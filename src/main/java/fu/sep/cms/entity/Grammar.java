@@ -7,24 +7,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "chapter")
+@Table(name = "grammar")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class Chapter {
+public class Grammar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "title", nullable = false)
-    private String title;
-
-    @Column(name = "content", columnDefinition = "TEXT")
-    private String content;
+    @Column(name = "file_url", nullable = false)
+    private String structure;
 
     @ManyToOne
-    @JoinColumn(name = "subject_id", nullable = false)
-    private Subject subject;
-
+    @JoinColumn(name = "lesson_id", nullable = false)
+    private Lesson lesson;
 }

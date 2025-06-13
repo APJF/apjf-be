@@ -1,0 +1,46 @@
+package fu.sep.cms.entity;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "material")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class Material {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "title", nullable = false)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "file_url", nullable = false)
+    private String fileUrl;
+
+    @Column(name = "type", nullable = false)
+    private String type;
+
+    @Column(name = "uploader_id", nullable = false)
+    private Long uploaderId;
+
+    @Column(name = "created_at", nullable = false)
+    private String createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private String updatedAt;
+
+    @Column(name = "status", nullable = false)
+    private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "subject_id", nullable = false)
+    private Subject subject;
+}
