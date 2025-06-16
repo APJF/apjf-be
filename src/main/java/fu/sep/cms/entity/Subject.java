@@ -24,6 +24,9 @@ public class Subject {
     @Column(name = "title", nullable = false)
     private String title;
 
+    @Column(name = "topic", nullable = false, unique = true)
+    private String topic;
+
     @Column(name = "description", nullable = false)
     private String description;
 
@@ -33,14 +36,20 @@ public class Subject {
     @Column(name = "estimated_duration", nullable = false)
     private String estimatedDuration;
 
-    @Column(name = "creator", nullable = false)
-    private String creator;
+    @Column(name = "creator_id", nullable = false)
+    private String creatorId;
+
+    @Column(name = "image", nullable = false)
+    private String image;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Column(name = "order_number", nullable = false)
+    private Integer orderNumber;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Chapter> chapters = new ArrayList<>();

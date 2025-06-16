@@ -22,9 +22,6 @@ public class Lesson {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "type", nullable = false)
-    private String description;
-
     @Column(name = "status", nullable = false)
     private String status;
 
@@ -34,9 +31,25 @@ public class Lesson {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "order_number", nullable = false)
+    private Integer orderNumber;
+
     @ManyToOne
     @JoinColumn(name = "slot_id", nullable = false)
     private Slot slot;
 
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL)
+    private Kanji kanji;
 
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL)
+    private Vocabulary vocabulary;
+
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL)
+    private Grammar grammar;
+
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL)
+    private Reading reading;
+
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL)
+    private Listening listening;
 }

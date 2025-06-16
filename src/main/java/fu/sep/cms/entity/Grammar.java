@@ -20,7 +20,8 @@ public class Grammar {
     @Column(name = "file_url", nullable = false)
     private String structure;
 
-    @ManyToOne
-    @JoinColumn(name = "lesson_id", nullable = false)
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
     private Lesson lesson;
 }

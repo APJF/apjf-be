@@ -7,24 +7,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "vocabulary")
+@Table(name = "reading")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class Vocabulary {
+public class Listening {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "word", nullable = false)
-    private String word;
+    @Column(name = "file_url", nullable = false)
+    private String description;
 
-    @Column(name = "pronunciaion", nullable = false)
-    private String pronunciation;
-    
-    @Column(name = "definition", columnDefinition = "TEXT")
-    private String definition;
+    @Column(name = "script", nullable = false)
+    private String script;
 
     @OneToOne
     @MapsId

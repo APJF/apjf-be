@@ -35,7 +35,8 @@ public class Kanji {
     @Column(name = "meaning", columnDefinition = "TEXT")
     private String meaning;
 
-    @ManyToOne
-    @JoinColumn(name = "lesson_id", nullable = false)
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id")
     private Lesson lesson;
 }

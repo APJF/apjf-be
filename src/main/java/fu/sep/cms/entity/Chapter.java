@@ -31,6 +31,9 @@ public class Chapter {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "order_number", nullable = false)
+    private Integer orderNumber;
+
     @ManyToOne
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
