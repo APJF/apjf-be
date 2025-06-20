@@ -1,5 +1,7 @@
 package fu.sep.cms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,7 +10,9 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "subject")
@@ -51,10 +55,11 @@ public class Subject {
     @Column(name = "order_number", nullable = false)
     private Integer orderNumber;
 
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Chapter> chapters = new ArrayList<>();
+    @OneToMany(mappedBy="subject", cascade = CascadeType.ALL)
+    private Set<Chapter> chapters = new HashSet<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Material> materials = new ArrayList<>();
 
 }

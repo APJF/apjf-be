@@ -1,5 +1,6 @@
 package fu.sep.cms.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,7 +32,11 @@ public class Slot {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "order_number", nullable = false)
+    private Integer orderNumber;
+
     @ManyToOne
     @JoinColumn(name = "chapter_id", nullable = false)
+    @JsonBackReference   // tránh vòng lặp JSON
     private Chapter chapter;
 }
