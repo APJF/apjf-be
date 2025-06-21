@@ -1,6 +1,7 @@
 package fu.sep.cms.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "slot")
@@ -39,4 +42,9 @@ public class Slot {
     @JoinColumn(name = "chapter_id", nullable = false)
     @JsonBackReference   // tránh vòng lặp JSON
     private Chapter chapter;
+
+    @OneToMany(mappedBy = "slot", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference  // giữ vai trò "cha" trong JSON, giúp tránh vòng lặp
+    private List<Material> materials = new ArrayList<>();
+
 }

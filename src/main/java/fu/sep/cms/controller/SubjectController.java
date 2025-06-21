@@ -14,12 +14,12 @@ public class SubjectController {
 
     private final SubjectService service;
 
-    @PostMapping
+@PostMapping("/create")
     public ResponseEntity<Subject> create(@RequestBody Subject subject) {
         return ResponseEntity.status(201).body(service.createSubject(subject));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<Subject> update(
             @PathVariable Long id,
             @RequestBody Subject subject
@@ -27,13 +27,13 @@ public class SubjectController {
         return ResponseEntity.ok(service.updateSubject(id, subject));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deleteSubject(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("//{id}")
     public ResponseEntity<Subject> getOne(@PathVariable Long id) {
         return ResponseEntity.ok(service.getSubjectById(id));
     }
@@ -56,7 +56,7 @@ public class SubjectController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/{id}/detail")
+    @GetMapping("/detail/{id}")
     public ResponseEntity<Subject> detail(@PathVariable Long id) {
         Subject subject = service.getDetail(id);
         return ResponseEntity.ok(subject);

@@ -3,59 +3,57 @@ package fu.sep.cms.service.impl;
 import fu.sep.cms.entity.Material;
 import fu.sep.cms.repository.MaterialRepository;
 import fu.sep.cms.service.MaterialService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class MaterialServiceImpl implements MaterialService {
 
     private final MaterialRepository materialRepository;
 
-    @Autowired
-    public MaterialServiceImpl(MaterialRepository materialRepository) {
-        this.materialRepository = materialRepository;
-    }
-
     @Override
-    public Material createMaterial(Material material) {
+    public Material create(Material material) {
         return materialRepository.save(material);
     }
 
     @Override
-    public Material updateMaterial(Long id, Material material) {
-        Optional<Material> existing = materialRepository.findById(id);
-        if (existing.isPresent()) {
-            Material old = existing.get();
-            old.setTitle(material.getTitle());
-            old.setDescription(material.getDescription());
-            old.setFileUrl(material.getFileUrl());
-            old.setType(material.getType());
-            old.setUploaderId(material.getUploaderId());
-            old.setStatus(material.getStatus());
-            old.setUpdatedAt(material.getUpdatedAt());
-            old.setSubject(material.getSubject());
-            return materialRepository.save(old);
-        }
-        throw new RuntimeException("Material not found with id: " + id);
+    public Material update(Long id, Material updated) {
+        Material existing = materialRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
+
+        existing.setTitle(updated.getTitle());
+        existing.setDescription(updated.getDescription());
+        existing.setFileUrl(updated.getFileUrl());
+        existing.setType(updated.getType());
+        existing.setUploaderId(updated.getUploaderId());
+        existing.setStatus(updated.getStatus());
+        existing.setSlot(updated.getSlot());
+        existing.setUpdatedAt(updated.getUpdatedAt());
+
+        return materialRepository.save(existing);
     }
 
     @Override
-    public void deleteMaterial(Long id) {
+    public void delete(Long id) {
+        if (!materialRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found");
+        }
         materialRepository.deleteById(id);
     }
 
     @Override
-    public Page<Material> getAllMaterials(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return materialRepository.findAll(pageable);
+    public List<Material> getBySlotId(Long slotId) {
+        return materialRepository.findBySlotId(slotId);
     }
 
     @Override
-    public Page<Material> searchMaterials(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return materialRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+    public Material getById(Long id) {
+        return materialRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"));
     }
 }

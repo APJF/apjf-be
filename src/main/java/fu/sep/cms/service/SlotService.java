@@ -7,4 +7,5 @@ public interface SlotService {
     Slot updateSlot(Long id, Slot slot);
     void deleteSlot(Long id);
     Slot getSlotById(Long id);
+    Slot getSlotDetail(Long slotId);
 }

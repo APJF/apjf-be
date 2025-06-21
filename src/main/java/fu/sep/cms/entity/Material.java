@@ -1,4 +1,5 @@
 package fu.sep.cms.entity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,6 +44,8 @@ public class Material {
     private String status;
 
     @ManyToOne
-    @JoinColumn(name = "subject_id", nullable = false)
-    private Subject subject;
+    @JoinColumn(name = "slot_id", nullable = false)
+    @JsonBackReference  // để tránh vòng lặp khi serialize JSON
+    private Slot slot;
+
 }

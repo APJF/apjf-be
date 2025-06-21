@@ -6,7 +6,9 @@ import fu.sep.cms.repository.ChapterRepository;
 import fu.sep.cms.repository.SlotRepository;
 import fu.sep.cms.service.SlotService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 
@@ -55,5 +57,15 @@ public class SlotServiceImpl implements SlotService {
     public Slot getSlotById(Long id) {
         return slotRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Slot not found"));
+    }
+
+    @Override
+    public Slot getSlotDetail(Long slotId) {
+        return slotRepository
+                .findWithAllById(slotId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Slot not found: " + slotId
+                ));
     }
 }

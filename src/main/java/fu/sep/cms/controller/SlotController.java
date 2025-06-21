@@ -42,4 +42,10 @@ public class SlotController {
     public ResponseEntity<Slot> getOne(@PathVariable Long id) {
         return ResponseEntity.ok(slotService.getSlotById(id));
     }
+
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<Slot> getLessonDetail(@PathVariable("id") Long id) {
+        Slot slot = slotService.getSlotDetail(id);
+        return ResponseEntity.ok(slot);
+    }
 }

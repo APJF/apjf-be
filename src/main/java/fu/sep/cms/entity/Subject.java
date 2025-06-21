@@ -1,7 +1,6 @@
 package fu.sep.cms.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -57,9 +56,5 @@ public class Subject {
 
     @OneToMany(mappedBy="subject", cascade = CascadeType.ALL)
     private Set<Chapter> chapters = new HashSet<>();
-
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Material> materials = new ArrayList<>();
 
 }
