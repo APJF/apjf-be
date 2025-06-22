@@ -54,18 +54,8 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public Slot getSlotById(Long id) {
+    public Slot getSlotWithMaterials(Long id) {
         return slotRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Slot not found"));
-    }
-
-    @Override
-    public Slot getSlotDetail(Long slotId) {
-        return slotRepository
-                .findWithAllById(slotId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Slot not found: " + slotId
-                ));
     }
 }

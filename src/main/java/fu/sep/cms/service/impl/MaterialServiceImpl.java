@@ -31,7 +31,6 @@ public class MaterialServiceImpl implements MaterialService {
         existing.setFileUrl(updated.getFileUrl());
         existing.setType(updated.getType());
         existing.setUploaderId(updated.getUploaderId());
-        existing.setStatus(updated.getStatus());
         existing.setSlot(updated.getSlot());
         existing.setUpdatedAt(updated.getUpdatedAt());
 

@@ -2,7 +2,7 @@ spring:
   application:
     name: cms
   datasource:
-    url: jdbc:postgresql://localhost:5432/sepdb
+    url: jdbc:postgresql://localhost:5432/cms_db
     username: postgres
     password: password
   jpa:

@@ -28,9 +28,6 @@ public class Material {
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
-    @Column(name = "type", nullable = false)
-    private String type;
-
     @Column(name = "uploader_id", nullable = false)
     private Long uploaderId;
 
@@ -40,12 +37,12 @@ public class Material {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "status", nullable = false)
-    private String status;
-
     @ManyToOne
     @JoinColumn(name = "slot_id", nullable = false)
     @JsonBackReference  // để tránh vòng lặp khi serialize JSON
     private Slot slot;
 
+    @ManyToOne
+    @JoinColumn(name = "material_type_id", nullable = false)
+    private MaterialType type;
 }

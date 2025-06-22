@@ -33,11 +33,6 @@ public class SubjectController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("//{id}")
-    public ResponseEntity<Subject> getOne(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getSubjectById(id));
-    }
-
     @GetMapping("/list")
     public ResponseEntity<Page<Subject>> list(
             @RequestParam(defaultValue = "0") int page,

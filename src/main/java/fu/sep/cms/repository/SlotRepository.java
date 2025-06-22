@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface SlotRepository extends JpaRepository<Slot, Long> {
-    @EntityGraph(attributePaths = {"kanji", "vocabulary", "grammar", "reading", "listening", "slot"})
-    Optional<Slot> findWithAllById(Long id);
+    @EntityGraph(attributePaths = {"materials", "materials.type"})
+    Optional<Slot> findById(Long id);
 }
