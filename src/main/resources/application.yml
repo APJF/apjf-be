@@ -2,12 +2,12 @@ spring:
   application:
     name: cms
   datasource:
-    url: jdbc:postgresql://localhost:5432/cms_db
-    username: postgres
-    password: password
+    url: jdbc:postgresql://apjf-server.postgres.database.azure.com:5432/cms_db
+    username: apjf_admin
+    password: PG16password
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

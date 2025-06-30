@@ -1,48 +1,52 @@
 package fu.sep.cms.entity;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "material")
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@ToString(exclude = {"unit", "approvalRequests"})
+@EqualsAndHashCode(of = "id")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Material {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(length = 36)
+    private String id;
 
-    @Column(name = "title", nullable = false)
-    private String title;
-
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(length = 255)
     private String description;
 
-    @Column(name = "file_url", nullable = false)
+    @Column(name = "file_url", nullable = false, length = 512)
     private String fileUrl;
 
-    @Column(name = "uploader_id", nullable = false)
-    private Long uploaderId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Type type;                       // KANJI, GRAMMAR …
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
+    /* ------- owner Unit ------- */
     @ManyToOne
-    @JoinColumn(name = "slot_id", nullable = false)
-    @JsonBackReference  // để tránh vòng lặp khi serialize JSON
-    private Slot slot;
+    @JoinColumn(name = "unit_id", nullable = false)
+    @JsonBackReference
+    private Unit unit;
 
-    @ManyToOne
-    @JoinColumn(name = "material_type_id", nullable = false)
-    private MaterialType type;
+    /* ------- 1-N Material → ApprovalRequest ------- */
+    @OneToMany(mappedBy = "material",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @JsonManagedReference
+    @Builder.Default
+    private Set<ApprovalRequest> approvalRequests = new HashSet<>();
+
+    /* enum */
+    public enum Type {KANJI, GRAMMAR, VOCAB, LISTENING, READING, WRITING}
 }

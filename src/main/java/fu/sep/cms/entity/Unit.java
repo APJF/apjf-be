@@ -9,19 +9,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "chapter")
+@Table(name = "unit")
 @Getter
 @Setter
-@ToString(exclude = {"course", "units", "approvalRequests"})
+@ToString(exclude = {"chapter", "materials", "approvalRequests"})
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Chapter {
+public class Unit {
 
     @Id
     @Column(length = 36)
-    private String id;              // UUID
+    private String id;          // UUID
 
     @Column(nullable = false)
     private String title;
@@ -33,25 +33,25 @@ public class Chapter {
     @Column(nullable = false, length = 20)
     private Status status;
 
-    /* prerequisite chapter */
+    /* prerequisite unit */
     @ManyToOne
-    @JoinColumn(name = "prerequisite_chapter_id")
-    private Chapter prerequisiteChapter;
+    @JoinColumn(name = "prerequisite_unit_id")
+    private Unit prerequisiteUnit;
 
-    /* Course owner */
+    /* owner Chapter */
     @ManyToOne
-    @JoinColumn(name = "course_id", nullable = false)
+    @JoinColumn(name = "chapter_id", nullable = false)
     @JsonBackReference
-    private Course course;
+    private Chapter chapter;
 
-    /* 1-N Chapter → Unit */
-    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
+    /* 1-N Unit → Material */
+    @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Builder.Default
-    private Set<Unit> units = new HashSet<>();
+    private Set<Material> materials = new HashSet<>();
 
-    /* 1-N Chapter → ApprovalRequest */
-    @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
+    /* 1-N Unit → ApprovalRequest */
+    @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     @Builder.Default
     private Set<ApprovalRequest> approvalRequests = new HashSet<>();
