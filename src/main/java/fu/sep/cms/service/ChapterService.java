@@ -56,6 +56,13 @@ public class ChapterService {
                 .course(parent)
                 .build();
 
+        // Set prerequisite chapter if provided
+        if (dto.prerequisiteChapterId() != null) {
+            Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
+                .orElseThrow(() -> new EntityNotFoundException("Prerequisite chapter not found"));
+            ch.setPrerequisiteChapter(prerequisite);
+        }
+
         return toDto(chapterRepo.save(ch));
     }
 
@@ -67,6 +74,15 @@ public class ChapterService {
         ch.setTitle(dto.title());
         ch.setDescription(dto.description());
         ch.setStatus(Status.DRAFT);
+
+        // Update prerequisite chapter
+        if (dto.prerequisiteChapterId() != null) {
+            Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
+                .orElseThrow(() -> new EntityNotFoundException("Prerequisite chapter not found"));
+            ch.setPrerequisiteChapter(prerequisite);
+        } else {
+            ch.setPrerequisiteChapter(null);
+        }
 
         if (!dto.id().equals(currentId)) {
             if (chapterRepo.existsById(dto.id()))
@@ -82,10 +98,13 @@ public class ChapterService {
     private ChapterDto toDto(Chapter ch) {
         Set<UnitDto> units = ch.getUnits().stream()
                 .map(u -> new UnitDto(u.getId(), u.getTitle(),
-                        u.getDescription(), u.getStatus(), ch.getId()))
+                        u.getDescription(), u.getStatus(), ch.getId(),
+                        u.getPrerequisiteUnit() != null ? u.getPrerequisiteUnit().getId() : null))
                 .collect(Collectors.toSet());
 
         return new ChapterDto(ch.getId(), ch.getTitle(), ch.getDescription(),
-                ch.getStatus(), ch.getCourse().getId(), units);
+                ch.getStatus(), ch.getCourse().getId(),
+                ch.getPrerequisiteChapter() != null ? ch.getPrerequisiteChapter().getId() : null,
+                units);
     }
 }

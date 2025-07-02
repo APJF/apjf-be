@@ -11,6 +11,7 @@ public record ChapterDto(
         String description,
         Status status,
         String courseId,
+        String prerequisiteChapterId,
         Set<UnitDto> units
 ) {
 }

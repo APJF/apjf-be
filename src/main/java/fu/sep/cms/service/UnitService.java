@@ -53,6 +53,13 @@ public class UnitService {
                 .chapter(parent)
                 .build();
 
+        // Set prerequisite unit if provided
+        if (dto.prerequisiteUnitId() != null) {
+            Unit prerequisite = unitRepo.findById(dto.prerequisiteUnitId())
+                    .orElseThrow(() -> new EntityNotFoundException("Prerequisite unit not found"));
+            u.setPrerequisiteUnit(prerequisite);
+        }
+
         return toDto(unitRepo.save(u));
     }
 
@@ -64,6 +71,15 @@ public class UnitService {
         u.setTitle(dto.title());
         u.setDescription(dto.description());
         u.setStatus(Status.DRAFT);
+
+        // Update prerequisite unit
+        if (dto.prerequisiteUnitId() != null) {
+            Unit prerequisite = unitRepo.findById(dto.prerequisiteUnitId())
+                    .orElseThrow(() -> new EntityNotFoundException("Prerequisite unit not found"));
+            u.setPrerequisiteUnit(prerequisite);
+        } else {
+            u.setPrerequisiteUnit(null);
+        }
 
         if (!dto.id().equals(currentId)) {
             if (unitRepo.existsById(dto.id()))
@@ -77,6 +93,7 @@ public class UnitService {
     /*------------- helper -------------*/
     private UnitDto toDto(Unit u) {
         return new UnitDto(u.getId(), u.getTitle(), u.getDescription(),
-                u.getStatus(), u.getChapter().getId());
+                u.getStatus(), u.getChapter().getId(),
+                u.getPrerequisiteUnit() != null ? u.getPrerequisiteUnit().getId() : null);
     }
 }

@@ -15,6 +15,7 @@ public record CourseDto(
         Level level,
         String image,
         String requirement,
-        Status status
+        Status status,
+        String prerequisiteCourseId
 ) {
 }

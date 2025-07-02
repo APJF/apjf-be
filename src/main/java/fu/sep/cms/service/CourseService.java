@@ -62,6 +62,14 @@ public class CourseService {
         Course entity = toEntity(dto);
         entity.setId(dto.id());
         entity.setStatus(Status.DRAFT);
+
+        // Set prerequisite course if provided
+        if (dto.prerequisiteCourseId() != null) {
+            Course prerequisite = courseRepo.findById(dto.prerequisiteCourseId())
+                .orElseThrow(() -> new EntityNotFoundException("Prerequisite course not found"));
+            entity.setPrerequisiteCourse(prerequisite);
+        }
+
         return toDto(courseRepo.save(entity));
     }
 
@@ -78,6 +86,15 @@ public class CourseService {
         course.setRequirement(dto.requirement());
         course.setStatus(Status.DRAFT);
 
+        // Update prerequisite course
+        if (dto.prerequisiteCourseId() != null) {
+            Course prerequisite = courseRepo.findById(dto.prerequisiteCourseId())
+                .orElseThrow(() -> new EntityNotFoundException("Prerequisite course not found"));
+            course.setPrerequisiteCourse(prerequisite);
+        } else {
+            course.setPrerequisiteCourse(null);
+        }
+
         /* Đổi PK nếu khác */
         if (!dto.id().equals(currentId)) {
             if (courseRepo.existsById(dto.id()))
@@ -93,17 +110,21 @@ public class CourseService {
     private CourseDto toDto(Course c) {
         return new CourseDto(c.getId(), c.getTitle(), c.getDescription(),
                 c.getEstimatedDuration(), c.getLevel(),
-                c.getImage(), c.getRequirement(), c.getStatus());
+                c.getImage(), c.getRequirement(), c.getStatus(),
+                c.getPrerequisiteCourse() != null ? c.getPrerequisiteCourse().getId() : null);
     }
 
     private ChapterDto toChapterDto(Chapter ch) {
         Set<UnitDto> units = ch.getUnits().stream()
                 .map(u -> new UnitDto(u.getId(), u.getTitle(),
-                        u.getDescription(), u.getStatus(), ch.getId()))
+                        u.getDescription(), u.getStatus(), ch.getId(),
+                        u.getPrerequisiteUnit() != null ? u.getPrerequisiteUnit().getId() : null))
                 .collect(Collectors.toSet());
 
         return new ChapterDto(ch.getId(), ch.getTitle(), ch.getDescription(),
-                ch.getStatus(), ch.getCourse().getId(), units);
+                ch.getStatus(), ch.getCourse().getId(),
+                ch.getPrerequisiteChapter() != null ? ch.getPrerequisiteChapter().getId() : null,
+                units);
     }
 
     private Course toEntity(CourseDto dto) {
