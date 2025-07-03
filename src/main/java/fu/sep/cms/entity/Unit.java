@@ -26,7 +26,7 @@ public class Unit {
     @Column(nullable = false)
     private String title;
 
-    @Lob
+    @Column(length = 255)
     private String description;
 
     @Enumerated(EnumType.STRING)

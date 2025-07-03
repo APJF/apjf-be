@@ -26,11 +26,11 @@ public class Course {
     @Column(nullable = false, length = 150)
     private String title;
 
-    @Lob
+    @Column(length = 255)
     private String description;
 
-    @Column(name = "estimated_duration", nullable = false)
-    private BigDecimal estimatedDuration;
+    @Column(name = "duration", nullable = false)
+    private BigDecimal duration;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -38,7 +38,7 @@ public class Course {
 
     private String image;
 
-    @Lob
+    @Column(length = 255)
     private String requirement;
 
     @Enumerated(EnumType.STRING)

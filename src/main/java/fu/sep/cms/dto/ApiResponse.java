@@ -18,4 +18,8 @@ public record ApiResponse<T>(
     public static ApiResponse<?> error(String msg) {
         return new ApiResponse<>(false, msg, null, Instant.now().toEpochMilli());
     }
+
+    public static <T> ApiResponse<T> error(String msg, T data) {
+        return new ApiResponse<>(false, msg, data, Instant.now().toEpochMilli());
+    }
 }

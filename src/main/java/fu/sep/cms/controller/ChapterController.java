@@ -3,6 +3,7 @@ package fu.sep.cms.controller;
 import fu.sep.cms.dto.ApiResponse;
 import fu.sep.cms.dto.ChapterDto;
 import fu.sep.cms.service.ChapterService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,37 +13,36 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/chapters")
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 public class ChapterController {
 
     private final ChapterService chapterService;
-    public ChapterController(ChapterService chapterService) {
-        this.chapterService = chapterService;
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ChapterDto>>> getAll() {
         return ResponseEntity.ok(
-                ApiResponse.ok("List chapters", chapterService.findAll()));
+                ApiResponse.ok("Danh sách chương", chapterService.findAll()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ChapterDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Chapter", chapterService.findById(id)));
+                ApiResponse.ok("Chi tiết chương", chapterService.findById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ChapterDto>> create(@RequestBody ChapterDto dto) {
-        ChapterDto created = chapterService.create(dto);
+    public ResponseEntity<ApiResponse<ChapterDto>> create(@Valid @RequestBody ChapterDto dto,
+                                                          @RequestHeader("X-User-Id") String staffId) {
+        ChapterDto created = chapterService.create(dto, staffId);
         return ResponseEntity.created(URI.create("/api/chapters/" + created.id()))
-                .body(ApiResponse.ok("Chapter created", created));
+                .body(ApiResponse.ok("Tạo chương thành công", created));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ChapterDto>> update(@PathVariable String id,
-                                                          @RequestBody ChapterDto dto) {
+                                                          @Valid @RequestBody ChapterDto dto,
+                                                          @RequestHeader("X-User-Id") String staffId) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Chapter updated", chapterService.update(id, dto)));
+                ApiResponse.ok("Cập nhật chương thành công", chapterService.update(id, dto, staffId)));
     }
 }

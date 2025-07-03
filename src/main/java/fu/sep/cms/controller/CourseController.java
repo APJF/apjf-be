@@ -4,6 +4,7 @@ import fu.sep.cms.dto.ApiResponse;
 import fu.sep.cms.dto.CourseDetailDto;
 import fu.sep.cms.dto.CourseDto;
 import fu.sep.cms.service.CourseService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,36 +23,38 @@ public class CourseController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<CourseDto>>> getAll() {
         return ResponseEntity.ok(
-                ApiResponse.ok("List courses", courseService.findAll()));
+                ApiResponse.ok("Danh sách khóa học", courseService.findAll()));
     }
 
     /* -------- GET /api/courses/{id} -------- */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<CourseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Course detail", courseService.findById(id)));
+                ApiResponse.ok("Chi tiết khóa học", courseService.findById(id)));
     }
 
     /* -------- GET /api/courses/{id}/detail -------- */
     @GetMapping("/{id}/detail")
     public ResponseEntity<ApiResponse<CourseDetailDto>> getFullDetail(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Course + chapters + units", courseService.findDetail(id)));
+                ApiResponse.ok("Khóa học với chương và bài học", courseService.findDetail(id)));
     }
 
     /* -------- POST /api/courses -------- */
     @PostMapping
-    public ResponseEntity<ApiResponse<CourseDto>> create(@RequestBody CourseDto dto) {
-        CourseDto created = courseService.create(dto);
+    public ResponseEntity<ApiResponse<CourseDto>> create(@Valid @RequestBody CourseDto dto,
+                                                         @RequestHeader("X-User-Id") String staffId) {
+        CourseDto created = courseService.create(dto, staffId);
         return ResponseEntity.created(URI.create("/api/courses/" + created.id()))
-                .body(ApiResponse.ok("Course created", created));
+                .body(ApiResponse.ok("Tạo khóa học thành công", created));
     }
 
     /* -------- PUT /api/courses/{id} -------- */
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<CourseDto>> update(@PathVariable String id,
-                                                         @RequestBody CourseDto dto) {
+                                                         @Valid @RequestBody CourseDto dto,
+                                                         @RequestHeader("X-User-Id") String staffId) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Course updated", courseService.update(id, dto)));
+                ApiResponse.ok("Cập nhật khóa học thành công", courseService.update(id, dto, staffId)));
     }
 }

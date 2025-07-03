@@ -2,6 +2,7 @@ package fu.sep.cms.service;
 
 import fu.sep.cms.dto.ChapterDto;
 import fu.sep.cms.dto.UnitDto;
+import fu.sep.cms.entity.ApprovalRequest;
 import fu.sep.cms.entity.Chapter;
 import fu.sep.cms.entity.Course;
 import fu.sep.cms.entity.Status;
@@ -10,6 +11,7 @@ import fu.sep.cms.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +22,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ChapterService {
 
     private final ChapterRepository chapterRepo;
     private final CourseRepository courseRepo;
+    private final ApprovalRequestService approvalRequestService;
 
     /* ---------- READ ---------- */
 
@@ -41,7 +45,9 @@ public class ChapterService {
     }
 
     /* ---------- CREATE ---------- */
-    public ChapterDto create(@Valid ChapterDto dto) {
+    public ChapterDto create(@Valid ChapterDto dto, String staffId) {
+        log.info("Staff {} creating new chapter with ID: {}", staffId, dto.id());
+
         Course parent = courseRepo.findById(dto.courseId())
                 .orElseThrow(() -> new EntityNotFoundException("Course missing"));
 
@@ -52,7 +58,7 @@ public class ChapterService {
                 .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
-                .status(Status.DRAFT)
+                .status(Status.DRAFT) // Set as DRAFT until approved
                 .course(parent)
                 .build();
 
@@ -63,37 +69,63 @@ public class ChapterService {
             ch.setPrerequisiteChapter(prerequisite);
         }
 
-        return toDto(chapterRepo.save(ch));
+        Chapter savedChapter = chapterRepo.save(ch);
+
+        // Auto-create approval request for this new chapter
+        approvalRequestService.autoCreateApprovalRequest(
+                ApprovalRequest.TargetType.CHAPTER,
+                savedChapter.getId(),
+                ApprovalRequest.RequestType.CREATE,
+                staffId
+        );
+
+        log.info("Successfully created chapter {} and approval request", savedChapter.getId());
+        return toDto(savedChapter);
     }
 
     /* ---------- UPDATE ---------- */
-    public ChapterDto update(String currentId, @Valid ChapterDto dto) {
-        Chapter ch = chapterRepo.findById(currentId)
+    public ChapterDto update(String currentId, @Valid ChapterDto dto, String staffId) {
+        log.info("Staff {} updating chapter with ID: {}", staffId, currentId);
+
+        Chapter chapter = chapterRepo.findById(currentId)
                 .orElseThrow(() -> new EntityNotFoundException("Chapter not found"));
 
-        ch.setTitle(dto.title());
-        ch.setDescription(dto.description());
-        ch.setStatus(Status.DRAFT);
+        chapter.setTitle(dto.title());
+        chapter.setDescription(dto.description());
+        chapter.setStatus(Status.DRAFT); // Reset to DRAFT when updated
 
         // Update prerequisite chapter
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
                 .orElseThrow(() -> new EntityNotFoundException("Prerequisite chapter not found"));
-            ch.setPrerequisiteChapter(prerequisite);
+            chapter.setPrerequisiteChapter(prerequisite);
         } else {
-            ch.setPrerequisiteChapter(null);
+            chapter.setPrerequisiteChapter(null);
         }
 
+        /* Đổi PK nếu khác */
         if (!dto.id().equals(currentId)) {
             if (chapterRepo.existsById(dto.id()))
                 throw new IllegalArgumentException("New chapter id already exists");
-            chapterRepo.delete(ch);
-            ch.setId(dto.id());
+            chapterRepo.delete(chapter);
+            chapter.setId(dto.id());
         }
-        return toDto(chapterRepo.save(ch));
+
+        Chapter savedChapter = chapterRepo.save(chapter);
+
+        // Auto-create approval request for this chapter update
+        approvalRequestService.autoCreateApprovalRequest(
+                ApprovalRequest.TargetType.CHAPTER,
+                savedChapter.getId(),
+                ApprovalRequest.RequestType.UPDATE,
+                staffId
+        );
+
+        log.info("Successfully updated chapter {} and created approval request", savedChapter.getId());
+        return toDto(savedChapter);
     }
 
-    /* ---------- helper ---------- */
+    /* ---------- Mapping helpers ---------- */
 
     private ChapterDto toDto(Chapter ch) {
         Set<UnitDto> units = ch.getUnits().stream()

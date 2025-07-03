@@ -1,74 +1,61 @@
 /* ============================
-   SEED DATA – Japanese Courses
+   SEED DATA – CMS Service Test Data
    ============================ */
 
-/* ---------- COURSE ---------- */
-INSERT INTO course (id, title, topic, description, estimated_duration,
-                    level, creator_id, requirements, image, status,
-                    created_at, updated_at)
-VALUES (1, 'Japanese N5 Foundations', 'jp-n5',
-        'Starter course for JLPT N5 – kana, greetings, basic grammar.',
-        20, 'BEGINNER', 'staff01',
-        'Laptop + headphone', '/img/n5.png', 'PUBLISHED',
-        NOW(), NOW()),
+/* ---------- TOPIC ---------- */
+INSERT INTO topic (name)
+VALUES ('Tiếng Nhật'),
+       ('Lập trình');
 
-       (2, 'Everyday Japanese – N4', 'jp-n4',
-        'Conversational Japanese, essential grammar and vocab for JLPT N4.',
-        30, 'INTERMEDIATE', 'staff02',
-        'Completed N5 or equivalent', '/img/n4.png', 'PUBLISHED',
-        NOW(), NOW());
+/* ---------- COURSE (Simple version for testing) ---------- */
+INSERT INTO course (id, title, description, duration, level, status)
+VALUES ('course-01', 'Tieng Nhat N5', 'Khoa hoc co ban', 40.5, 'BEGINNER', 'PUBLISHED');
+
+/* Add second course after first one works */
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id)
+VALUES ('course-02', 'Tieng Nhat N4', 'Khoa hoc nang cao', 60.0, 'INTERMEDIATE', 'PUBLISHED', 'course-01');
 
 /* ---------- CHAPTER ---------- */
--- 3 chương cho course 1
-INSERT INTO chapter (id, title, description, created_at, order_number,
-                     status, prerequisite_chapter_id, course_id)
-VALUES (1, 'Hiragana', 'Learn all 46 basic hiragana characters', NOW(), 1, 'PUBLISHED', NULL, 1),
-       (2, 'Katakana', 'Learn basic katakana for loan-words', NOW(), 2, 'PUBLISHED', NULL, 1),
-       (3, 'Basic Greetings', 'Common phrases for daily greetings', NOW(), 3, 'PUBLISHED', NULL, 1),
-
--- 3 chương cho course 2
-       (4, 'Keigo Basics', 'Introduction to polite Japanese forms', NOW(), 1, 'PUBLISHED', NULL, 2),
-       (5, 'Te-Form Mastery', 'All uses of the て-form in N4 grammar', NOW(), 2, 'PUBLISHED', NULL, 2),
-       (6, 'Daily Conversations', 'Role-play dialogues for daily life', NOW(), 3, 'PUBLISHED', NULL, 2);
+INSERT INTO chapter (id, title, description, status, course_id)
+VALUES ('chapter-01', 'Hiragana', 'Hoc Hiragana co ban', 'PUBLISHED', 'course-01'),
+       ('chapter-02', 'Katakana', 'Hoc Katakana co ban', 'PUBLISHED', 'course-01'),
+       ('chapter-03', 'Ngu phap N4', 'Hoc ngu phap N4', 'PUBLISHED', 'course-02'),
+       ('chapter-04', 'Hoi thoai', 'Luyen hoi thoai', 'PUBLISHED', 'course-02');
 
 /* ---------- UNIT ---------- */
--- helper comment: 4 unit cho mỗi chapter (Vocabulary, Grammar, Listening, Quiz)
+INSERT INTO unit (id, title, description, status, chapter_id)
+VALUES ('unit-01', 'Tu vung Hiragana', 'Hoc tu vung co ban', 'PUBLISHED', 'chapter-01'),
+       ('unit-02', 'Luyen doc Hiragana', 'Bai tap doc', 'PUBLISHED', 'chapter-01'),
+       ('unit-03', 'Tu vung Katakana', 'Hoc tu vung Katakana', 'PUBLISHED', 'chapter-02'),
+       ('unit-04', 'Luyen viet Katakana', 'Bai tap viet', 'PUBLISHED', 'chapter-02'),
+       ('unit-05', 'Te-form', 'Hoc te-form', 'PUBLISHED', 'chapter-03'),
+       ('unit-06', 'Kha nang', 'Dien dat kha nang', 'PUBLISHED', 'chapter-03'),
+       ('unit-07', 'Hoi thoai cua hang', 'Luyen tap mua sam', 'PUBLISHED', 'chapter-04'),
+       ('unit-08', 'Hoi thoai nha hang', 'Luyen tap di an', 'PUBLISHED', 'chapter-04');
 
-INSERT INTO unit (id, title, description, created_at, updated_at,
-                  order_number, prerequisite_unit_id, chapter_id)
+/* ---------- MATERIAL ---------- */
+INSERT INTO material (id, description, file_url, type, unit_id)
+VALUES ('material-01', 'Video Hiragana', '/videos/hiragana.mp4', 'GRAMMAR', 'unit-01'),
+       ('material-02', 'PDF Hiragana', '/docs/hiragana.pdf', 'VOCAB', 'unit-01'),
+       ('material-03', 'Audio Katakana', '/audios/katakana.mp3', 'LISTENING', 'unit-03'),
+       ('material-04', 'Quiz Te-form', '/quizzes/te-form.html', 'GRAMMAR', 'unit-05');
+
+/* ---------- COURSE_TOPIC ---------- */
+INSERT INTO course_topic (course_id, topic_id)
+VALUES ('course-01', 1),
+       ('course-02', 1);
+
+/* ---------- APPROVAL_REQUEST ---------- */
+INSERT INTO approval_request (course_id, chapter_id, unit_id, material_id, target_type, created_by, created_at, request_type, decision, feedback, reviewed_by, reviewed_at)
 VALUES
-    /* Chapter 1 – Hiragana */
-    (1, 'Vocabulary', 'Hiragana reading drill', NOW(), NOW(), 1, NULL, 1),
-    (2, 'Grammar', 'Particles は・が・を intro', NOW(), NOW(), 2, NULL, 1),
-    (3, 'Listening Practice', 'Audio: native hiragana words', NOW(), NOW(), 3, NULL, 1),
-    (4, 'Quiz', 'Hiragana multiple-choice test', NOW(), NOW(), 4, NULL, 1),
+    -- PENDING requests (chờ Manager duyệt)
+    ('course-01', NULL, NULL, NULL, 'COURSE', 'instructor-01', NOW() - INTERVAL '2 days', 'UPDATE', 'PENDING', NULL, NULL, NULL),
+    (NULL, 'chapter-01', NULL, NULL, 'CHAPTER', 'instructor-02', NOW() - INTERVAL '1 days', 'CREATE', 'PENDING', NULL, NULL, NULL),
+    (NULL, NULL, 'unit-05', NULL, 'UNIT', 'instructor-01', NOW() - INTERVAL '3 hours', 'UPDATE', 'PENDING', NULL, NULL, NULL),
 
-    /* Chapter 2 – Katakana */
-    (5, 'Vocabulary', 'Katakana reading drill', NOW(), NOW(), 1, NULL, 2),
-    (6, 'Grammar', 'Loan-word usage', NOW(), NOW(), 2, NULL, 2),
-    (7, 'Listening Practice', 'Audio: katakana words', NOW(), NOW(), 3, NULL, 2),
-    (8, 'Quiz', 'Katakana quiz', NOW(), NOW(), 4, NULL, 2),
+    -- APPROVED requests (đã được Manager duyệt)
+    ('course-02', NULL, NULL, NULL, 'COURSE', 'instructor-02', NOW() - INTERVAL '7 days', 'CREATE', 'APPROVED', 'Khóa học chất lượng cao, nội dung phù hợp với learner path', 'manager-01', NOW() - INTERVAL '5 days'),
+    (NULL, 'chapter-02', NULL, NULL, 'CHAPTER', 'instructor-01', NOW() - INTERVAL '10 days', 'CREATE', 'APPROVED', 'Chương được thiết kế tốt với bài tập phong phú', 'manager-02', NOW() - INTERVAL '8 days'),
 
-    /* Chapter 3 – Basic Greetings */
-    (9, 'Vocabulary', 'Common greeting words', NOW(), NOW(), 1, NULL, 3),
-    (10, 'Grammar', 'Using です／ます', NOW(), NOW(), 2, NULL, 3),
-    (11, 'Listening Practice', 'Greeting dialogues audio', NOW(), NOW(), 3, NULL, 3),
-    (12, 'Quiz', 'Greetings comprehension test', NOW(), NOW(), 4, NULL, 3),
-
-    /* Chapter 4 – Keigo Basics */
-    (13, 'Vocabulary', 'Honorific verbs list', NOW(), NOW(), 1, NULL, 4),
-    (14, 'Grammar', '～させていただく constructions', NOW(), NOW(), 2, NULL, 4),
-    (15, 'Listening Practice', 'Keigo phone calls', NOW(), NOW(), 3, NULL, 4),
-    (16, 'Quiz', 'Keigo basics quiz', NOW(), NOW(), 4, NULL, 4),
-
-    /* Chapter 5 – Te-Form Mastery */
-    (17, 'Vocabulary', 'Verbs te-form table', NOW(), NOW(), 1, NULL, 5),
-    (18, 'Grammar', 'Sequential actions with て', NOW(), NOW(), 2, NULL, 5),
-    (19, 'Listening Practice', 'Te-form conversations', NOW(), NOW(), 3, NULL, 5),
-    (20, 'Quiz', 'Te-form mastery test', NOW(), NOW(), 4, NULL, 5),
-
-    /* Chapter 6 – Daily Conversations */
-    (21, 'Vocabulary', 'Daily life phrases', NOW(), NOW(), 1, NULL, 6),
-    (22, 'Grammar', 'Casual vs polite switch', NOW(), NOW(), 2, NULL, 6),
-    (23, 'Listening Practice', 'Daily convo audio', NOW(), NOW(), 3, NULL, 6),
-    (24, 'Quiz', 'Conversation role-play quiz', NOW(), NOW(), 4, NULL, 6);
+    -- REJECTED requests (đã bị Manager từ chối)
+    (NULL, NULL, NULL, 'material-01', 'MATERIAL', 'instructor-03', NOW() - INTERVAL '15 days', 'UPDATE', 'REJECTED', 'Chất lượng video chưa đạt yêu cầu, cần cải thiện âm thanh và hình ảnh', 'manager-01', NOW() - INTERVAL '12 days');
