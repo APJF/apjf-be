@@ -1,4 +1,4 @@
-package fu.sep.cms;
+package fu.sep.apjf;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,4 +1,4 @@
-package fu.sep.cms;
+package fu.sep.apjf;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
