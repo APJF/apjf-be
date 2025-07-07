@@ -1,7 +1,7 @@
 package fu.sep.cms.dto;
 
 import fu.sep.cms.entity.Course.Level;
-import fu.sep.cms.entity.Status;
+import fu.sep.cms.entity.EnumClass;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,7 +23,7 @@ public record CourseDto(
         Level level,
         String image,
         String requirement,
-        Status status,
+        EnumClass.Status status,
         String prerequisiteCourseId
 ) {
 }

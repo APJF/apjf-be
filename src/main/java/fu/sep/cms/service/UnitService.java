@@ -3,7 +3,7 @@ package fu.sep.cms.service;
 import fu.sep.cms.dto.UnitDto;
 import fu.sep.cms.entity.ApprovalRequest;
 import fu.sep.cms.entity.Chapter;
-import fu.sep.cms.entity.Status;
+import fu.sep.cms.entity.EnumClass;
 import fu.sep.cms.entity.Unit;
 import fu.sep.cms.repository.ChapterRepository;
 import fu.sep.cms.repository.UnitRepository;
@@ -55,7 +55,7 @@ public class UnitService {
                 .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
-                .status(Status.DRAFT) // Set as DRAFT until approved
+                .status(EnumClass.Status.DRAFT) // Set as DRAFT until approved
                 .chapter(parent)
                 .build();
 
@@ -89,7 +89,7 @@ public class UnitService {
 
         unit.setTitle(dto.title());
         unit.setDescription(dto.description());
-        unit.setStatus(Status.DRAFT); // Reset to DRAFT when updated
+        unit.setStatus(EnumClass.Status.DRAFT); // Reset to DRAFT when updated
 
         // Update prerequisite unit
         if (dto.prerequisiteUnitId() != null) {

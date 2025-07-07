@@ -1,8 +1,7 @@
 package fu.sep.cms.dto;
 
-import fu.sep.cms.entity.Status;
+import fu.sep.cms.entity.EnumClass;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.util.Set;
@@ -15,7 +14,7 @@ public record ChapterDto(
         @NotBlank(message = "Mô tả chương không được để trống")
         @Size(min = 1, max = 2000, message = "Mô tả chương phải từ 1 đến 2000 ký tự")
         String description,
-        Status status,
+        EnumClass.Status status,
         @NotBlank(message = "ID khóa học không được để trống")
         String courseId,
         String prerequisiteChapterId,

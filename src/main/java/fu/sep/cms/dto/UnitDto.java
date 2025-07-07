@@ -1,9 +1,8 @@
 package fu.sep.cms.dto;
 
-import fu.sep.cms.entity.Status;
+import fu.sep.cms.entity.EnumClass.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 public record UnitDto(
         String id,
         @NotBlank(message = "Tiêu đề bài học không được để trống")

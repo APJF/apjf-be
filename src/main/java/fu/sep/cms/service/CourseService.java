@@ -8,7 +8,7 @@ import fu.sep.cms.entity.ApprovalRequest;
 import fu.sep.cms.entity.Chapter;
 import fu.sep.cms.entity.Course;
 import fu.sep.cms.entity.Course.Level;
-import fu.sep.cms.entity.Status;
+import fu.sep.cms.entity.EnumClass;
 import fu.sep.cms.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -67,7 +67,7 @@ public class CourseService {
 
         Course entity = toEntity(dto);
         entity.setId(dto.id());
-        entity.setStatus(Status.DRAFT); // Set as DRAFT until approved
+        entity.setStatus(EnumClass.Status.DRAFT); // Set as DRAFT until approved
 
         // Set prerequisite course if provided
         if (dto.prerequisiteCourseId() != null) {
@@ -103,7 +103,7 @@ public class CourseService {
         course.setLevel(dto.level());
         course.setImage(dto.image());
         course.setRequirement(dto.requirement());
-        course.setStatus(Status.DRAFT); // Reset to DRAFT when updated
+        course.setStatus(EnumClass.Status.DRAFT); // Reset to DRAFT when updated
 
         // Update prerequisite course
         if (dto.prerequisiteCourseId() != null) {
@@ -166,7 +166,7 @@ public class CourseService {
                 .level(Optional.ofNullable(dto.level()).orElse(Level.BEGINNER))
                 .image(dto.image())
                 .requirement(dto.requirement())
-                .status(Optional.ofNullable(dto.status()).orElse(Status.DRAFT))
+                .status(Optional.ofNullable(dto.status()).orElse(EnumClass.Status.DRAFT))
                 .build();
     }
 }

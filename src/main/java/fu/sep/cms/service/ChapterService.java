@@ -5,7 +5,7 @@ import fu.sep.cms.dto.UnitDto;
 import fu.sep.cms.entity.ApprovalRequest;
 import fu.sep.cms.entity.Chapter;
 import fu.sep.cms.entity.Course;
-import fu.sep.cms.entity.Status;
+import fu.sep.cms.entity.EnumClass;
 import fu.sep.cms.repository.ChapterRepository;
 import fu.sep.cms.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -58,7 +58,7 @@ public class ChapterService {
                 .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
-                .status(Status.DRAFT) // Set as DRAFT until approved
+                .status(EnumClass.Status.DRAFT) // Set as DRAFT until approved
                 .course(parent)
                 .build();
 
@@ -92,7 +92,7 @@ public class ChapterService {
 
         chapter.setTitle(dto.title());
         chapter.setDescription(dto.description());
-        chapter.setStatus(Status.DRAFT); // Reset to DRAFT when updated
+        chapter.setStatus(EnumClass.Status.DRAFT); // Reset to DRAFT when updated
 
         // Update prerequisite chapter
         if (dto.prerequisiteChapterId() != null) {

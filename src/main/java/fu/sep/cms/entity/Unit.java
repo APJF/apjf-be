@@ -31,7 +31,7 @@ public class Unit {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Status status;
+    private EnumClass.Status status;
 
     /* prerequisite unit */
     @ManyToOne
