@@ -60,23 +60,29 @@ public class CourseService {
 
     /* ---------- CREATE ---------- */
     public CourseDto create(@Valid CourseDto dto, String staffId) {
-        log.info("Staff {} creating new course with ID: {}", staffId, dto.id());
+        log.info("Nhân viên {} tạo khóa học mới với mã: {}", staffId, dto.id());
 
-        if (courseRepo.existsById(dto.id()))
-            throw new IllegalArgumentException("Course id already exists");
-
-        Course entity = toEntity(dto);
-        entity.setId(dto.id());
-        entity.setStatus(EnumClass.Status.DRAFT); // Set as DRAFT until approved
-
-        // Set prerequisite course if provided
+        // Validate prerequisite course exists
         if (dto.prerequisiteCourseId() != null) {
-            Course prerequisite = courseRepo.findById(dto.prerequisiteCourseId())
-                .orElseThrow(() -> new EntityNotFoundException("Prerequisite course not found"));
-            entity.setPrerequisiteCourse(prerequisite);
+            courseRepo.findById(dto.prerequisiteCourseId())
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học tiên quyết"));
         }
 
-        Course savedCourse = courseRepo.save(entity);
+        if (courseRepo.existsById(dto.id()))
+            throw new IllegalArgumentException("Mã khóa học đã tồn tại");
+
+        Course course = Course.builder()
+                .id(dto.id())
+                .title(dto.title())
+                .description(dto.description())
+                .duration(dto.duration())
+                .level(dto.level())
+                .prerequisiteCourse(dto.prerequisiteCourseId() != null ?
+                        courseRepo.findById(dto.prerequisiteCourseId()).orElse(null) : null)
+                .status(EnumClass.Status.DRAFT) // Set as DRAFT until approved
+                .build();
+
+        Course savedCourse = courseRepo.save(course);
 
         // Auto-create approval request for this new course
         approvalRequestService.autoCreateApprovalRequest(
@@ -86,29 +92,32 @@ public class CourseService {
                 staffId
         );
 
-        log.info("Successfully created course {} and approval request", savedCourse.getId());
+        log.info("Tạo khóa học {} và yêu cầu phê duyệt thành công", savedCourse.getId());
         return toDto(savedCourse);
     }
 
     /* ---------- UPDATE ---------- */
     public CourseDto update(String currentId, @Valid CourseDto dto, String staffId) {
-        log.info("Staff {} updating course with ID: {}", staffId, currentId);
+        log.info("Nhân viên {} cập nhật khóa học với mã: {}", staffId, currentId);
 
         Course course = courseRepo.findById(currentId)
-                .orElseThrow(() -> new EntityNotFoundException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+
+        // Validate prerequisite course exists
+        if (dto.prerequisiteCourseId() != null) {
+            courseRepo.findById(dto.prerequisiteCourseId())
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học tiên quyết"));
+        }
 
         course.setTitle(dto.title());
         course.setDescription(dto.description());
         course.setDuration(dto.duration());
         course.setLevel(dto.level());
-        course.setImage(dto.image());
-        course.setRequirement(dto.requirement());
         course.setStatus(EnumClass.Status.DRAFT); // Reset to DRAFT when updated
 
         // Update prerequisite course
         if (dto.prerequisiteCourseId() != null) {
-            Course prerequisite = courseRepo.findById(dto.prerequisiteCourseId())
-                .orElseThrow(() -> new EntityNotFoundException("Prerequisite course not found"));
+            Course prerequisite = courseRepo.findById(dto.prerequisiteCourseId()).orElse(null);
             course.setPrerequisiteCourse(prerequisite);
         } else {
             course.setPrerequisiteCourse(null);
@@ -117,8 +126,8 @@ public class CourseService {
         /* Đổi PK nếu khác */
         if (!dto.id().equals(currentId)) {
             if (courseRepo.existsById(dto.id()))
-                throw new IllegalArgumentException("New course id already exists");
-            courseRepo.delete(course);      // xóa hàng PK cũ
+                throw new IllegalArgumentException("Mã khóa học mới đã tồn tại");
+            courseRepo.delete(course);
             course.setId(dto.id());
         }
 
@@ -132,7 +141,7 @@ public class CourseService {
                 staffId
         );
 
-        log.info("Successfully updated course {} and created approval request", savedCourse.getId());
+        log.info("Cập nhật khóa học {} và tạo yêu cầu phê duyệt thành công", savedCourse.getId());
         return toDto(savedCourse);
     }
 

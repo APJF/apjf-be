@@ -43,15 +43,15 @@ public class UnitService {
 
     /* ---------- CREATE ---------- */
     public UnitDto create(@Valid UnitDto dto, String staffId) {
-        log.info("Staff {} creating new unit with ID: {}", staffId, dto.id());
+        log.info("Nhân viên {} tạo đơn vị học tập mới với mã: {}", staffId, dto.id());
 
         Chapter parent = chapterRepo.findById(dto.chapterId())
-                .orElseThrow(() -> new EntityNotFoundException("Chapter missing"));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học"));
 
         if (unitRepo.existsById(dto.id()))
-            throw new IllegalArgumentException("Unit id already exists");
+            throw new IllegalArgumentException("Mã đơn vị học tập đã tồn tại");
 
-        Unit u = Unit.builder()
+        Unit unit = Unit.builder()
                 .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
@@ -62,11 +62,11 @@ public class UnitService {
         // Set prerequisite unit if provided
         if (dto.prerequisiteUnitId() != null) {
             Unit prerequisite = unitRepo.findById(dto.prerequisiteUnitId())
-                .orElseThrow(() -> new EntityNotFoundException("Prerequisite unit not found"));
-            u.setPrerequisiteUnit(prerequisite);
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập tiên quyết"));
+            unit.setPrerequisiteUnit(prerequisite);
         }
 
-        Unit savedUnit = unitRepo.save(u);
+        Unit savedUnit = unitRepo.save(unit);
 
         // Auto-create approval request for this new unit
         approvalRequestService.autoCreateApprovalRequest(
@@ -76,16 +76,16 @@ public class UnitService {
                 staffId
         );
 
-        log.info("Successfully created unit {} and approval request", savedUnit.getId());
+        log.info("Tạo đơn vị học tập {} và yêu cầu phê duyệt thành công", savedUnit.getId());
         return toDto(savedUnit);
     }
 
     /* ---------- UPDATE ---------- */
     public UnitDto update(String currentId, @Valid UnitDto dto, String staffId) {
-        log.info("Staff {} updating unit with ID: {}", staffId, currentId);
+        log.info("Nhân viên {} cập nhật đơn vị học tập với mã: {}", staffId, currentId);
 
         Unit unit = unitRepo.findById(currentId)
-                .orElseThrow(() -> new EntityNotFoundException("Unit not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập"));
 
         unit.setTitle(dto.title());
         unit.setDescription(dto.description());
@@ -94,7 +94,7 @@ public class UnitService {
         // Update prerequisite unit
         if (dto.prerequisiteUnitId() != null) {
             Unit prerequisite = unitRepo.findById(dto.prerequisiteUnitId())
-                .orElseThrow(() -> new EntityNotFoundException("Prerequisite unit not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập tiên quyết"));
             unit.setPrerequisiteUnit(prerequisite);
         } else {
             unit.setPrerequisiteUnit(null);
@@ -103,7 +103,7 @@ public class UnitService {
         /* Đổi PK nếu khác */
         if (!dto.id().equals(currentId)) {
             if (unitRepo.existsById(dto.id()))
-                throw new IllegalArgumentException("New unit id already exists");
+                throw new IllegalArgumentException("Mã đơn vị học tập mới đã tồn tại");
             unitRepo.delete(unit);
             unit.setId(dto.id());
         }
@@ -118,7 +118,7 @@ public class UnitService {
                 staffId
         );
 
-        log.info("Successfully updated unit {} and created approval request", savedUnit.getId());
+        log.info("Cập nhật đơn vị học tập {} và tạo yêu cầu phê duyệt thành công", savedUnit.getId());
         return toDto(savedUnit);
     }
 

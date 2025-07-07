@@ -37,8 +37,8 @@ public class ApprovalRequestController {
     /* -------- GET /api/approval-requests/pending - Lấy các approval requests đang chờ duyệt -------- */
     @GetMapping("/pending")
     public ResponseEntity<ApiResponse<List<ApprovalRequestDto>>> getPending() {
-        log.info("Manager requesting pending approval requests");
-        List<ApprovalRequestDto> pendingRequests = approvalRequestService.findAllPending();
+        log.info("Quản lý yêu cầu danh sách approval requests đang chờ duyệt");
+        List<ApprovalRequestDto> pendingRequests = approvalRequestService.findPending();
         return ResponseEntity.ok(
                 ApiResponse.ok("Danh sách approval requests chờ duyệt", pendingRequests));
     }

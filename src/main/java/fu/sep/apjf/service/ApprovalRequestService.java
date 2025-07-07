@@ -48,8 +48,8 @@ public class ApprovalRequestService {
      * Get all pending approval requests waiting for manager review
      */
     @Transactional(readOnly = true)
-    public List<ApprovalRequestDto> findAllPending() {
-        log.info("Fetching all pending approval requests");
+    public List<ApprovalRequestDto> findPending() {
+        log.info("Lấy danh sách tất cả yêu cầu phê duyệt đang chờ");
         return approvalRequestRepository.findByDecision(Decision.PENDING)
                 .stream()
                 .map(this::toDto)
@@ -61,7 +61,7 @@ public class ApprovalRequestService {
      */
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findAll() {
-        log.info("Fetching all approval requests");
+        log.info("Lấy danh sách tất cả yêu cầu phê duyệt");
         return approvalRequestRepository.findAll()
                 .stream()
                 .map(this::toDto)
@@ -73,7 +73,7 @@ public class ApprovalRequestService {
      */
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByTargetType(TargetType targetType) {
-        log.info("Fetching approval requests for target type: {}", targetType);
+        log.info("Lấy danh sách yêu cầu phê duyệt theo loại đối tượng: {}", targetType);
         return approvalRequestRepository.findByTargetType(targetType)
                 .stream()
                 .map(this::toDto)
@@ -85,9 +85,9 @@ public class ApprovalRequestService {
      */
     @Transactional(readOnly = true)
     public ApprovalRequestDto findById(Integer id) {
-        log.info("Fetching approval request with ID: {}", id);
+        log.info("Lấy chi tiết yêu cầu phê duyệt với ID: {}", id);
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy approval request với ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu phê duyệt"));
         return toDto(approvalRequest);
     }
 
@@ -96,7 +96,7 @@ public class ApprovalRequestService {
      */
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByCreatedBy(String staffId) {
-        log.info("Fetching approval requests created by: {}", staffId);
+        log.info("Lấy danh sách yêu cầu phê duyệt được tạo bởi: {}", staffId);
         return approvalRequestRepository.findByCreatedBy(staffId)
                 .stream()
                 .map(this::toDto)
@@ -108,7 +108,7 @@ public class ApprovalRequestService {
      */
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByReviewedBy(String managerId) {
-        log.info("Fetching approval requests reviewed by: {}", managerId);
+        log.info("Lấy danh sách yêu cầu phê duyệt được duyệt bởi: {}", managerId);
         return approvalRequestRepository.findByReviewedBy(managerId)
                 .stream()
                 .map(this::toDto)
@@ -121,7 +121,7 @@ public class ApprovalRequestService {
      * Staff creates a new approval request (kept for compatibility but not used in auto-flow)
      */
     public ApprovalRequestDto createApprovalRequest(CreateApprovalRequestDto dto, String staffId) {
-        log.info("Staff {} creating approval request for {} with ID: {}",
+        log.info("Nhân viên {} tạo yêu cầu phê duyệt cho {} với ID: {}",
                 staffId, dto.targetType(), dto.targetId());
 
         // Check if there's already a pending request for this target
@@ -143,7 +143,7 @@ public class ApprovalRequestService {
         // For now, we'll rely on the targetType field - entity relationships will be set later
         ApprovalRequest saved = approvalRequestRepository.save(approvalRequest);
 
-        log.info("Successfully created approval request ID: {} for target: {}",
+        log.info("Tạo yêu cầu phê duyệt thành công với ID: {} cho đối tượng: {}",
                 saved.getId(), dto.targetId());
         return toDto(saved);
     }
@@ -156,13 +156,13 @@ public class ApprovalRequestService {
      */
     public void autoCreateApprovalRequest(TargetType targetType, String targetId,
                                         ApprovalRequest.RequestType requestType, String staffId) {
-        log.info("Auto-creating approval request for {} {} by staff {}", requestType, targetType, staffId);
+        log.info("Tự động tạo yêu cầu phê duyệt cho {} {} bởi nhân viên {}", requestType, targetType, staffId);
 
         Optional<ApprovalRequest> existingPending = approvalRequestRepository
                 .findPendingRequestByTargetId(targetId);
 
         if (existingPending.isPresent()) {
-            log.warn("Approval request already exists for target {}, skipping auto-creation", targetId);
+            log.warn("Yêu cầu phê duyệt đã tồn tại cho đối tượng {}, bỏ qua việc tạo tự động", targetId);
             return;
         }
 
@@ -176,22 +176,22 @@ public class ApprovalRequestService {
         switch (targetType) {
             case COURSE -> {
                 Course course = courseRepository.findById(targetId)
-                        .orElseThrow(() -> new EntityNotFoundException("Course not found: " + targetId));
+                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học: " + targetId));
                 builder.course(course);
             }
             case CHAPTER -> {
                 Chapter chapter = chapterRepository.findById(targetId)
-                        .orElseThrow(() -> new EntityNotFoundException("Chapter not found: " + targetId));
+                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học: " + targetId));
                 builder.chapter(chapter);
             }
             case UNIT -> {
                 Unit unit = unitRepository.findById(targetId)
-                        .orElseThrow(() -> new EntityNotFoundException("Unit not found: " + targetId));
+                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập: " + targetId));
                 builder.unit(unit);
             }
             case MATERIAL -> {
                 Material material = materialRepository.findById(targetId)
-                        .orElseThrow(() -> new EntityNotFoundException("Material not found: " + targetId));
+                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy tài liệu: " + targetId));
                 builder.material(material);
             }
             default -> throw new IllegalArgumentException("Unknown targetType: " + targetType);
@@ -200,18 +200,18 @@ public class ApprovalRequestService {
         ApprovalRequest approvalRequest = builder.build();
         approvalRequestRepository.save(approvalRequest);
 
-        log.info("Successfully auto-created approval request for {} {}", targetType, targetId);
+        log.info("Tự động tạo yêu cầu phê duyệt thành công cho {} {}", targetType, targetId);
     }
 
     /**
      * Manager approves or rejects an approval request with feedback
      */
     public ApprovalRequestDto processApproval(Integer id, @Valid ApprovalDecisionDto decision, String managerId) {
-        log.info("Processing approval request ID: {} by manager: {} with decision: {}",
+        log.info("Xử lý yêu cầu phê duyệt ID: {} bởi quản lý: {} với quyết định: {}",
                 id, managerId, decision.decision());
 
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy approval request với ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu phê duyệt với ID: " + id));
 
         // Validate current status
         if (approvalRequest.getDecision() != Decision.PENDING) {
@@ -231,7 +231,7 @@ public class ApprovalRequestService {
 
         ApprovalRequest saved = approvalRequestRepository.save(approvalRequest);
 
-        log.info("Successfully processed approval request ID: {} with decision: {}", id, decision.decision());
+        log.info("Xử lý yêu cầu phê duyệt thành công ID: {} với quyết định: {}", id, decision.decision());
         return toDto(saved);
     }
 
