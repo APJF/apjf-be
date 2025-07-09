@@ -7,7 +7,6 @@ import fu.sep.apjf.dto.UnitDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Course;
-import fu.sep.apjf.entity.Course.Level;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -172,7 +171,7 @@ public class CourseService {
                 .title(dto.title())
                 .description(dto.description())
                 .duration(dto.duration())
-                .level(Optional.ofNullable(dto.level()).orElse(Level.BEGINNER))
+                .level(Optional.ofNullable(dto.level()).orElse(EnumClass.Level.N5))
                 .image(dto.image())
                 .requirement(dto.requirement())
                 .status(Optional.ofNullable(dto.status()).orElse(EnumClass.Status.DRAFT))

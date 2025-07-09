@@ -1,6 +1,5 @@
 package fu.sep.apjf.dto;
 
-import fu.sep.apjf.entity.Course.Level;
 import fu.sep.apjf.entity.EnumClass;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,7 +19,7 @@ public record CourseDto(
         @NotNull(message = "Thời gian khóa học không được để trống")
         BigDecimal duration,
         @NotNull(message = "Cấp độ khóa học không được để trống")
-        Level level,
+        EnumClass.Level level,
         String image,
         String requirement,
         EnumClass.Status status,
