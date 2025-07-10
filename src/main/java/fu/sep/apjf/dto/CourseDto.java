@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 /* -------- Course -------- */
 public record CourseDto(
@@ -23,6 +24,7 @@ public record CourseDto(
         String image,
         String requirement,
         EnumClass.Status status,
-        String prerequisiteCourseId
+        String prerequisiteCourseId,
+        Set<TopicDto> topics
 ) {
 }

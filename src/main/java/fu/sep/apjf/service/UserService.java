@@ -165,6 +165,21 @@ public class UserService {
         tokenRepository.deleteAllByUserAndType(user, TokenType.RESET_PASSWORD);
     }
 
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Email không tồn tại"));
+
+        // Kiểm tra mật khẩu cũ có đúng không
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadCredentialsException("Mật khẩu không chính xác");
+        }
+
+        // Đặt mật khẩu mới
+        user.setPassword(passwordEncoder.encode(newPassword));
+        save(user);
+    }
+
     private void createAndSendToken(User user, TokenType type) {
         tokenRepository.deleteAllByUserAndType(user, type);
         LocalDateTime now = LocalDateTime.now();

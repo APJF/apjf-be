@@ -3,6 +3,7 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.ChapterDto;
 import fu.sep.apjf.dto.CourseDetailDto;
 import fu.sep.apjf.dto.CourseDto;
+import fu.sep.apjf.dto.TopicDto;
 import fu.sep.apjf.dto.UnitDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Chapter;
@@ -13,6 +14,10 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +42,12 @@ public class CourseService {
         return courseRepo.findAll().stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CourseDto> findAll(int page, int size) {
+        return courseRepo.findAll(PageRequest.of(page, size))
+                .map(this::toDto);
     }
 
     @Transactional(readOnly = true)
@@ -144,13 +155,47 @@ public class CourseService {
         return toDto(savedCourse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<CourseDto> findAll(int page, int size, String sortBy, String direction,
+                                  String title, EnumClass.Level level, EnumClass.Status status) {
+        Sort sort = Sort.by(direction.equalsIgnoreCase("desc") ?
+                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        // Xây dựng điều kiện tìm kiếm
+        Specification<Course> spec = Specification.where(null);
+
+        if (title != null && !title.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.like(criteriaBuilder.lower(root.get("title")),
+                    "%" + title.toLowerCase() + "%"));
+        }
+
+        if (level != null) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("level"), level));
+        }
+
+        if (status != null) {
+            spec = spec.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("status"), status));
+        }
+
+        return courseRepo.findAll(spec, pageRequest).map(this::toDto);
+    }
+
     /* ---------- Mapping helpers ---------- */
 
     private CourseDto toDto(Course c) {
+        Set<TopicDto> topicDtos = c.getTopics().stream()
+                .map(topic -> new TopicDto(topic.getId(), topic.getName()))
+                .collect(Collectors.toSet());
+
         return new CourseDto(c.getId(), c.getTitle(), c.getDescription(),
                 c.getDuration(), c.getLevel(),
                 c.getImage(), c.getRequirement(), c.getStatus(),
-                c.getPrerequisiteCourse() != null ? c.getPrerequisiteCourse().getId() : null);
+                c.getPrerequisiteCourse() != null ? c.getPrerequisiteCourse().getId() : null,
+                topicDtos);
     }
 
     private ChapterDto toChapterDto(Chapter ch) {

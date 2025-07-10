@@ -3,14 +3,15 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.ApiResponse;
 import fu.sep.apjf.dto.CourseDetailDto;
 import fu.sep.apjf.dto.CourseDto;
+import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.service.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/courses")
@@ -21,9 +22,17 @@ public class CourseController {
 
     /* -------- GET /api/courses -------- */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CourseDto>>> getAll() {
+    public ResponseEntity<ApiResponse<Page<CourseDto>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "title") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) EnumClass.Level level,
+            @RequestParam(required = false) EnumClass.Status status) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Danh sách khóa học", courseService.findAll()));
+                ApiResponse.ok("Danh sách khóa học",
+                        courseService.findAll(page, size, sortBy, direction, title, level, status)));
     }
 
     /* -------- GET /api/courses/{id} -------- */

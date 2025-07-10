@@ -1,9 +1,6 @@
 package fu.sep.apjf.controller;
 
-import fu.sep.apjf.dto.ApiResponse;
-import fu.sep.apjf.dto.LoginDTO;
-import fu.sep.apjf.dto.LoginResponse;
-import fu.sep.apjf.dto.RegisterDTO;
+import fu.sep.apjf.dto.*;
 import fu.sep.apjf.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +52,16 @@ public class AuthController {
             @RequestParam String newPassword) {
         userService.resetPassword(email, otp, newPassword);
         return new ResponseEntity<>(ApiResponse.ok("Đặt lại mật khẩu thành công.", null), HttpStatus.OK);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Object>> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
+        userService.changePassword(
+                changePasswordDTO.email(),
+                changePasswordDTO.oldPassword(),
+                changePasswordDTO.newPassword()
+        );
+        return new ResponseEntity<>(ApiResponse.ok("Thay đổi mật khẩu thành công.", null), HttpStatus.OK);
     }
 
 }
