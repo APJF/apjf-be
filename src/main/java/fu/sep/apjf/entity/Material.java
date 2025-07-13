@@ -23,7 +23,7 @@ public class Material {
     @Column(length = 36)
     private String id;
 
-    @Column(length = 255)
+    @Column()
     private String description;
 
     @Column(name = "file_url", nullable = false, length = 512)

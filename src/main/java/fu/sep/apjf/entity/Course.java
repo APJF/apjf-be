@@ -34,7 +34,7 @@ public class Course {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Level level;
+    private EnumClass.Level level;
 
     private String image;
 
@@ -71,5 +71,5 @@ public class Course {
     @Builder.Default
     private Set<ApprovalRequest> approvalRequests = new HashSet<>();
 
-    public enum Level {BEGINNER, INTERMEDIATE, ADVANCED}
+
 }

@@ -81,7 +81,6 @@ public class ExamResultService {
             examResultAnswerRepository.save(answer);
         }
 
-        // Tính điểm và cập nhật kết quả
         float score = (float) correctAnswers / totalQuestions * 10;
         EnumClass.ExamStatus status = score >= 5.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED;
 

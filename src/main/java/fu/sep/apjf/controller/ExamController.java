@@ -2,15 +2,14 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.CreateExamDto;
 import fu.sep.apjf.dto.ExamDto;
-import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.EnumClass;
+import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.service.ExamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/exams")
@@ -24,7 +23,7 @@ public class ExamController {
         List<Exam> exams = examService.getAllExams();
         List<ExamDto> examDtos = exams.stream()
                 .map(examService::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(examDtos);
     }
 
@@ -39,7 +38,7 @@ public class ExamController {
         List<Exam> exams = examService.getExamsByScopeType(scopeType);
         List<ExamDto> examDtos = exams.stream()
                 .map(examService::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(examDtos);
     }
 
@@ -48,7 +47,7 @@ public class ExamController {
         List<Exam> exams = examService.searchExams(keyword);
         List<ExamDto> examDtos = exams.stream()
                 .map(examService::convertToDto)
-                .collect(Collectors.toList());
+                .toList();
         return ResponseEntity.ok(examDtos);
     }
 

@@ -80,7 +80,7 @@ public class ApprovalRequest {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Decision decision = Decision.PENDING;
-    @Column(length = 255)
+    @Column()
     private String feedback;
 
     /* ---------- validation: đúng 1 FK & khớp enum ---------- */

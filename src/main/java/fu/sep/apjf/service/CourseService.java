@@ -3,17 +3,21 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.ChapterDto;
 import fu.sep.apjf.dto.CourseDetailDto;
 import fu.sep.apjf.dto.CourseDto;
+import fu.sep.apjf.dto.TopicDto;
 import fu.sep.apjf.dto.UnitDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Course;
-import fu.sep.apjf.entity.Course.Level;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +42,12 @@ public class CourseService {
         return courseRepo.findAll().stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CourseDto> findAll(int page, int size) {
+        return courseRepo.findAll(PageRequest.of(page, size))
+                .map(this::toDto);
     }
 
     @Transactional(readOnly = true)
@@ -145,13 +155,50 @@ public class CourseService {
         return toDto(savedCourse);
     }
 
+    @Transactional(readOnly = true)
+    public Page<CourseDto> findAll(int page, int size, String sortBy, String direction,
+                                  String title, EnumClass.Level level, EnumClass.Status status) {
+        // Tạo Sort object
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(sortDirection, sortBy);
+
+        // Tạo PageRequest
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        // Tạo Specification cho filtering
+        Specification<Course> spec = (root, query, cb) -> cb.conjunction();
+
+        if (title != null && !title.trim().isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
+        }
+
+        if (level != null) {
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("level"), level));
+        }
+
+        if (status != null) {
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("status"), status));
+        }
+
+        return courseRepo.findAll(spec, pageRequest).map(this::toDto);
+    }
+
     /* ---------- Mapping helpers ---------- */
 
     private CourseDto toDto(Course c) {
+        Set<TopicDto> topicDtos = c.getTopics().stream()
+                .map(topic -> new TopicDto(topic.getId(), topic.getName()))
+                .collect(Collectors.toSet());
+
         return new CourseDto(c.getId(), c.getTitle(), c.getDescription(),
                 c.getDuration(), c.getLevel(),
                 c.getImage(), c.getRequirement(), c.getStatus(),
-                c.getPrerequisiteCourse() != null ? c.getPrerequisiteCourse().getId() : null);
+                c.getPrerequisiteCourse() != null ? c.getPrerequisiteCourse().getId() : null,
+                topicDtos);
     }
 
     private ChapterDto toChapterDto(Chapter ch) {
@@ -165,17 +212,5 @@ public class CourseService {
                 ch.getStatus(), ch.getCourse().getId(),
                 ch.getPrerequisiteChapter() != null ? ch.getPrerequisiteChapter().getId() : null,
                 units);
-    }
-
-    private Course toEntity(CourseDto dto) {
-        return Course.builder()
-                .title(dto.title())
-                .description(dto.description())
-                .duration(dto.duration())
-                .level(Optional.ofNullable(dto.level()).orElse(Level.BEGINNER))
-                .image(dto.image())
-                .requirement(dto.requirement())
-                .status(Optional.ofNullable(dto.status()).orElse(EnumClass.Status.DRAFT))
-                .build();
     }
 }

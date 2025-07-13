@@ -18,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,6 +41,7 @@ public class UserService {
     private static final Duration OTP_THROTTLE = Duration.ofMinutes(1);
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    @Lazy
     private final PasswordEncoder passwordEncoder;
     private final OtpUtils otpUtils;
     private final EmailUtils emailUtils;
@@ -165,6 +167,21 @@ public class UserService {
         tokenRepository.deleteAllByUserAndType(user, TokenType.RESET_PASSWORD);
     }
 
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Email không tồn tại"));
+
+        // Kiểm tra mật khẩu cũ có đúng không
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadCredentialsException("Mật khẩu không chính xác");
+        }
+
+        // Đặt mật khẩu mới
+        user.setPassword(passwordEncoder.encode(newPassword));
+        save(user);
+    }
+
     private void createAndSendToken(User user, TokenType type) {
         tokenRepository.deleteAllByUserAndType(user, type);
         LocalDateTime now = LocalDateTime.now();
@@ -190,6 +207,11 @@ public class UserService {
 
 
     public User save(User user) {
+        if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
+            Authority defaultRole = authorityRepository.findByAuthority("ROLE_USER")
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy role mặc định ROLE_USER"));
+            user.setAuthorities(List.of(defaultRole));
+        }
         return userRepository.save(user);
     }
 }
