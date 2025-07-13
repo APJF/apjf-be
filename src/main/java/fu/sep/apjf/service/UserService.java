@@ -18,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
@@ -40,6 +41,7 @@ public class UserService {
     private static final Duration OTP_THROTTLE = Duration.ofMinutes(1);
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
+    @Lazy
     private final PasswordEncoder passwordEncoder;
     private final OtpUtils otpUtils;
     private final EmailUtils emailUtils;
@@ -205,6 +207,11 @@ public class UserService {
 
 
     public User save(User user) {
+        if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
+            Authority defaultRole = authorityRepository.findByAuthority("ROLE_USER")
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy role mặc định ROLE_USER"));
+            user.setAuthorities(List.of(defaultRole));
+        }
         return userRepository.save(user);
     }
 }

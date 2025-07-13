@@ -1,8 +1,10 @@
 package fu.sep.apjf.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -13,5 +15,14 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:uploads/");
         registry.addResourceHandler("/uploads/avatars/**")
                 .addResourceLocations("file:/Users/phanphuong/pcols-uploads/avatars/");
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }

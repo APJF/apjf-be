@@ -12,10 +12,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-#  sql:
-#    init:
-#      mode: always
-#      data-locations: classpath:data.sql
+    open-in-view: false
   mail:
     host: smtp.gmail.com
     port: 587
@@ -37,8 +34,12 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope: openid, profile, email
+            scope:
+              - openid
+              - profile
+              - email
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-name: Google
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
@@ -46,5 +47,7 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: name
 
-
-
+# Cấu hình cho OAuth2 redirect
+app:
+  oauth2:
+    redirectUri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/redirect}

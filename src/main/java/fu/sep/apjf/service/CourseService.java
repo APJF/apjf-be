@@ -158,27 +158,30 @@ public class CourseService {
     @Transactional(readOnly = true)
     public Page<CourseDto> findAll(int page, int size, String sortBy, String direction,
                                   String title, EnumClass.Level level, EnumClass.Status status) {
-        Sort sort = Sort.by(direction.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
+        // Tạo Sort object
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sort = Sort.by(sortDirection, sortBy);
+
+        // Tạo PageRequest
         PageRequest pageRequest = PageRequest.of(page, size, sort);
 
-        // Xây dựng điều kiện tìm kiếm
-        Specification<Course> spec = Specification.where(null);
+        // Tạo Specification cho filtering
+        Specification<Course> spec = (root, query, cb) -> cb.conjunction();
 
-        if (title != null && !title.isEmpty()) {
-            spec = spec.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.like(criteriaBuilder.lower(root.get("title")),
-                    "%" + title.toLowerCase() + "%"));
+        if (title != null && !title.trim().isEmpty()) {
+            spec = spec.and((root, query, cb) ->
+                cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%"));
         }
 
         if (level != null) {
-            spec = spec.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("level"), level));
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("level"), level));
         }
 
         if (status != null) {
-            spec = spec.and((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("status"), status));
+            spec = spec.and((root, query, cb) ->
+                cb.equal(root.get("status"), status));
         }
 
         return courseRepo.findAll(spec, pageRequest).map(this::toDto);
@@ -209,17 +212,5 @@ public class CourseService {
                 ch.getStatus(), ch.getCourse().getId(),
                 ch.getPrerequisiteChapter() != null ? ch.getPrerequisiteChapter().getId() : null,
                 units);
-    }
-
-    private Course toEntity(CourseDto dto) {
-        return Course.builder()
-                .title(dto.title())
-                .description(dto.description())
-                .duration(dto.duration())
-                .level(Optional.ofNullable(dto.level()).orElse(EnumClass.Level.N5))
-                .image(dto.image())
-                .requirement(dto.requirement())
-                .status(Optional.ofNullable(dto.status()).orElse(EnumClass.Status.DRAFT))
-                .build();
     }
 }
