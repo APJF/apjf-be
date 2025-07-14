@@ -23,7 +23,7 @@ public class Token {
     private User user;
 
     @Column(name = "token", nullable = false, length = 64)
-    private String token;
+    private String tokenValue;
 
     @Column(name = "requested_time", nullable = false)
     private LocalDateTime requestedTime;
@@ -31,9 +31,6 @@ public class Token {
     @Column(name = "expiration_time", nullable = false)
     private LocalDateTime expirationTime;
 
-    /**
-     * Loại token: đăng ký, reset mật khẩu, verify email…
-     */
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)
     private TokenType type;

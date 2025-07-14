@@ -11,7 +11,7 @@ public class ExamDto {
     private String id;
     private String title;
     private String description;
-    private Integer duration;
+    private Double duration;
     private EnumClass.ExamScopeType examScopeType;
     private LocalDateTime createdAt;
     private List<QuestionDto> questions;

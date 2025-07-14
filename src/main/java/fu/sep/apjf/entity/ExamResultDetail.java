@@ -1,7 +1,7 @@
 package fu.sep.apjf.entity;
 
-import lombok.*;
 import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter
@@ -9,8 +9,8 @@ import jakarta.persistence.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "exam_result_answers")
-public class ExamResultAnswer {
+@Table(name = "exam_result_detail")
+public class ExamResultDetail {
 
     @Id
     private String id;

@@ -11,10 +11,12 @@ import fu.sep.apjf.repository.CourseRepository;
 import fu.sep.apjf.repository.ChapterRepository;
 import fu.sep.apjf.repository.UnitRepository;
 import fu.sep.apjf.repository.MaterialRepository;
+import fu.sep.apjf.repository.UserRepository;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.entity.Material;
+import fu.sep.apjf.entity.User;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class ApprovalRequestService {
     private final ChapterRepository chapterRepository;
     private final UnitRepository unitRepository;
     private final MaterialRepository materialRepository;
+    private final UserRepository userRepository;
 
     /* ---------- READ OPERATIONS ---------- */
 
@@ -97,7 +100,9 @@ public class ApprovalRequestService {
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByCreatedBy(String staffId) {
         log.info("Lấy danh sách yêu cầu phê duyệt được tạo bởi: {}", staffId);
-        return approvalRequestRepository.findByCreatedBy(staffId)
+        User creator = userRepository.findById(Long.parseLong(staffId))
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user: " + staffId));
+        return approvalRequestRepository.findByCreator(creator)
                 .stream()
                 .map(this::toDto)
                 .toList();
@@ -109,7 +114,9 @@ public class ApprovalRequestService {
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByReviewedBy(String managerId) {
         log.info("Lấy danh sách yêu cầu phê duyệt được duyệt bởi: {}", managerId);
-        return approvalRequestRepository.findByReviewedBy(managerId)
+        User reviewer = userRepository.findById(Long.parseLong(managerId))
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy manager: " + managerId));
+        return approvalRequestRepository.findByReviewer(reviewer)
                 .stream()
                 .map(this::toDto)
                 .toList();
@@ -124,6 +131,10 @@ public class ApprovalRequestService {
         log.info("Nhân viên {} tạo yêu cầu phê duyệt cho {} với ID: {}",
                 staffId, dto.targetType(), dto.targetId());
 
+        // Tìm user creator
+        User creator = userRepository.findById(Long.parseLong(staffId))
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user: " + staffId));
+
         // Check if there's already a pending request for this target
         Optional<ApprovalRequest> existingPending = approvalRequestRepository
                 .findPendingRequestByTargetId(dto.targetId());
@@ -136,7 +147,7 @@ public class ApprovalRequestService {
                 .targetType(dto.targetType())
                 .requestType(dto.requestType())
                 .decision(Decision.PENDING)
-                .createdBy(staffId)
+                .creator(creator)
                 .createdAt(Instant.now())
                 .build();
 
@@ -158,6 +169,10 @@ public class ApprovalRequestService {
                                         ApprovalRequest.RequestType requestType, String staffId) {
         log.info("Tự động tạo yêu cầu phê duyệt cho {} {} bởi nhân viên {}", requestType, targetType, staffId);
 
+        // Tìm user creator
+        User creator = userRepository.findById(Long.parseLong(staffId))
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user: " + staffId));
+
         Optional<ApprovalRequest> existingPending = approvalRequestRepository
                 .findPendingRequestByTargetId(targetId);
 
@@ -170,7 +185,7 @@ public class ApprovalRequestService {
                 .targetType(targetType)
                 .requestType(requestType)
                 .decision(Decision.PENDING)
-                .createdBy(staffId)
+                .creator(creator)
                 .createdAt(Instant.now());
 
         switch (targetType) {
@@ -213,6 +228,10 @@ public class ApprovalRequestService {
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu phê duyệt với ID: " + id));
 
+        // Tìm user reviewer
+        User reviewer = userRepository.findById(Long.parseLong(managerId))
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy manager: " + managerId));
+
         // Validate current status
         if (approvalRequest.getDecision() != Decision.PENDING) {
             throw new IllegalArgumentException("Approval request này đã được xử lý với trạng thái: " + approvalRequest.getDecision());
@@ -226,7 +245,7 @@ public class ApprovalRequestService {
         // Update approval request
         approvalRequest.setDecision(decision.decision());
         approvalRequest.setFeedback(decision.feedback());
-        approvalRequest.setReviewedBy(managerId);
+        approvalRequest.setReviewer(reviewer);
         approvalRequest.setReviewedAt(Instant.now());
 
         ApprovalRequest saved = approvalRequestRepository.save(approvalRequest);
@@ -280,9 +299,9 @@ public class ApprovalRequestService {
                 ar.getRequestType(),
                 ar.getDecision(),
                 ar.getFeedback(),
-                ar.getCreatedBy(),
+                ar.getCreator() != null ? ar.getCreator().getId().toString() : null,
                 ar.getCreatedAt(),
-                ar.getReviewedBy(),
+                ar.getReviewer() != null ? ar.getReviewer().getId().toString() : null,
                 ar.getReviewedAt()
         );
     }

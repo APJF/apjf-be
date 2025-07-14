@@ -3,7 +3,7 @@ package fu.sep.apjf.dto;
 import lombok.Data;
 
 @Data
-public class ExamResultAnswerDto {
+public class ExamResultDetailDto {
     private String id;
     private String userAnswer;
     private Boolean isCorrect;

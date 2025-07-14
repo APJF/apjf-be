@@ -4,6 +4,11 @@ import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.ApprovalRequest.Decision;
 import fu.sep.apjf.entity.ApprovalRequest.RequestType;
 import fu.sep.apjf.entity.ApprovalRequest.TargetType;
+import fu.sep.apjf.entity.User;
+import fu.sep.apjf.entity.Course;
+import fu.sep.apjf.entity.Chapter;
+import fu.sep.apjf.entity.Unit;
+import fu.sep.apjf.entity.Material;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,10 +20,12 @@ import java.util.Optional;
 
 /**
  * Repository for ApprovalRequest entity
- * Provides query methods for filtering approval requests by various criteria
+ * Uses Spring Data JPA naming conventions for automatic query generation
  */
 @Repository
 public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest, Integer> {
+
+    // ========== BASIC FINDER METHODS (Using naming convention) ==========
 
     /**
      * Find approval requests by decision status
@@ -36,14 +43,36 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     List<ApprovalRequest> findByRequestType(RequestType requestType);
 
     /**
-     * Find approval requests created by specific staff member
+     * Find approval requests created by specific user
      */
-    List<ApprovalRequest> findByCreatedBy(String createdBy);
+    List<ApprovalRequest> findByCreator(User creator);
 
     /**
-     * Find approval requests reviewed by specific manager
+     * Find approval requests reviewed by specific user
      */
-    List<ApprovalRequest> findByReviewedBy(String reviewedBy);
+    List<ApprovalRequest> findByReviewer(User reviewer);
+
+    /**
+     * Find approval requests for specific course
+     */
+    List<ApprovalRequest> findByCourse(Course course);
+
+    /**
+     * Find approval requests for specific chapter
+     */
+    List<ApprovalRequest> findByChapter(Chapter chapter);
+
+    /**
+     * Find approval requests for specific unit
+     */
+    List<ApprovalRequest> findByUnit(Unit unit);
+
+    /**
+     * Find approval requests for specific material
+     */
+    List<ApprovalRequest> findByMaterial(Material material);
+
+    // ========== COMBINED CRITERIA (Using naming convention) ==========
 
     /**
      * Find approval requests by decision and target type
@@ -56,6 +85,23 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     List<ApprovalRequest> findByDecisionAndRequestType(Decision decision, RequestType requestType);
 
     /**
+     * Find approval requests by target type and creator
+     */
+    List<ApprovalRequest> findByTargetTypeAndCreator(TargetType targetType, User creator);
+
+    /**
+     * Find approval requests by decision and creator
+     */
+    List<ApprovalRequest> findByDecisionAndCreator(Decision decision, User creator);
+
+    /**
+     * Find approval requests by decision and reviewer
+     */
+    List<ApprovalRequest> findByDecisionAndReviewer(Decision decision, User reviewer);
+
+    // ========== DATE RANGE QUERIES (Using naming convention) ==========
+
+    /**
      * Find approval requests created within date range
      */
     List<ApprovalRequest> findByCreatedAtBetween(Instant startDate, Instant endDate);
@@ -66,46 +112,111 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     List<ApprovalRequest> findByReviewedAtBetween(Instant startDate, Instant endDate);
 
     /**
-     * Find approval requests for specific course
+     * Find approval requests created after specific date
      */
-    @Query("SELECT ar FROM ApprovalRequest ar WHERE ar.course.id = :courseId")
-    List<ApprovalRequest> findByCourseId(@Param("courseId") String courseId);
+    List<ApprovalRequest> findByCreatedAtAfter(Instant date);
 
     /**
-     * Find approval requests for specific chapter
+     * Find approval requests reviewed before specific date
      */
-    @Query("SELECT ar FROM ApprovalRequest ar WHERE ar.chapter.id = :chapterId")
-    List<ApprovalRequest> findByChapterId(@Param("chapterId") String chapterId);
+    List<ApprovalRequest> findByReviewedAtBefore(Instant date);
+
+    // ========== COUNTING METHODS (Using naming convention) ==========
 
     /**
-     * Find approval requests for specific unit
-     */
-    @Query("SELECT ar FROM ApprovalRequest ar WHERE ar.unit.id = :unitId")
-    List<ApprovalRequest> findByUnitId(@Param("unitId") String unitId);
-
-    /**
-     * Find approval requests for specific material
-     */
-    @Query("SELECT ar FROM ApprovalRequest ar WHERE ar.material.id = :materialId")
-    List<ApprovalRequest> findByMaterialId(@Param("materialId") String materialId);
-
-    /**
-     * Count pending approval requests
+     * Count approval requests by decision
      */
     long countByDecision(Decision decision);
 
     /**
-     * Count approval requests by manager
+     * Count approval requests by target type
      */
-    long countByReviewedBy(String managerId);
+    long countByTargetType(TargetType targetType);
 
     /**
-     * Count approval requests by staff
+     * Count approval requests by creator
      */
-    long countByCreatedBy(String staffId);
+    long countByCreator(User creator);
+
+    /**
+     * Count approval requests by reviewer
+     */
+    long countByReviewer(User reviewer);
+
+    /**
+     * Count approval requests by decision and target type
+     */
+    long countByDecisionAndTargetType(Decision decision, TargetType targetType);
+
+    // ========== EXISTENCE CHECKS (Using naming convention) ==========
+
+    /**
+     * Check if approval request exists for specific course
+     */
+    boolean existsByCourse(Course course);
+
+    /**
+     * Check if approval request exists for specific chapter
+     */
+    boolean existsByChapter(Chapter chapter);
+
+    /**
+     * Check if approval request exists for specific unit
+     */
+    boolean existsByUnit(Unit unit);
+
+    /**
+     * Check if approval request exists for specific material
+     */
+    boolean existsByMaterial(Material material);
+
+    /**
+     * Check if pending approval request exists for specific course
+     */
+    boolean existsByCourseAndDecision(Course course, Decision decision);
+
+    /**
+     * Check if pending approval request exists for specific chapter
+     */
+    boolean existsByChapterAndDecision(Chapter chapter, Decision decision);
+
+    /**
+     * Check if pending approval request exists for specific unit
+     */
+    boolean existsByUnitAndDecision(Unit unit, Decision decision);
+
+    /**
+     * Check if pending approval request exists for specific material
+     */
+    boolean existsByMaterialAndDecision(Material material, Decision decision);
+
+    // ========== ORDERING QUERIES (Using naming convention) ==========
+
+    /**
+     * Find approval requests ordered by creation date (newest first)
+     */
+    List<ApprovalRequest> findByOrderByCreatedAtDesc();
+
+    /**
+     * Find approval requests by decision ordered by creation date
+     */
+    List<ApprovalRequest> findByDecisionOrderByCreatedAtDesc(Decision decision);
+
+    /**
+     * Find approval requests by creator ordered by creation date
+     */
+    List<ApprovalRequest> findByCreatorOrderByCreatedAtDesc(User creator);
+
+    /**
+     * Find approval requests by reviewer ordered by reviewed date
+     */
+    List<ApprovalRequest> findByReviewerOrderByReviewedAtDesc(User reviewer);
+
+    // ========== SPECIFIC BUSINESS LOGIC (Custom queries only when necessary) ==========
 
     /**
      * Find most recent approval request for a specific target
+     * Note: This requires custom query due to complex OR conditions across multiple entities
      */
     @Query("SELECT ar FROM ApprovalRequest ar WHERE " +
            "(ar.course.id = :targetId AND ar.targetType = 'COURSE') OR " +
@@ -117,6 +228,7 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
 
     /**
      * Check if there's already a pending approval request for a specific target
+     * Note: This requires custom query due to complex OR conditions across multiple entities
      */
     @Query("SELECT ar FROM ApprovalRequest ar WHERE " +
            "ar.decision = 'PENDING' AND (" +

@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "question_options")
+@Table(name = "question_option")
 public class QuestionOption {
 
     @Id
@@ -28,8 +28,8 @@ public class QuestionOption {
     private Question question;
 
     /**
-     * 1‑N ngược với ExamResultAnswer (khi học sinh chọn)
+     * 1‑N ngược với ExamResultDetail (khi học sinh chọn)
      */
     @OneToMany(mappedBy = "selectedOption")
-    private List<ExamResultAnswer> selectedByAnswers = new ArrayList<>();
+    private List<ExamResultDetail> selectedByAnswers = new ArrayList<>();
 }

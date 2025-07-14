@@ -16,7 +16,7 @@ public class ExamResultDto {
     private String userId;
     private String examId;
     private String examTitle;
-    private List<ExamResultAnswerDto> answers;
+    private List<ExamResultDetailDto> answers;
     private int totalQuestions;
     private int correctAnswers;
 }

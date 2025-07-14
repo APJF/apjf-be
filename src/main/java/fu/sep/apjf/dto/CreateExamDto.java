@@ -9,7 +9,7 @@ import java.util.List;
 public class CreateExamDto {
     private String title;
     private String description;
-    private Integer duration;
+    private Double duration;
     private EnumClass.ExamScopeType examScopeType;
     private List<String> questionIds;
 }

@@ -64,12 +64,17 @@ public class ApprovalRequest {
     @Column(name = "target_type", nullable = false, length = 20)
     private TargetType targetType;
     /* ---------- audit ---------- */
-    @Column(name = "created_by", nullable = false, length = 36)
-    private String createdBy;              // staff gửi yêu cầu
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User creator;              // staff gửi yêu cầu
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-    @Column(name = "reviewed_by", length = 36)
-    private String reviewedBy;             // manager duyệt / từ chối
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewed_by")
+    private User reviewer;             // manager duyệt / từ chối
+
     @Column(name = "reviewed_at")
     private Instant reviewedAt;
     /* ---------- workflow ---------- */

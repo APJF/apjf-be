@@ -20,17 +20,14 @@ public class ExamController {
 
     @GetMapping
     public ResponseEntity<List<ExamDto>> getAllExams() {
-        List<Exam> exams = examService.getAllExams();
-        List<ExamDto> examDtos = exams.stream()
-                .map(examService::convertToDto)
-                .toList();
-        return ResponseEntity.ok(examDtos);
+        return ResponseEntity.ok(examService.getAllExamsAsDto());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Exam> getExamById(@PathVariable String id) {
+    public ResponseEntity<ExamDto> getExamById(@PathVariable String id) {
         Exam exam = examService.getExamById(id);
-        return ResponseEntity.ok(exam);
+        ExamDto examDto = examService.convertToDto(exam);
+        return ResponseEntity.ok(examDto);
     }
 
     @GetMapping("/scope/{scopeType}")

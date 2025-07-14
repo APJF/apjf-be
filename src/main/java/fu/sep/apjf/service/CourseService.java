@@ -50,6 +50,75 @@ public class CourseService {
                 .map(this::toDto);
     }
 
+    // Thêm các phương thức mới tận dụng repository đã cập nhật
+    @Transactional(readOnly = true)
+    public List<CourseDto> findByStatus(EnumClass.Status status) {
+        return courseRepo.findByStatus(status).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CourseDto> findByStatus(EnumClass.Status status, int page, int size) {
+        return courseRepo.findByStatus(status, PageRequest.of(page, size))
+                .map(this::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseDto> findByLevel(EnumClass.Level level) {
+        return courseRepo.findByLevel(level).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CourseDto> findByLevel(EnumClass.Level level, int page, int size) {
+        return courseRepo.findByLevel(level, PageRequest.of(page, size))
+                .map(this::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseDto> findEntryLevelCourses() {
+        return courseRepo.findByPrerequisiteCourseIsNull().stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseDto> searchByTitle(String title) {
+        return courseRepo.findByTitleContainingIgnoreCase(title).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CourseDto> searchByTitle(String title, int page, int size) {
+        return courseRepo.findByTitleContainingIgnoreCase(title, PageRequest.of(page, size))
+                .map(this::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CourseDto> findPublishedCoursesByLevel(EnumClass.Level level) {
+        return courseRepo.findByStatusAndLevel(EnumClass.Status.PUBLISHED, level).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long countByStatus(EnumClass.Status status) {
+        return courseRepo.countByStatus(status);
+    }
+
+    @Transactional(readOnly = true)
+    public long countByLevel(EnumClass.Level level) {
+        return courseRepo.countByLevel(level);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsByTitle(String title) {
+        return courseRepo.existsByTitleIgnoreCase(title);
+    }
+
     @Transactional(readOnly = true)
     public CourseDto findById(String id) {
         return toDto(courseRepo.findById(id)
@@ -70,7 +139,7 @@ public class CourseService {
 
     /* ---------- CREATE ---------- */
     public CourseDto create(@Valid CourseDto dto, String staffId) {
-        log.info("Nhân viên {} tạo khóa học mới với mã: {}", staffId, dto.id());
+        log.info("Nhân viên {} tạo khóa học m���i với mã: {}", staffId, dto.id());
 
         // Validate prerequisite course exists
         if (dto.prerequisiteCourseId() != null) {

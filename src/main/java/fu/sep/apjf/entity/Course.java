@@ -10,9 +10,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "course")
-@Getter
-@Setter
-@ToString(exclude = {"chapters", "topics", "approvalRequests"})
+@Data
+@ToString(exclude = {"chapters", "topics", "approvalRequests", "exams"})
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,12 +20,12 @@ public class Course {
 
     @Id
     @Column(length = 36)
-    private String id;                       // UUID
+    private String id;
 
     @Column(nullable = false, length = 150)
     private String title;
 
-    @Column(length = 255)
+    @Column
     private String description;
 
     @Column(name = "duration", nullable = false)
@@ -38,7 +37,7 @@ public class Course {
 
     private String image;
 
-    @Column(length = 255)
+    @Column
     private String requirement;
 
     @Enumerated(EnumType.STRING)
@@ -71,5 +70,9 @@ public class Course {
     @Builder.Default
     private Set<ApprovalRequest> approvalRequests = new HashSet<>();
 
+    /* 1-N Course → Exam */
+    @OneToMany(mappedBy = "course")
+    @Builder.Default
+    private Set<Exam> exams = new HashSet<>();
 
 }

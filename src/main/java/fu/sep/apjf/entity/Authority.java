@@ -8,7 +8,7 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 
 @Entity
-@Table(name = "authorities")
+@Table(name = "authority")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

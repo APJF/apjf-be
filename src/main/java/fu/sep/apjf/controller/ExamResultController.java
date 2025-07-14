@@ -45,9 +45,33 @@ public class ExamResultController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ExamResult>> getExamResultsByUserId(@PathVariable String userId) {
+    public ResponseEntity<List<ExamResult>> getExamResultsByUserId(@PathVariable Long userId) {
         List<ExamResult> examResults = examResultService.getExamResultsByUserId(userId);
         return ResponseEntity.ok(examResults);
+    }
+
+    @GetMapping("/user/{userId}/passed")
+    public ResponseEntity<List<ExamResult>> getPassedExamsByUser(@PathVariable Long userId) {
+        List<ExamResult> examResults = examResultService.getPassedExamsByUser(userId);
+        return ResponseEntity.ok(examResults);
+    }
+
+    @GetMapping("/user/{userId}/failed")
+    public ResponseEntity<List<ExamResult>> getFailedExamsByUser(@PathVariable Long userId) {
+        List<ExamResult> examResults = examResultService.getFailedExamsByUser(userId);
+        return ResponseEntity.ok(examResults);
+    }
+
+    @GetMapping("/user/{userId}/count")
+    public ResponseEntity<Long> countCompletedExamsByUser(@PathVariable Long userId) {
+        long count = examResultService.countCompletedExamsByUser(userId);
+        return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/user/{userId}/exam/{examId}/exists")
+    public ResponseEntity<Boolean> hasUserTakenExam(@PathVariable Long userId, @PathVariable String examId) {
+        boolean hasTaken = examResultService.hasUserTakenExam(userId, examId);
+        return ResponseEntity.ok(hasTaken);
     }
 
     @GetMapping("/exam/{examId}")

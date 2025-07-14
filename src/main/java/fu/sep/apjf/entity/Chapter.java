@@ -21,12 +21,12 @@ public class Chapter {
 
     @Id
     @Column(length = 36)
-    private String id;              // UUID
+    private String id;
 
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 255)
+    @Column
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -55,4 +55,9 @@ public class Chapter {
     @JsonManagedReference
     @Builder.Default
     private Set<ApprovalRequest> approvalRequests = new HashSet<>();
+
+    /* 1-N Chapter → Exam */
+    @OneToMany(mappedBy = "chapter")
+    @Builder.Default
+    private Set<Exam> exams = new HashSet<>();
 }

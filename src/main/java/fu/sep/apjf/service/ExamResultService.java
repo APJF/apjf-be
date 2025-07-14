@@ -19,16 +19,22 @@ public class ExamResultService {
     private final ExamResultRepository examResultRepository;
     private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
-    private final ExamResultAnswerRepository examResultAnswerRepository;
+    private final ExamResultDetailRepository examResultDetailRepository;
     private final QuestionOptionRepository questionOptionRepository;
+    private final UserRepository userRepository;
 
     public ExamResult startExam(StartExamDto startExamDto) {
         // Kiểm tra exam có tồn tại không
         Exam exam = examRepository.findById(startExamDto.getExamId())
                 .orElseThrow(() -> new RuntimeException("Exam not found: " + startExamDto.getExamId()));
 
-        // Kiểm tra user đã làm bài này chưa
-        examResultRepository.findByUserIdAndExamId(startExamDto.getUserId(), startExamDto.getExamId())
+        // Tìm user
+        Long userId = Long.parseLong(startExamDto.getUserId());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + startExamDto.getUserId()));
+
+        // Kiểm tra user đã làm bài này chưa - sử dụng entity objects
+        examResultRepository.findByUserAndExam(user, exam)
                 .ifPresent(existingResult -> {
                     if (existingResult.getSubmittedAt() == null) {
                         throw new RuntimeException("User is already taking this exam");
@@ -38,7 +44,7 @@ public class ExamResultService {
         ExamResult examResult = ExamResult.builder()
                 .id(UUID.randomUUID().toString())
                 .startedAt(LocalDateTime.now())
-                .userId(startExamDto.getUserId())
+                .user(user)
                 .exam(exam)
                 .build();
 
@@ -64,7 +70,7 @@ public class ExamResultService {
             boolean isCorrect = checkAnswer(question, answerDto);
             if (isCorrect) correctAnswers++;
 
-            ExamResultAnswer answer = ExamResultAnswer.builder()
+            ExamResultDetail answer = ExamResultDetail.builder()
                     .id(UUID.randomUUID().toString())
                     .userAnswer(answerDto.getUserAnswer())
                     .isCorrect(isCorrect)
@@ -78,7 +84,7 @@ public class ExamResultService {
                 answer.setSelectedOption(selectedOption);
             }
 
-            examResultAnswerRepository.save(answer);
+            examResultDetailRepository.save(answer);
         }
 
         float score = (float) correctAnswers / totalQuestions * 10;
@@ -102,8 +108,7 @@ public class ExamResultService {
                 }
                 return false;
 
-            case SHORT_ANSWER:
-            case FILL_BLANK:
+            case WRITING:
                 return question.getCorrectAnswer() != null &&
                        question.getCorrectAnswer().equalsIgnoreCase(answerDto.getUserAnswer());
 
@@ -112,12 +117,16 @@ public class ExamResultService {
         }
     }
 
-    public List<ExamResult> getExamResultsByUserId(String userId) {
-        return examResultRepository.findByUserId(userId);
+    public List<ExamResult> getExamResultsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        return examResultRepository.findByUser(user);
     }
 
     public List<ExamResult> getExamResultsByExamId(String examId) {
-        return examResultRepository.findByExamId(examId);
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found: " + examId));
+        return examResultRepository.findByExam(exam);
     }
 
     public ExamResult getExamResultById(String id) {
@@ -126,10 +135,40 @@ public class ExamResultService {
     }
 
     public Double getAverageScoreByExamId(String examId) {
-        return examResultRepository.getAverageScoreByExamId(examId);
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found: " + examId));
+        return examResultRepository.getAverageScoreByExam(exam);
     }
 
     public List<ExamResult> getInProgressExams() {
-        return examResultRepository.findInProgressExams();
+        return examResultRepository.findBySubmittedAtIsNull();
+    }
+
+    // Thêm các phương thức mới tận dụng repository đã cập nhật
+    public List<ExamResult> getPassedExamsByUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        return examResultRepository.findByUserAndStatus(user, EnumClass.ExamStatus.PASSED);
+    }
+
+    public List<ExamResult> getFailedExamsByUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        return examResultRepository.findByUserAndStatus(user, EnumClass.ExamStatus.FAILED);
+    }
+
+    public long countCompletedExamsByUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        return examResultRepository.countByUserAndStatus(user, EnumClass.ExamStatus.PASSED) +
+               examResultRepository.countByUserAndStatus(user, EnumClass.ExamStatus.FAILED);
+    }
+
+    public boolean hasUserTakenExam(Long userId, String examId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found: " + examId));
+        return examResultRepository.existsByUserAndExam(user, exam);
     }
 }

@@ -120,7 +120,7 @@ public class UserService {
                 .findTopByUserOrderByRequestedTimeDesc(user)
                 .orElseThrow(() -> new AppException("OTP không tồn tại."));
 
-        if (token.getExpirationTime().isBefore(LocalDateTime.now()) || !token.getToken().equals(otp)) {
+        if (token.getExpirationTime().isBefore(LocalDateTime.now()) || !token.getTokenValue().equals(otp)) {
             throw new AppException("OTP sai hoặc đã hết hạn.");
         }
 
@@ -164,7 +164,7 @@ public class UserService {
         Token token = tokenRepository.findTopByUserAndTypeOrderByRequestedTimeDesc(user, TokenType.RESET_PASSWORD)
                 .orElseThrow(() -> new IllegalArgumentException("Token không hợp lệ"));
 
-        if (!otpUtils.validateOTP(token.getToken(), otp)) {
+        if (!otpUtils.validateOTP(token.getTokenValue(), otp)) {
             throw new IllegalArgumentException("OTP không chính xác");
         }
 
@@ -200,7 +200,7 @@ public class UserService {
         String otp = otpUtils.generateOTP();
         Token token = Token.builder()
                 .user(user)
-                .token(otp)
+                .tokenValue(otp)
                 .type(type)
                 .requestedTime(now)
                 .expirationTime(now.plus(OTP_TTL))
