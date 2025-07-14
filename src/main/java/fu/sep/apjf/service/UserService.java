@@ -69,11 +69,23 @@ public class UserService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        return new LoginResponse(
+        String token = jwtUtils.generateTokenFromUsername(user);
+
+        // 5. Tạo đối tượng UserInfo
+        LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo(
+                user.getId(),
                 user.getUsername(),
                 user.getAvatar(),
-                roles,
-                jwtUtils.generateTokenFromUsername(user)
+                roles
+        );
+
+        // 6. Trả về đối tượng LoginResponse mới
+        return new LoginResponse(
+                token,              // access_token
+                "Bearer",           // token_type
+                3600,               // expires_in (1 hour in seconds)
+                null,               // refresh_token (null for now)
+                userInfo            // user object
         );
     }
 
@@ -215,3 +227,4 @@ public class UserService {
         return userRepository.save(user);
     }
 }
+

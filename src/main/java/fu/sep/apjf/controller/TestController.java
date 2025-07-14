@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 public class TestController {
 
-    /**
+    /**x`
      * Endpoint để test OAuth2 success callback
      */
     @GetMapping("/oauth2-success")
