@@ -18,6 +18,7 @@ public record ChapterDto(
         @NotBlank(message = "ID khóa học không được để trống")
         String courseId,
         String prerequisiteChapterId,
+        Set<ExamSummaryDto> exams,
         Set<UnitDto> units
 ) {
 }

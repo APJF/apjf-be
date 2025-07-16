@@ -24,6 +24,8 @@ public record CourseDto(
         String requirement,
         EnumClass.Status status,
         String prerequisiteCourseId,
-        Set<TopicDto> topics
+        Set<TopicDto> topics,
+        Set<ExamSummaryDto> exams,
+        Set<ChapterDto> chapters
 ) {
 }

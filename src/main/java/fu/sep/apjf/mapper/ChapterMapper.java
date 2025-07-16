@@ -1,6 +1,7 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.ChapterDto;
+import fu.sep.apjf.dto.ExamSummaryDto;
 import fu.sep.apjf.dto.UnitDto;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Course;
@@ -19,15 +20,29 @@ public final class ChapterMapper {
             return null;
         }
 
+        // Map units and include their exams
         Set<UnitDto> unitDtos = chapter.getUnits().stream()
-                .map(unit -> new UnitDto(
-                        unit.getId(),
-                        unit.getTitle(),
-                        unit.getDescription(),
-                        unit.getStatus(),
-                        chapter.getId(),
-                        unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null
-                ))
+                .map(unit -> {
+                    // Get exams for this unit
+                    Set<ExamSummaryDto> unitExams = unit.getExams().stream()
+                            .map(ExamSummaryMapper::toDto)
+                            .collect(Collectors.toSet());
+
+                    return new UnitDto(
+                            unit.getId(),
+                            unit.getTitle(),
+                            unit.getDescription(),
+                            unit.getStatus(),
+                            chapter.getId(),
+                            unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null,
+                            unitExams
+                    );
+                })
+                .collect(Collectors.toSet());
+
+        // Get exams for this chapter
+        Set<ExamSummaryDto> chapterExams = chapter.getExams().stream()
+                .map(ExamSummaryMapper::toDto)
                 .collect(Collectors.toSet());
 
         return new ChapterDto(
@@ -37,7 +52,9 @@ public final class ChapterMapper {
                 chapter.getStatus(),
                 chapter.getCourse().getId(),
                 chapter.getPrerequisiteChapter() != null ? chapter.getPrerequisiteChapter().getId() : null,
+                chapterExams,
                 unitDtos
+
         );
     }
 

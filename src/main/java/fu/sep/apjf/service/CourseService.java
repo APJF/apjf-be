@@ -1,12 +1,11 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.ChapterDto;
 import fu.sep.apjf.dto.CourseDetailDto;
 import fu.sep.apjf.dto.CourseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
-import fu.sep.apjf.mapper.ChapterMapper;
+import fu.sep.apjf.mapper.CourseDetailMapper;
 import fu.sep.apjf.mapper.CourseMapper;
 import fu.sep.apjf.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,8 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -150,11 +147,9 @@ public class CourseService {
         Course course = courseRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Course not found"));
 
-        Set<ChapterDto> chapters = course.getChapters().stream()
-                .map(ChapterMapper::toDto)
-                .collect(Collectors.toSet());
-
-        return new CourseDetailDto(CourseMapper.toDto(course), chapters);
+        // Use the CourseDetailMapper to create a properly structured response
+        // with exams nested within course, chapters, and units
+        return CourseDetailMapper.toDto(course);
     }
 
     /* ---------- CREATE ---------- */

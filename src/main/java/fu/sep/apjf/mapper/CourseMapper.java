@@ -1,9 +1,11 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.CourseDto;
+import fu.sep.apjf.dto.ExamSummaryDto;
 import fu.sep.apjf.dto.TopicDto;
 import fu.sep.apjf.entity.Course;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,10 @@ public final class CourseMapper {
                 .map(topic -> new TopicDto(topic.getId(), topic.getName()))
                 .collect(Collectors.toSet());
 
+        Set<ExamSummaryDto> examDtos = course.getExams().stream()
+                .map(ExamSummaryMapper::toDto)
+                .collect(Collectors.toSet());
+
         return new CourseDto(
                 course.getId(),
                 course.getTitle(),
@@ -32,7 +38,9 @@ public final class CourseMapper {
                 course.getRequirement(),
                 course.getStatus(),
                 course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
-                topicDtos
+                topicDtos,
+                examDtos,
+                Collections.emptySet() // We don't include chapters in the standard CourseDto
         );
     }
 
