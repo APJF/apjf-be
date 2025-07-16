@@ -10,7 +10,6 @@ import java.util.List;
 
 @Repository
 public interface QuestionOptionRepository extends JpaRepository<QuestionOption, String> {
-
     List<QuestionOption> findByQuestionId(String questionId);
 
     @Query("SELECT qo FROM QuestionOption qo WHERE qo.question.id = :questionId AND qo.isCorrect = true")

@@ -1,8 +1,8 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.LoginDTO;
-import fu.sep.apjf.dto.LoginResponse;
-import fu.sep.apjf.dto.RegisterDTO;
+import fu.sep.apjf.dto.LoginRequestDto;
+import fu.sep.apjf.dto.LoginResponseDto;
+import fu.sep.apjf.dto.RegisterDto;
 import fu.sep.apjf.entity.Authority;
 import fu.sep.apjf.entity.Token;
 import fu.sep.apjf.entity.Token.TokenType;
@@ -49,7 +49,7 @@ public class UserService {
     private final AuthorityRepository authorityRepository;
 
     @Transactional
-    public LoginResponse login(LoginDTO loginDTO) {
+    public LoginResponseDto login(LoginRequestDto loginDTO) {
         // 1. Kiểm tra email có tồn tại không
         User user = userRepository.findByEmail(loginDTO.email())
                 .orElseThrow(() -> new BadCredentialsException("Email không tồn tại trong hệ thống"));
@@ -72,15 +72,15 @@ public class UserService {
         String token = jwtUtils.generateTokenFromUsername(user);
 
         // 5. Tạo đối tượng UserInfo
-        LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo(
+        LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
                 user.getId(),
                 user.getUsername(),
                 user.getAvatar(),
                 roles
         );
 
-        // 6. Trả về đối tượng LoginResponse mới
-        return new LoginResponse(
+        // 6. Trả về đối tư���ng LoginResponse mới
+        return new LoginResponseDto(
                 token,              // access_token
                 "Bearer",           // token_type
                 3600,               // expires_in (1 hour in seconds)
@@ -91,7 +91,7 @@ public class UserService {
 
 
     @Transactional
-    public void register(RegisterDTO registerDTO) {
+    public void register(RegisterDto registerDTO) {
         if (userRepository.existsByEmail(registerDTO.email())) {
             throw new IllegalArgumentException("Email đã tồn tại.");
         }

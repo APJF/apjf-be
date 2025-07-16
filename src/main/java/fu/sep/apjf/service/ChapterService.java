@@ -1,11 +1,11 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.ChapterDto;
-import fu.sep.apjf.dto.UnitDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
+import fu.sep.apjf.mapper.ChapterMapper;
 import fu.sep.apjf.repository.ChapterRepository;
 import fu.sep.apjf.repository.CourseRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,13 +32,13 @@ public class ChapterService {
     @Transactional(readOnly = true)
     public List<ChapterDto> findAll() {
         return chapterRepo.findAll().stream()
-                .map(this::toDto)
+                .map(ChapterMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public ChapterDto findById(String id) {
-        return toDto(chapterRepo.findById(id)
+        return ChapterMapper.toDto(chapterRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học")));
     }
 
@@ -65,7 +63,7 @@ public class ChapterService {
         // Set prerequisite chapter if provided
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
             ch.setPrerequisiteChapter(prerequisite);
         }
 
@@ -80,7 +78,7 @@ public class ChapterService {
         );
 
         log.info("Tạo chương học {} và yêu cầu phê duyệt thành công", savedChapter.getId());
-        return toDto(savedChapter);
+        return ChapterMapper.toDto(savedChapter);
     }
 
     /* ---------- UPDATE ---------- */
@@ -97,7 +95,7 @@ public class ChapterService {
         // Update prerequisite chapter
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
             chapter.setPrerequisiteChapter(prerequisite);
         } else {
             chapter.setPrerequisiteChapter(null);
@@ -122,21 +120,6 @@ public class ChapterService {
         );
 
         log.info("Cập nhật chương học {} và tạo yêu cầu phê duyệt thành công", savedChapter.getId());
-        return toDto(savedChapter);
-    }
-
-    /* ---------- Mapping helpers ---------- */
-
-    private ChapterDto toDto(Chapter ch) {
-        Set<UnitDto> units = ch.getUnits().stream()
-                .map(u -> new UnitDto(u.getId(), u.getTitle(),
-                        u.getDescription(), u.getStatus(), ch.getId(),
-                        u.getPrerequisiteUnit() != null ? u.getPrerequisiteUnit().getId() : null))
-                .collect(Collectors.toSet());
-
-        return new ChapterDto(ch.getId(), ch.getTitle(), ch.getDescription(),
-                ch.getStatus(), ch.getCourse().getId(),
-                ch.getPrerequisiteChapter() != null ? ch.getPrerequisiteChapter().getId() : null,
-                units);
+        return ChapterMapper.toDto(savedChapter);
     }
 }

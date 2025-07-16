@@ -1,7 +1,6 @@
 package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.QuestionDto;
-import fu.sep.apjf.entity.Question;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.service.QuestionService;
 import lombok.RequiredArgsConstructor;
@@ -18,44 +17,44 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @GetMapping
-    public ResponseEntity<List<Question>> getAllQuestions() {
-        List<Question> questions = questionService.getAllQuestions();
+    public ResponseEntity<List<QuestionDto>> getAllQuestions() {
+        List<QuestionDto> questions = questionService.getAllQuestions();
         return ResponseEntity.ok(questions);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Question> getQuestionById(@PathVariable String id) {
-        Question question = questionService.getQuestionById(id);
+    public ResponseEntity<QuestionDto> getQuestionById(@PathVariable String id) {
+        QuestionDto question = questionService.getQuestionById(id);
         return ResponseEntity.ok(question);
     }
 
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<Question>> getQuestionsByType(@PathVariable EnumClass.QuestionType type) {
-        List<Question> questions = questionService.getQuestionsByType(type);
+    public ResponseEntity<List<QuestionDto>> getQuestionsByType(@PathVariable EnumClass.QuestionType type) {
+        List<QuestionDto> questions = questionService.getQuestionsByType(type);
         return ResponseEntity.ok(questions);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Question>> searchQuestions(@RequestParam String keyword) {
-        List<Question> questions = questionService.searchQuestions(keyword);
+    public ResponseEntity<List<QuestionDto>> searchQuestions(@RequestParam String keyword) {
+        List<QuestionDto> questions = questionService.searchQuestions(keyword);
         return ResponseEntity.ok(questions);
     }
 
     @GetMapping("/exam/{examId}")
-    public ResponseEntity<List<Question>> getQuestionsByExamId(@PathVariable String examId) {
-        List<Question> questions = questionService.getQuestionsByExamId(examId);
+    public ResponseEntity<List<QuestionDto>> getQuestionsByExamId(@PathVariable String examId) {
+        List<QuestionDto> questions = questionService.getQuestionsByExamId(examId);
         return ResponseEntity.ok(questions);
     }
 
     @PostMapping
-    public ResponseEntity<Question> createQuestion(@RequestBody QuestionDto questionDto) {
-        Question question = questionService.createQuestion(questionDto);
+    public ResponseEntity<QuestionDto> createQuestion(@RequestBody QuestionDto questionDto) {
+        QuestionDto question = questionService.createQuestion(questionDto);
         return ResponseEntity.ok(question);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Question> updateQuestion(@PathVariable String id, @RequestBody QuestionDto questionDto) {
-        Question question = questionService.updateQuestion(id, questionDto);
+    public ResponseEntity<QuestionDto> updateQuestion(@PathVariable String id, @RequestBody QuestionDto questionDto) {
+        QuestionDto question = questionService.updateQuestion(id, questionDto);
         return ResponseEntity.ok(question);
     }
 

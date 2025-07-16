@@ -2,6 +2,7 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.*;
 import fu.sep.apjf.entity.User;
+import fu.sep.apjf.mapper.UserMapper;
 import fu.sep.apjf.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -24,14 +24,14 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginDTO loginDTO) {
-        LoginResponse payload = userService.login(loginDTO);
+    public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+        LoginResponseDto payload = userService.login(loginRequest);
         return ResponseEntity.ok(ApiResponse.ok("Đăng nhập thành công", payload));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Object>> register(@Valid @RequestBody RegisterDTO registerDTO) {
-        userService.register(registerDTO);
+    public ResponseEntity<ApiResponse<Object>> register(@Valid @RequestBody RegisterDto registerRequest) {
+        userService.register(registerRequest);
         return new ResponseEntity<>(
                 ApiResponse.ok("Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.", null),
                 HttpStatus.CREATED
@@ -68,11 +68,11 @@ public class AuthController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse<Object>> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
+    public ResponseEntity<ApiResponse<Object>> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
         userService.changePassword(
-                changePasswordDTO.email(),
-                changePasswordDTO.oldPassword(),
-                changePasswordDTO.newPassword()
+                changePasswordDto.email(),
+                changePasswordDto.oldPassword(),
+                changePasswordDto.newPassword()
         );
         return ResponseEntity.ok(ApiResponse.ok("Thay đổi mật khẩu thành công.", null));
     }
@@ -95,51 +95,9 @@ public class AuthController {
         }
 
         User user = userOptional.get();
-        UserProfileDto profile = UserProfileDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .avatar(user.getAvatar())
-                .enabled(user.isEnabled())
-                .authorities(user.getAuthorities().stream()
-                        .map(authority -> authority.getAuthority())
-                        .toList())
-                .build();
+        UserProfileDto userProfileDto = UserMapper.toProfileDto(user);
 
-        return ResponseEntity.ok(ApiResponse.ok("Lấy thông tin người dùng thành công", profile));
-    }
-
-    @GetMapping("/oauth2/success")
-    public ResponseEntity<ApiResponse<Map<String, String>>> oauth2Success(
-            @RequestParam String token,
-            @RequestParam String email,
-            @RequestParam String username) {
-
-        Map<String, String> response = Map.of(
-                "token", token,
-                "email", email,
-                "username", username,
-                "loginType", "oauth2",
-                "provider", "google"
-        );
-
-        return ResponseEntity.ok(ApiResponse.ok("Đăng nhập Google thành công", response));
-    }
-
-    @GetMapping("/status")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> checkAuthStatus() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        boolean isAuthenticated = authentication != null &&
-                                 authentication.isAuthenticated() &&
-                                 !"anonymousUser".equals(authentication.getName());
-
-        Map<String, Object> status = Map.of(
-                "authenticated", isAuthenticated,
-                "principal", authentication != null ? authentication.getName() : "anonymous",
-                "authorities", authentication != null ? authentication.getAuthorities() : "none"
-        );
-
-        return ResponseEntity.ok(ApiResponse.ok("Authentication status retrieved", status));
+        return ResponseEntity.ok(ApiResponse.ok("Thông tin người dùng", userProfileDto));
     }
 }
+

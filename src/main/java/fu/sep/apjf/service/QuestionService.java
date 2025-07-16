@@ -1,11 +1,13 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.QuestionDto;
+import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Question;
 import fu.sep.apjf.entity.QuestionOption;
-import fu.sep.apjf.entity.EnumClass;
-import fu.sep.apjf.repository.QuestionRepository;
+import fu.sep.apjf.mapper.QuestionMapper;
+import fu.sep.apjf.repository.ExamRepository;
 import fu.sep.apjf.repository.QuestionOptionRepository;
+import fu.sep.apjf.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,72 +22,83 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
     private final QuestionOptionRepository questionOptionRepository;
+    private final ExamRepository examRepository;
 
-    public List<Question> getAllQuestions() {
-        return questionRepository.findAll();
+    public List<QuestionDto> getAllQuestions() {
+        List<Question> questions = questionRepository.findAll();
+        return QuestionMapper.toDtoList(questions);
     }
 
-    public Question getQuestionById(String id) {
-        return questionRepository.findById(id)
+    public QuestionDto getQuestionById(String id) {
+        Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found: " + id));
+        return QuestionMapper.toDto(question);
     }
 
-    public List<Question> getQuestionsByType(EnumClass.QuestionType type) {
-        return questionRepository.findByType(type);
+    public List<QuestionDto> getQuestionsByType(EnumClass.QuestionType type) {
+        List<Question> questions = questionRepository.findByType(type);
+        return QuestionMapper.toDtoList(questions);
     }
 
-    public List<Question> searchQuestions(String keyword) {
-        return questionRepository.findByContentContainingIgnoreCase(keyword);
+    public List<QuestionDto> searchQuestions(String keyword) {
+        List<Question> questions = questionRepository.findByContentContainingIgnoreCase(keyword);
+        return QuestionMapper.toDtoList(questions);
     }
 
-    public Question createQuestion(QuestionDto questionDto) {
+    public QuestionDto createQuestion(QuestionDto questionDto) {
         Question question = Question.builder()
                 .id(UUID.randomUUID().toString())
-                .content(questionDto.getContent())
-                .correctAnswer(questionDto.getCorrectAnswer())
-                .type(questionDto.getType())
-                .explanation(questionDto.getExplanation())
-                .fileUrl(questionDto.getFileUrl())
+                .content(questionDto.content())
+                .correctAnswer(questionDto.correctAnswer())
+                .type(questionDto.type())
+                .scope(questionDto.scope())
+                .explanation(questionDto.explanation())
+                .fileUrl(questionDto.fileUrl())
                 .build();
 
         Question savedQuestion = questionRepository.save(question);
 
         // Tạo options nếu có
-        if (questionDto.getOptions() != null && !questionDto.getOptions().isEmpty()) {
-            questionDto.getOptions().forEach(optionDto -> {
+        if (questionDto.options() != null && !questionDto.options().isEmpty()) {
+            questionDto.options().forEach(optionDto -> {
                 QuestionOption option = QuestionOption.builder()
                         .id(UUID.randomUUID().toString())
-                        .content(optionDto.getContent())
-                        .isCorrect(optionDto.getIsCorrect())
+                        .content(optionDto.content())
+                        .isCorrect(optionDto.isCorrect())
                         .question(savedQuestion)
                         .build();
                 questionOptionRepository.save(option);
             });
         }
 
-        return savedQuestion;
+        return QuestionMapper.toDto(savedQuestion);
     }
 
-    public Question updateQuestion(String id, QuestionDto questionDto) {
-        Question question = getQuestionById(id);
+    public QuestionDto updateQuestion(String id, QuestionDto questionDto) {
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Question not found: " + id));
 
-        question.setContent(questionDto.getContent());
-        question.setCorrectAnswer(questionDto.getCorrectAnswer());
-        question.setType(questionDto.getType());
-        question.setExplanation(questionDto.getExplanation());
-        question.setFileUrl(questionDto.getFileUrl());
+        question.setContent(questionDto.content());
+        question.setCorrectAnswer(questionDto.correctAnswer());
+        question.setType(questionDto.type());
+        question.setScope(questionDto.scope());
+        question.setExplanation(questionDto.explanation());
+        question.setFileUrl(questionDto.fileUrl());
 
-        return questionRepository.save(question);
+        Question updatedQuestion = questionRepository.save(question);
+        return QuestionMapper.toDto(updatedQuestion);
     }
 
     public void deleteQuestion(String id) {
         questionRepository.deleteById(id);
     }
 
-    public List<Question> getQuestionsByExamId(String examId) {
-        // Cần tìm Exam entity trước, sau đó sử dụng phương thức mới
-        // Tạm thời comment out hoặc sửa logic này
-        throw new UnsupportedOperationException("Method needs to be updated to use Exam entity");
-        // TODO: Implement using examRepository.findById(examId) then questionRepository.findByExamsContaining(exam)
+    public List<QuestionDto> getQuestionsByExamId(String examId) {
+        return examRepository.findById(examId)
+                .map(exam -> {
+                    List<Question> questions = questionRepository.findByExamsContaining(exam);
+                    return QuestionMapper.toDtoList(questions);
+                })
+                .orElseThrow(() -> new RuntimeException("Exam not found: " + examId));
     }
 }

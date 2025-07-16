@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-/**
- * DTO for creating new approval requests by staff
- */
 public record CreateApprovalRequestDto(
         @NotNull(message = "Loại đối tượng không được để trống")
         TargetType targetType,

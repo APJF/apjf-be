@@ -5,6 +5,7 @@ import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Unit;
+import fu.sep.apjf.mapper.UnitMapper;
 import fu.sep.apjf.repository.ChapterRepository;
 import fu.sep.apjf.repository.UnitRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,13 +32,13 @@ public class UnitService {
     public List<UnitDto> list() {
         return unitRepo.findAll()
                 .stream()
-                .map(this::toDto)
+                .map(UnitMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public UnitDto get(String id) {
-        return toDto(unitRepo.findById(id)
+        return UnitMapper.toDto(unitRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Unit not found")));
     }
 
@@ -77,7 +78,7 @@ public class UnitService {
         );
 
         log.info("Tạo đơn vị học tập {} và yêu cầu phê duyệt thành công", savedUnit.getId());
-        return toDto(savedUnit);
+        return UnitMapper.toDto(savedUnit);
     }
 
     /* ---------- UPDATE ---------- */
@@ -119,13 +120,6 @@ public class UnitService {
         );
 
         log.info("Cập nhật đơn vị học tập {} và tạo yêu cầu phê duyệt thành công", savedUnit.getId());
-        return toDto(savedUnit);
-    }
-
-    /* ---------- Mapping helpers ---------- */
-    private UnitDto toDto(Unit u) {
-        return new UnitDto(u.getId(), u.getTitle(), u.getDescription(),
-                u.getStatus(), u.getChapter().getId(),
-                u.getPrerequisiteUnit() != null ? u.getPrerequisiteUnit().getId() : null);
+        return UnitMapper.toDto(savedUnit);
     }
 }

@@ -1,7 +1,6 @@
 package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.*;
-import fu.sep.apjf.entity.ExamResult;
 import fu.sep.apjf.service.ExamResultService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,78 +16,82 @@ public class ExamResultController {
     private final ExamResultService examResultService;
 
     @PostMapping("/start")
-    public ResponseEntity<ExamResult> startExam(@RequestBody StartExamDto startExamDto) {
-        ExamResult examResult = examResultService.startExam(startExamDto);
-        return ResponseEntity.ok(examResult);
+    public ResponseEntity<ApiResponse<ExamResultDto>> startExam(@RequestBody StartExamDto startExamDto) {
+        ExamResultDto result = examResultService.startExam(startExamDto);
+        return ResponseEntity.ok(ApiResponse.ok("Bắt đầu bài thi thành công", result));
     }
 
     @PostMapping("/exam/{examId}/start")
-    public ResponseEntity<ExamResult> startExamByPath(@PathVariable String examId, @RequestParam String userId) {
-        StartExamDto startExamDto = new StartExamDto();
-        startExamDto.setExamId(examId);
-        startExamDto.setUserId(userId);
-
-        ExamResult examResult = examResultService.startExam(startExamDto);
-        return ResponseEntity.ok(examResult);
+    public ResponseEntity<ApiResponse<ExamResultDto>> startExamByPath(
+            @PathVariable String examId,
+            @RequestParam String userId) {
+        // Tạo đối tượng StartExamDto mới thay vì sử dụng setter
+        StartExamDto startExamDto = new StartExamDto(examId, userId);
+        ExamResultDto result = examResultService.startExam(startExamDto);
+        return ResponseEntity.ok(ApiResponse.ok("Bắt đầu bài thi thành công", result));
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<ExamResult> submitExam(@RequestBody SubmitExamDto submitExamDto) {
-        ExamResult examResult = examResultService.submitExam(submitExamDto);
-        return ResponseEntity.ok(examResult);
+    public ResponseEntity<ApiResponse<ExamResultDto>> submitExam(
+            @RequestBody SubmitExamDto submitExamDto,
+            @RequestParam String userId) {
+        ExamResultDto result = examResultService.submitExam(submitExamDto, userId);
+        return ResponseEntity.ok(ApiResponse.ok("Nộp bài thi thành công", result));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ExamResult> getExamResultById(@PathVariable String id) {
-        ExamResult examResult = examResultService.getExamResultById(id);
-        return ResponseEntity.ok(examResult);
+    public ResponseEntity<ApiResponse<ExamResultDto>> getExamResultById(@PathVariable String id) {
+        ExamResultDto result = examResultService.getExamResultById(id);
+        return ResponseEntity.ok(ApiResponse.ok("Thông tin kết quả bài thi", result));
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ExamResult>> getExamResultsByUserId(@PathVariable Long userId) {
-        List<ExamResult> examResults = examResultService.getExamResultsByUserId(userId);
-        return ResponseEntity.ok(examResults);
+    public ResponseEntity<ApiResponse<List<ExamResultDto>>> getExamResultsByUserId(@PathVariable Long userId) {
+        List<ExamResultDto> results = examResultService.getExamResultsByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách kết quả bài thi của người dùng", results));
     }
 
     @GetMapping("/user/{userId}/passed")
-    public ResponseEntity<List<ExamResult>> getPassedExamsByUser(@PathVariable Long userId) {
-        List<ExamResult> examResults = examResultService.getPassedExamsByUser(userId);
-        return ResponseEntity.ok(examResults);
+    public ResponseEntity<ApiResponse<List<ExamResultDto>>> getPassedExamsByUser(@PathVariable Long userId) {
+        List<ExamResultDto> results = examResultService.getPassedExamsByUser(userId);
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách bài thi đã vượt qua", results));
     }
 
     @GetMapping("/user/{userId}/failed")
-    public ResponseEntity<List<ExamResult>> getFailedExamsByUser(@PathVariable Long userId) {
-        List<ExamResult> examResults = examResultService.getFailedExamsByUser(userId);
-        return ResponseEntity.ok(examResults);
+    public ResponseEntity<ApiResponse<List<ExamResultDto>>> getFailedExamsByUser(@PathVariable Long userId) {
+        List<ExamResultDto> results = examResultService.getFailedExamsByUser(userId);
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách bài thi chưa vượt qua", results));
     }
 
     @GetMapping("/user/{userId}/count")
-    public ResponseEntity<Long> countCompletedExamsByUser(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<Long>> countCompletedExamsByUser(@PathVariable Long userId) {
         long count = examResultService.countCompletedExamsByUser(userId);
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok(ApiResponse.ok("Số lượng bài thi đã hoàn thành", count));
     }
 
     @GetMapping("/user/{userId}/exam/{examId}/exists")
-    public ResponseEntity<Boolean> hasUserTakenExam(@PathVariable Long userId, @PathVariable String examId) {
+    public ResponseEntity<ApiResponse<Boolean>> hasUserTakenExam(
+            @PathVariable Long userId,
+            @PathVariable String examId) {
         boolean hasTaken = examResultService.hasUserTakenExam(userId, examId);
-        return ResponseEntity.ok(hasTaken);
+        return ResponseEntity.ok(ApiResponse.ok("Trạng thái đã làm bài thi", hasTaken));
     }
 
     @GetMapping("/exam/{examId}")
-    public ResponseEntity<List<ExamResult>> getExamResultsByExamId(@PathVariable String examId) {
-        List<ExamResult> examResults = examResultService.getExamResultsByExamId(examId);
-        return ResponseEntity.ok(examResults);
+    public ResponseEntity<ApiResponse<List<ExamResultDto>>> getExamResultsByExamId(@PathVariable String examId) {
+        List<ExamResultDto> results = examResultService.getExamResultsByExamId(examId);
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách kết quả của bài thi", results));
     }
 
     @GetMapping("/exam/{examId}/average-score")
-    public ResponseEntity<Double> getAverageScoreByExamId(@PathVariable String examId) {
+    public ResponseEntity<ApiResponse<Double>> getAverageScoreByExamId(@PathVariable String examId) {
         Double averageScore = examResultService.getAverageScoreByExamId(examId);
-        return ResponseEntity.ok(averageScore);
+        return ResponseEntity.ok(ApiResponse.ok("Điểm trung bình của bài thi", averageScore));
     }
 
     @GetMapping("/in-progress")
-    public ResponseEntity<List<ExamResult>> getInProgressExams() {
-        List<ExamResult> inProgressExams = examResultService.getInProgressExams();
-        return ResponseEntity.ok(inProgressExams);
+    public ResponseEntity<ApiResponse<List<ExamResultDto>>> getInProgressExams() {
+        List<ExamResultDto> results = examResultService.getInProgressExams();
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách bài thi đang làm dở", results));
     }
 }

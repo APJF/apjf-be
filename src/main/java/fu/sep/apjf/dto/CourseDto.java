@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Set;
 
-/* -------- Course -------- */
 public record CourseDto(
         String id,
         @NotBlank(message = "Tiêu đề khóa học không được để trống")

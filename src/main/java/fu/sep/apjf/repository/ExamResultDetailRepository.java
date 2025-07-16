@@ -10,7 +10,6 @@ import java.util.List;
 
 @Repository
 public interface ExamResultDetailRepository extends JpaRepository<ExamResultDetail, String> {
-
     List<ExamResultDetail> findByExamResultId(String examResultId);
 
     List<ExamResultDetail> findByQuestionId(String questionId);

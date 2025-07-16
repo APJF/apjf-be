@@ -34,8 +34,16 @@ public class SecurityConfig {
             "/api/auth/**",
             "/oauth2/**",
             "/login/oauth2/**",
-            "/test/**"
+            "/api/courses/**" // Thêm tất cả các endpoint liên quan đến khóa học vào public
     };
+
+    private static final String[] EXAMS_ENDPOINTS = {
+            "/api/exams/**"
+    };
+
+    private static final String[] USER_ALLOWED_ENDPOINTS = {
+    };
+
     @Lazy
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
     @Lazy
@@ -55,7 +63,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .anyRequest().permitAll())
+                        .requestMatchers(EXAMS_ENDPOINTS).permitAll()
+                        .requestMatchers(USER_ALLOWED_ENDPOINTS).hasAnyRole("USER", "MANAGER", "ADMIN", "STAFF")
+                        .anyRequest().hasAnyRole("MANAGER", "ADMIN", "STAFF"))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(unauthorizedHandler))
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint

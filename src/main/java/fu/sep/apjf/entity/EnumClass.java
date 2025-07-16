@@ -23,10 +23,15 @@ public class EnumClass {
     }
 
     public enum ExamStatus {
-        PASSED, FAILED
+        PASSED, FAILED, IN_PROGRESS
     }
 
     public enum QuestionScope {
-        KANJI, VOCAB
+        KANJI, VOCAB, GRAMMAR, LISTENING, READING, WRITING
     }
+
+    public enum MaterialType {
+        KANJI, GRAMMAR, VOCAB, LISTENING, READING, WRITING
+    }
+
 }

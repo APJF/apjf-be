@@ -10,21 +10,25 @@ VALUES ('ROLE_USER'),
        ('ROLE_ADMIN');
 
 /* ---------- USERS ---------- */
+-- Password for all accounts is: password123
 INSERT INTO users (id, username, password, email, enabled)
-VALUES (1, 'instructor1', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'instructor1@example.com',
+VALUES (10, 'instructor1', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'instructor1@example.com',
         true),
-       (2, 'instructor2', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'instructor2@example.com',
+       (11, 'instructor2', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'instructor2@example.com',
         true),
-       (3, 'manager1', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'manager1@example.com', true),
-       (4, 'manager2', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'manager2@example.com', true);
+       (12, 'manager1', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'manager1@example.com', true),
+       (13, 'manager2', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'manager2@example.com', true),
+       (14, 'user1', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'user1@example.com', true),
+       (15, 'admin1', '$2a$10$FTN5ap6txyGAM9NGT5uuPO3Bwg7lJCIjT.fz8sDQ.TJZhJz4bJ5B.', 'admin1@example.com', true);
 
 /* ---------- USER AUTHORITIES ---------- */
 INSERT INTO user_authority (user_id, authority_id)
-VALUES (1, 2), -- instructor1 has ROLE_STAFF
-       (2, 2), -- instructor2 has ROLE_STAFF
-       (3, 3), -- manager1 has ROLE_MANAGER
-       (4, 3);
--- manager2 has ROLE_MANAGER
+VALUES (10, 2), -- instructor1 has ROLE_STAFF
+       (11, 2), -- instructor2 has ROLE_STAFF
+       (12, 3), -- manager1 has ROLE_MANAGER
+       (13, 3), -- manager2 has ROLE_MANAGER
+       (14, 1), -- user1 has ROLE_USER
+       (15, 4); -- admin1 has ROLE_ADMIN
 
 /* ---------- TOPIC ---------- */
 INSERT INTO topic (name)

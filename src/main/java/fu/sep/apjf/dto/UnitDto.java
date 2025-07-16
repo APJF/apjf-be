@@ -3,6 +3,7 @@ package fu.sep.apjf.dto;
 import fu.sep.apjf.entity.EnumClass.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
 public record UnitDto(
         String id,
         @NotBlank(message = "Tiêu đề bài học không được để trống")

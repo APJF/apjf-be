@@ -1,14 +1,12 @@
 package fu.sep.apjf.dto;
 
-import lombok.Data;
-
-@Data
-public class ExamResultDetailDto {
-    private String id;
-    private String userAnswer;
-    private Boolean isCorrect;
-    private String questionId;
-    private String questionContent;
-    private String selectedOptionId;
-    private String correctAnswer;
+public record ExamResultDetailDto(
+        String id,
+        String userAnswer,
+        Boolean isCorrect,
+        String questionId,
+        String questionContent,
+        String selectedOptionId,
+        String correctAnswer
+) {
 }

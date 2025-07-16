@@ -40,5 +40,6 @@ public class ExamResult {
     private Exam exam;
 
     @OneToMany(mappedBy = "examResult", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExamResultDetail> answers = new ArrayList<>();
+    @Builder.Default
+    private List<ExamResultDetail> details = new ArrayList<>();
 }
