@@ -7,6 +7,8 @@ import fu.sep.apjf.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,4 +54,10 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, String> 
 
     @Query("SELECT AVG(e.score) FROM ExamResult e WHERE e.exam = :exam AND e.submittedAt IS NOT NULL")
     Double getAverageScoreByExam(Exam exam);
+
+    List<ExamResult> findByUserAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(User user);
+
+    Page<ExamResult> findByUserAndSubmittedAtIsNotNull(User user, Pageable pageable);
+
+    List<ExamResult> findByUserAndStatusOrderBySubmittedAtDesc(User user, EnumClass.ExamStatus status);
 }

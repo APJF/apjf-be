@@ -1,13 +1,18 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.AnswerSubmissionDto;
+import fu.sep.apjf.dto.ExamHistoryDto;
 import fu.sep.apjf.dto.ExamResultDto;
 import fu.sep.apjf.dto.StartExamDto;
 import fu.sep.apjf.dto.SubmitExamDto;
 import fu.sep.apjf.entity.*;
+import fu.sep.apjf.mapper.ExamHistoryMapper;
 import fu.sep.apjf.mapper.ExamResultMapper;
 import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -201,5 +206,35 @@ public class ExamResultService {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
         return examResultRepository.existsByUserAndExam(user, exam);
+    }
+
+    public List<ExamHistoryDto> getExamHistory(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
+        List<ExamResult> results = examResultRepository.findByUserAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(user);
+        return ExamHistoryMapper.toDtoList(results);
+    }
+
+    public Page<ExamHistoryDto> getExamHistory(Long userId, int page, int size) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExamResult> results = examResultRepository.findByUserAndSubmittedAtIsNotNull(user, pageable);
+        return results.map(ExamHistoryMapper::toDto);
+    }
+
+    public List<ExamHistoryDto> getExamHistoryByStatus(Long userId, EnumClass.ExamStatus status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
+        List<ExamResult> results = examResultRepository.findByUserAndStatusOrderBySubmittedAtDesc(user, status);
+        return ExamHistoryMapper.toDtoList(results);
+    }
+
+    public List<ExamHistoryDto> getRecentExamHistory(Long userId, int limit) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
+        Pageable pageable = PageRequest.of(0, limit);
+        Page<ExamResult> results = examResultRepository.findByUserAndSubmittedAtIsNotNull(user, pageable);
+        return ExamHistoryMapper.toDtoList(results.getContent());
     }
 }
