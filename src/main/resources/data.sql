@@ -166,3 +166,11 @@ VALUES ('ans1', 'a', true, 'result1', 'q1', 'opt1'),
        ('ans9', 'tabete', true, 'result3', 'q3', null),
        ('ans10', '46', true, 'result3', 'q4', 'opt9'),
        ('ans11', 'wa', true, 'result3', 'q5', null);
+
+
+ALTER TABLE IF EXISTS exam_result
+    DROP CONSTRAINT IF EXISTS exam_result_status_check;
+
+ALTER TABLE IF EXISTS exam_result
+    ADD CONSTRAINT exam_result_status_check
+        CHECK (status IN ('PASSED', 'FAILED', 'IN_PROGRESS'));
