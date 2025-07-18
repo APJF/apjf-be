@@ -1,5 +1,6 @@
 package fu.sep.apjf.utils;
 
+import fu.sep.apjf.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -44,9 +45,21 @@ public class JwtUtils {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
+        // Lấy thêm thông tin từ User object
+        Long userId = null;
+        String email = null;
+
+        if (userDetails instanceof User) {
+            User user = (User) userDetails;
+            userId = user.getId();
+            email = user.getEmail();
+        }
+
         return Jwts.builder()
-                .subject(username)
-                .claim("roles", roles)                     // embed roles claim
+                .subject(email)  // Sử dụng email làm subject thay vì username
+                .claim("roles", roles)     // embed roles claim
+                .claim("userId", userId)   // embed userId claim
+                .claim("username", username)   // Chuyển username thành một claim
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
@@ -58,7 +71,7 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getSubject();
+                .get("username", String.class);  // Lấy username từ claim
     }
 
     @SuppressWarnings("unchecked")
@@ -68,6 +81,24 @@ public class JwtUtils {
                 .parseSignedClaims(token)
                 .getPayload()
                 .get("roles", List.class);
+    }
+
+    // Thêm phương thức để lấy userId từ JWT token
+    public Long getUserIdFromJwtToken(String token) {
+        return Jwts.parser().verifyWith(key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId", Long.class);
+    }
+
+    // Thêm phương thức để lấy email từ JWT token
+    public String getEmailFromJwtToken(String token) {
+        return Jwts.parser().verifyWith(key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();  // Email bây giờ là subject
     }
 
     private SecretKey key() {

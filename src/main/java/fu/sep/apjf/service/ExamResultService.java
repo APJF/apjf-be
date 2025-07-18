@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,14 +43,24 @@ public class ExamResultService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + startExamDto.userId()));
 
-        // Kiểm tra user đã làm bài này chưa - sử dụng entity objects
-        examResultRepository.findByUserAndExam(user, exam)
-                .ifPresent(existingResult -> {
-                    if (existingResult.getSubmittedAt() == null) {
-                        throw new RuntimeException("Người dùng đang làm bài thi này");
-                    }
-                    throw new RuntimeException("Người dùng đã làm bài thi này rồi");
-                });
+        // Kiểm tra xem có bài thi đang làm dở không
+        Optional<ExamResult> inProgressExam = examResultRepository.findByUserAndExamAndSubmittedAtIsNull(user, exam);
+        if (inProgressExam.isPresent()) {
+            throw new RuntimeException("Người dùng đang làm bài thi này");
+        }
+
+        // Kiểm tra xem đã có kết quả hoàn thành chưa - nếu có thì xóa để cho phép thi lại
+        Optional<ExamResult> existingResult = examResultRepository.findByUserAndExam(user, exam);
+        if (existingResult.isPresent() && existingResult.get().getSubmittedAt() != null) {
+            // Xóa kết quả cũ để cho phép thi lại
+            ExamResult oldResult = existingResult.get();
+            // Xóa các chi tiết trước
+            if (!oldResult.getDetails().isEmpty()) {
+                examResultDetailRepository.deleteAll(oldResult.getDetails());
+            }
+            // Xóa kết quả chính
+            examResultRepository.delete(oldResult);
+        }
 
         ExamResult examResult = ExamResult.builder()
                 .id(UUID.randomUUID().toString())

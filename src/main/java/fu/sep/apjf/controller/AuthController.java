@@ -82,22 +82,40 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            log.error("Authentication is null, not authenticated, or anonymous user");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponse.error("Chưa xác thực", null));
         }
 
-        String email = authentication.getName();
+        String email = authentication.getName(); // Email từ JWT token (vì subject là email)
+        log.info("Attempting to find user with email: {}", email);
+
+        // Kiểm tra authentication principal
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User) {
+            User userFromToken = (User) principal;
+            log.info("User from token - ID: {}, Username: {}, Email: {}",
+                userFromToken.getId(), userFromToken.getUsername(), userFromToken.getEmail());
+
+            // Sử dụng email từ User object trong token
+            email = userFromToken.getEmail();
+            log.info("Using email from user object: {}", email);
+        } else {
+            log.warn("Principal is not a User object, it is: {}", principal.getClass().getName());
+        }
+
         Optional<User> userOptional = userService.findByEmail(email);
 
         if (userOptional.isEmpty()) {
+            log.error("No user found with email: {}", email);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error("Không tìm thấy người dùng", null));
         }
 
         User user = userOptional.get();
+        log.info("User found - ID: {}, Username: {}, Email: {}", user.getId(), user.getUsername(), user.getEmail());
         UserProfileDto userProfileDto = UserMapper.toProfileDto(user);
 
         return ResponseEntity.ok(ApiResponse.ok("Thông tin người dùng", userProfileDto));
     }
 }
-
