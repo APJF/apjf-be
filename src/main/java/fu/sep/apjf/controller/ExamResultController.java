@@ -34,9 +34,11 @@ public class ExamResultController {
     @PostMapping("/submit")
     public ResponseEntity<ApiResponse<ExamResultDto>> submitExam(
             @RequestBody SubmitExamDto submitExamDto,
-            @RequestParam String userId) {
-        ExamResultDto result = examResultService.submitExam(submitExamDto, userId);
-        return ResponseEntity.ok(ApiResponse.ok("Nộp bài thi thành công", result));
+            @RequestParam String userId,
+            @RequestParam(defaultValue = "false") boolean isAutoSubmit) {
+        ExamResultDto result = examResultService.submitExam(submitExamDto, userId, isAutoSubmit);
+        String message = isAutoSubmit ? "Bài thi đã được nộp tự động do hết thời gian" : "Nộp bài thi thành công";
+        return ResponseEntity.ok(ApiResponse.ok(message, result));
     }
 
     @GetMapping("/{id}")

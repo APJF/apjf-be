@@ -77,7 +77,7 @@ public class ExamResultService {
     }
 
     // Cập nhật phương thức submitExam để nhận thêm userId
-    public ExamResultDto submitExam(SubmitExamDto submitExamDto, String userId) {
+    public ExamResultDto submitExam(SubmitExamDto submitExamDto, String userId, boolean isAutoSubmit) {
         // Tìm bài thi dựa vào examId
         String examId = submitExamDto.examId();
         Exam exam = examRepository.findById(examId)
@@ -96,50 +96,72 @@ public class ExamResultService {
             throw new RuntimeException("Bài thi đã được nộp rồi");
         }
 
-        // Xóa các câu trả lời cũ nếu có (để tránh trùng lặp)
-        if (!examResult.getDetails().isEmpty()) {
+        // Kiểm tra thời gian làm bài
+        LocalDateTime startedAt = examResult.getStartedAt();
+        Double duration = examResult.getExam().getDuration();
+        LocalDateTime expectedEndTime = startedAt.plusMinutes(duration.longValue());
+        boolean isTimeExpired = LocalDateTime.now().isAfter(expectedEndTime);
+
+        // Nếu không phải auto submit và đã hết giờ
+        if (!isAutoSubmit && isTimeExpired) {
+            throw new RuntimeException("Đã hết thời gian làm bài");
+        }
+
+        // Xóa các câu trả lời cũ nếu có và người dùng đang submit mới
+        if (!isAutoSubmit && !examResult.getDetails().isEmpty()) {
             examResultDetailRepository.deleteAll(examResult.getDetails());
             examResult.getDetails().clear();
         }
 
-        // Lưu các câu trả lời mới
         int correctAnswers = 0;
-        int totalQuestions = submitExamDto.answers().size();
+        int totalQuestions;
 
-        for (AnswerSubmissionDto answerDto : submitExamDto.answers()) {
-            Question question = questionRepository.findById(answerDto.questionId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy câu hỏi: " + answerDto.questionId()));
+        if (!isAutoSubmit) {
+            // Trường hợp submit thông thường: lưu các câu trả lời mới
+            totalQuestions = submitExamDto.answers().size();
+            for (AnswerSubmissionDto answerDto : submitExamDto.answers()) {
+                Question question = questionRepository.findById(answerDto.questionId())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy câu hỏi: " + answerDto.questionId()));
 
-            boolean isCorrect = checkAnswer(question, answerDto);
-            if (isCorrect) correctAnswers++;
+                boolean isCorrect = checkAnswer(question, answerDto);
+                if (isCorrect) correctAnswers++;
 
-            ExamResultDetail answer = ExamResultDetail.builder()
-                    .id(UUID.randomUUID().toString())
-                    .userAnswer(answerDto.userAnswer())
-                    .isCorrect(isCorrect)
-                    .examResult(examResult)
-                    .question(question)
-                    .build();
+                ExamResultDetail answer = ExamResultDetail.builder()
+                        .id(UUID.randomUUID().toString())
+                        .userAnswer(answerDto.userAnswer())
+                        .isCorrect(isCorrect)
+                        .examResult(examResult)
+                        .question(question)
+                        .build();
 
-            if (answerDto.selectedOptionId() != null) {
-                QuestionOption selectedOption = questionOptionRepository.findById(answerDto.selectedOptionId())
-                        .orElse(null);
-                answer.setSelectedOption(selectedOption);
+                if (answerDto.selectedOptionId() != null) {
+                    QuestionOption selectedOption = questionOptionRepository.findById(answerDto.selectedOptionId())
+                            .orElse(null);
+                    answer.setSelectedOption(selectedOption);
+                }
+
+                examResultDetailRepository.save(answer);
+                examResult.getDetails().add(answer);
             }
-
-            examResultDetailRepository.save(answer);
-            examResult.getDetails().add(answer);
+        } else {
+            // Trường hợp auto submit: tính điểm dựa trên câu trả lời đã có
+            totalQuestions = examResult.getDetails().size();
+            for (ExamResultDetail detail : examResult.getDetails()) {
+                if (detail.getIsCorrect()) {
+                    correctAnswers++;
+                }
+            }
         }
 
-        float score = totalQuestions > 0 ? (float) correctAnswers / totalQuestions * 10 : 0;
-        EnumClass.ExamStatus status = score >= 5.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED;
+        // Tính điểm theo phần trăm và làm tròn
+        float score = totalQuestions > 0 ? Math.round(((float) correctAnswers / totalQuestions) * 100) : 0;
+        EnumClass.ExamStatus status = score >= 50.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED;
 
         examResult.setSubmittedAt(LocalDateTime.now());
         examResult.setScore(score);
         examResult.setStatus(status);
 
         ExamResult savedResult = examResultRepository.save(examResult);
-
         return ExamResultMapper.toDto(savedResult);
     }
 
