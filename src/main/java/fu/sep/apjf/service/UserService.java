@@ -64,12 +64,13 @@ public class UserService {
             throw new BadCredentialsException("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản");
         }
 
-        // 4. Lấy role & sinh token
+        // 4. Lấy role & sinh cả access token và refresh token
         List<String> roles = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        String token = jwtUtils.generateTokenFromUsername(user);
+        String accessToken = jwtUtils.generateTokenFromUsername(user);
+        String refreshToken = jwtUtils.generateRefreshToken(user);
 
         // 5. Tạo đối tượng UserInfo
         LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
@@ -79,16 +80,57 @@ public class UserService {
                 roles
         );
 
-        // 6. Trả về đối tư���ng LoginResponse mới
+        // 6. Trả về đối tượng LoginResponse với cả access token và refresh token
         return new LoginResponseDto(
-                token,              // access_token
+                accessToken,        // access_token
                 "Bearer",           // token_type
                 3600,               // expires_in (1 hour in seconds)
-                null,               // refresh_token (null for now)
+                refreshToken,       // refresh_token
                 userInfo            // user object
         );
     }
 
+    @Transactional
+    public LoginResponseDto refreshToken(String refreshToken) {
+        // 1. Validate refresh token
+        if (!jwtUtils.validateRefreshToken(refreshToken)) {
+            throw new BadCredentialsException("Refresh token không hợp lệ hoặc đã hết hạn");
+        }
+
+        // 2. Lấy thông tin user từ refresh token
+        String email = jwtUtils.getEmailFromJwtToken(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Người dùng không tồn tại"));
+
+        // 3. Kiểm tra tài khoản vẫn còn active
+        if (!user.isEnabled()) {
+            throw new BadCredentialsException("Tài khoản đã bị vô hiệu hóa");
+        }
+
+        // 4. Tạo cặp token mới
+        List<String> roles = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        String newAccessToken = jwtUtils.generateTokenFromUsername(user);
+        String newRefreshToken = jwtUtils.generateRefreshToken(user);
+
+        // 5. Tạo response
+        LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
+                user.getId(),
+                user.getUsername(),
+                user.getAvatar(),
+                roles
+        );
+
+        return new LoginResponseDto(
+                newAccessToken,     // access_token mới
+                "Bearer",           // token_type
+                3600,               // expires_in
+                newRefreshToken,    // refresh_token mới
+                userInfo            // user object
+        );
+    }
 
     @Transactional
     public void register(RegisterDto registerDTO) {
@@ -227,4 +269,3 @@ public class UserService {
         return userRepository.save(user);
     }
 }
-

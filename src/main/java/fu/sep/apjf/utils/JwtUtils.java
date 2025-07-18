@@ -30,6 +30,10 @@ public class JwtUtils {
     @Value("${spring.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
+    // Thêm config cho refresh token
+    @Value("${spring.app.jwtRefreshExpirationMs:604800000}") // 7 ngày mặc định
+    private int jwtRefreshExpirationMs;
+
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         logger.debug("Authorization header: {}", bearerToken);
@@ -60,8 +64,33 @@ public class JwtUtils {
                 .claim("roles", roles)     // embed roles claim
                 .claim("userId", userId)   // embed userId claim
                 .claim("username", username)   // Chuyển username thành một claim
+                .claim("tokenType", "access") // Đánh dấu đây là access token
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key())
+                .compact();
+    }
+
+    // Thêm method tạo refresh token
+    public String generateRefreshToken(UserDetails userDetails) {
+        String username = userDetails.getUsername();
+
+        Long userId = null;
+        String email = null;
+
+        if (userDetails instanceof User) {
+            User user = (User) userDetails;
+            userId = user.getId();
+            email = user.getEmail();
+        }
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("userId", userId)
+                .claim("username", username)
+                .claim("tokenType", "refresh") // Đánh dấu đây là refresh token
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtRefreshExpirationMs))
                 .signWith(key())
                 .compact();
     }
@@ -99,6 +128,30 @@ public class JwtUtils {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();  // Email bây giờ là subject
+    }
+
+    // Thêm method kiểm tra loại token
+    public String getTokenType(String token) {
+        return Jwts.parser().verifyWith(key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("tokenType", String.class);
+    }
+
+    // Thêm method validate refresh token
+    public boolean validateRefreshToken(String refreshToken) {
+        try {
+            if (!validateJwtToken(refreshToken)) {
+                return false;
+            }
+
+            String tokenType = getTokenType(refreshToken);
+            return "refresh".equals(tokenType);
+        } catch (Exception e) {
+            logger.error("Invalid refresh token: {}", e.getMessage());
+            return false;
+        }
     }
 
     private SecretKey key() {

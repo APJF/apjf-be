@@ -77,6 +77,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Thay đổi mật khẩu thành công.", null));
     }
 
+    @PostMapping("/refresh-token")
+    public ResponseEntity<ApiResponse<LoginResponseDto>> refreshToken(@Valid @RequestBody RefreshTokenRequestDto refreshTokenRequest) {
+        LoginResponseDto payload = userService.refreshToken(refreshTokenRequest.refreshToken());
+        return ResponseEntity.ok(ApiResponse.ok("Làm mới token thành công", payload));
+    }
+
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserProfileDto>> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

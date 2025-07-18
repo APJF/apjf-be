@@ -3,7 +3,8 @@ spring:
     name: APJF-PROJECT
   app:
     jwtSecret: ${JWT_SECRET}
-    jwtExpirationMs: ${JWT_EXPIRATION}
+    jwtExpirationMs: ${JWT_EXPIRATION:3600000} # 1 hour
+    jwtRefreshExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}

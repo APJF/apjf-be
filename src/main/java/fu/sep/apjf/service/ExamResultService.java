@@ -114,11 +114,10 @@ public class ExamResultService {
         }
 
         int correctAnswers = 0;
-        int totalQuestions;
+        int totalQuestionsInExam = exam.getQuestions().size(); // Lấy tổng số câu hỏi thực tế trong đề thi
 
         if (!isAutoSubmit) {
             // Trường hợp submit thông thường: lưu các câu trả lời mới
-            totalQuestions = submitExamDto.answers().size();
             for (AnswerSubmissionDto answerDto : submitExamDto.answers()) {
                 Question question = questionRepository.findById(answerDto.questionId())
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy câu hỏi: " + answerDto.questionId()));
@@ -145,7 +144,6 @@ public class ExamResultService {
             }
         } else {
             // Trường hợp auto submit: tính điểm dựa trên câu trả lời đã có
-            totalQuestions = examResult.getDetails().size();
             for (ExamResultDetail detail : examResult.getDetails()) {
                 if (detail.getIsCorrect()) {
                     correctAnswers++;
@@ -153,8 +151,8 @@ public class ExamResultService {
             }
         }
 
-        // Tính điểm theo phần trăm và làm tròn
-        float score = totalQuestions > 0 ? Math.round(((float) correctAnswers / totalQuestions) * 100) : 0;
+        // Tính điểm theo phần trăm dựa trên TỔNG SỐ CÂU HỎI TRONG ĐỀ THI, không phải số câu đã trả lời
+        float score = totalQuestionsInExam > 0 ? Math.round(((float) correctAnswers / totalQuestionsInExam) * 100) : 0;
         EnumClass.ExamStatus status = score >= 50.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED;
 
         examResult.setSubmittedAt(LocalDateTime.now());
