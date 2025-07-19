@@ -383,5 +383,12 @@ public class ExamService {
             exam.getQuestions().addAll(questions);
         }
     }
+
+    // Method mới cho ExamService
+    public ExamDto getExamDetail(String examId) {
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
+        return ExamMapper.toDto(exam);
+    }
 }
 
