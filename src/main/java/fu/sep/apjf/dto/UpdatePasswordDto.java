@@ -3,7 +3,7 @@ package fu.sep.apjf.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record UpdatePasswordDTO(
+public record UpdatePasswordDto(
         @NotBlank(message = "Mật khẩu hiện tại không được để trống")
         @Size(min = 6, message = "Mật khẩu ít nhất 6 ký tự")
         String currentPassword,

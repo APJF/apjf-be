@@ -8,7 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface AuthorityRepository extends JpaRepository<Authority, Long> {
-
-    /* tìm theo tên quyền: ROLE_USER, ROLE_STAFF … */
     Optional<Authority> findByAuthority(String authority);
 }

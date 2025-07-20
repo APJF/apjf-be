@@ -3,6 +3,9 @@ package fu.sep.apjf.dto;
 import fu.sep.apjf.entity.EnumClass.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.util.Set;
+
 public record UnitDto(
         String id,
         @NotBlank(message = "Tiêu đề bài học không được để trống")
@@ -14,6 +17,7 @@ public record UnitDto(
         Status status,
         @NotBlank(message = "ID chương không được để trống")
         String chapterId,
-        String prerequisiteUnitId
+        String prerequisiteUnitId,
+        Set<ExamSummaryDto> exams
 ) {
 }

@@ -21,12 +21,12 @@ public class Unit {
 
     @Id
     @Column(length = 36)
-    private String id;          // UUID
+    private String id;
 
     @Column(nullable = false)
     private String title;
 
-    @Column(length = 255)
+    @Column
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -55,4 +55,14 @@ public class Unit {
     @JsonManagedReference
     @Builder.Default
     private Set<ApprovalRequest> approvalRequests = new HashSet<>();
+
+    /* N-N Unit ↔ Question */
+    @ManyToMany(mappedBy = "units")
+    @Builder.Default
+    private Set<Question> questions = new HashSet<>();
+
+    /* 1-N Unit → Exam */
+    @OneToMany(mappedBy = "unit")
+    @Builder.Default
+    private Set<Exam> exams = new HashSet<>();
 }

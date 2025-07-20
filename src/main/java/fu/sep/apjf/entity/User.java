@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -50,11 +52,26 @@ public class User implements UserDetails {
     @Column(name = "email_verified")
     private boolean emailVerified = true;
 
+    @Column(name = "vip_expiration")
+    private LocalDateTime vipExpiration;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_authority",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "authority_id", referencedColumnName = "id"))
     private List<Authority> authorities;
+
+    /* 1-N User → ExamResult */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private transient List<ExamResult> examResults = new ArrayList<>();
+
+    /* 1-N User → ApprovalRequest (as creator) */
+    @OneToMany(mappedBy = "creator")
+    private transient List<ApprovalRequest> createdRequests = new ArrayList<>();
+
+    /* 1-N User → ApprovalRequest (as reviewer) */
+    @OneToMany(mappedBy = "reviewer")
+    private transient List<ApprovalRequest> reviewedRequests = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -62,5 +79,3 @@ public class User implements UserDetails {
     }
 
 }
-
-

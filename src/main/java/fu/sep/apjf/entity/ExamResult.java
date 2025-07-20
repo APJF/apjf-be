@@ -1,7 +1,8 @@
 package fu.sep.apjf.entity;
 
-import lombok.*;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "exam_results")
+@Table(name = "exam_result")
 public class ExamResult {
 
     @Id
@@ -29,8 +30,9 @@ public class ExamResult {
     @Enumerated(EnumType.STRING)
     private EnumClass.ExamStatus status;
 
-    @Column(name = "user_id")
-    private String userId;                  // nếu có entity User thì ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     /* ==== Quan hệ ==== */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,5 +40,6 @@ public class ExamResult {
     private Exam exam;
 
     @OneToMany(mappedBy = "examResult", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExamResultAnswer> answers = new ArrayList<>();
+    @Builder.Default
+    private List<ExamResultDetail> details = new ArrayList<>();
 }

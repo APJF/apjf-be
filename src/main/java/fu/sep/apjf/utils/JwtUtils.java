@@ -1,5 +1,6 @@
 package fu.sep.apjf.utils;
 
+import fu.sep.apjf.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -29,6 +30,10 @@ public class JwtUtils {
     @Value("${spring.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
+    // Thêm config cho refresh token
+    @Value("${spring.app.jwtRefreshExpirationMs:604800000}") // 7 ngày mặc định
+    private int jwtRefreshExpirationMs;
+
     public String getJwtFromHeader(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         logger.debug("Authorization header: {}", bearerToken);
@@ -44,11 +49,48 @@ public class JwtUtils {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
+        // Lấy thêm thông tin từ User object
+        Long userId = null;
+        String email = null;
+
+        if (userDetails instanceof User) {
+            User user = (User) userDetails;
+            userId = user.getId();
+            email = user.getEmail();
+        }
+
         return Jwts.builder()
-                .subject(username)
-                .claim("roles", roles)                     // embed roles claim
+                .subject(email)  // Sử dụng email làm subject thay vì username
+                .claim("roles", roles)     // embed roles claim
+                .claim("userId", userId)   // embed userId claim
+                .claim("username", username)   // Chuyển username thành một claim
+                .claim("tokenType", "access") // Đánh dấu đây là access token
                 .issuedAt(new Date())
                 .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key())
+                .compact();
+    }
+
+    // Thêm method tạo refresh token
+    public String generateRefreshToken(UserDetails userDetails) {
+        String username = userDetails.getUsername();
+
+        Long userId = null;
+        String email = null;
+
+        if (userDetails instanceof User) {
+            User user = (User) userDetails;
+            userId = user.getId();
+            email = user.getEmail();
+        }
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("userId", userId)
+                .claim("username", username)
+                .claim("tokenType", "refresh") // Đánh dấu đây là refresh token
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtRefreshExpirationMs))
                 .signWith(key())
                 .compact();
     }
@@ -58,7 +100,7 @@ public class JwtUtils {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getSubject();
+                .get("username", String.class);  // Lấy username từ claim
     }
 
     @SuppressWarnings("unchecked")
@@ -68,6 +110,48 @@ public class JwtUtils {
                 .parseSignedClaims(token)
                 .getPayload()
                 .get("roles", List.class);
+    }
+
+    // Thêm phương thức để lấy userId từ JWT token
+    public Long getUserIdFromJwtToken(String token) {
+        return Jwts.parser().verifyWith(key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId", Long.class);
+    }
+
+    // Thêm phương thức để lấy email từ JWT token
+    public String getEmailFromJwtToken(String token) {
+        return Jwts.parser().verifyWith(key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();  // Email bây giờ là subject
+    }
+
+    // Thêm method kiểm tra loại token
+    public String getTokenType(String token) {
+        return Jwts.parser().verifyWith(key())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("tokenType", String.class);
+    }
+
+    // Thêm method validate refresh token
+    public boolean validateRefreshToken(String refreshToken) {
+        try {
+            if (!validateJwtToken(refreshToken)) {
+                return false;
+            }
+
+            String tokenType = getTokenType(refreshToken);
+            return "refresh".equals(tokenType);
+        } catch (Exception e) {
+            logger.error("Invalid refresh token: {}", e.getMessage());
+            return false;
+        }
     }
 
     private SecretKey key() {

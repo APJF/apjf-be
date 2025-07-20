@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,8 +35,16 @@ public class SecurityConfig {
             "/api/auth/**",
             "/oauth2/**",
             "/login/oauth2/**",
-            "/test/**"
+            "/api/courses/**" // Thêm tất cả các endpoint liên quan đến khóa học vào public
     };
+
+    private static final String[] EXAMS_ENDPOINTS = {
+            "/api/exams/**"
+    };
+
+    private static final String[] USER_ALLOWED_ENDPOINTS = {
+    };
+
     @Lazy
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
     @Lazy
@@ -51,11 +60,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthEntryPointJwt unauthorizedHandler) throws Exception {
         return http
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .anyRequest().permitAll())
+                        .requestMatchers(EXAMS_ENDPOINTS).permitAll()
+                        .requestMatchers(USER_ALLOWED_ENDPOINTS).hasAnyRole("USER", "MANAGER", "ADMIN", "STAFF")
+                        .anyRequest().hasAnyRole("MANAGER", "ADMIN", "STAFF"))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(unauthorizedHandler))
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint

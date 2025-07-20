@@ -1,8 +1,9 @@
 package fu.sep.apjf.entity;
 
-import lombok.*;
 import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,16 +14,21 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "questions")
+@Table(name = "question")
 public class Question {
 
     @Id
-    private String id;             // UUID, sinh từ code hoặc @GenericGenerator
+    private String id;
 
     private String content;
 
     @Column(name = "correct_answer")
     private String correctAnswer;  // với dạng tự luận; nếu chỉ MCQ thì bỏ
+
+    @Column(name = "scope")
+    @Enumerated(EnumType.STRING)
+    private EnumClass.QuestionScope scope;
+
 
     @Enumerated(EnumType.STRING)
     private EnumClass.QuestionType type;
@@ -51,8 +57,20 @@ public class Question {
     private List<QuestionOption> options = new ArrayList<>();
 
     /**
-     * 1‑N với ExamResultAnswer
+     * 1‑N với ExamResultDetail
      */
     @OneToMany(mappedBy = "question")
-    private List<ExamResultAnswer> resultAnswers = new ArrayList<>();
+    private List<ExamResultDetail> examResultDetails = new ArrayList<>();
+
+    /**
+     * N‑N với Unit
+     */
+    @ManyToMany
+    @JoinTable(
+        name = "question_unit",
+        joinColumns = @JoinColumn(name = "question_id"),
+        inverseJoinColumns = @JoinColumn(name = "unit_id")
+    )
+    @Builder.Default
+    private List<Unit> units = new ArrayList<>();
 }

@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Set;
 
-/* -------- Course -------- */
 public record CourseDto(
         String id,
         @NotBlank(message = "Tiêu đề khóa học không được để trống")
@@ -25,6 +24,8 @@ public record CourseDto(
         String requirement,
         EnumClass.Status status,
         String prerequisiteCourseId,
-        Set<TopicDto> topics
+        Set<TopicDto> topics,
+        Set<ExamSummaryDto> exams,
+        Set<ChapterDto> chapters
 ) {
 }

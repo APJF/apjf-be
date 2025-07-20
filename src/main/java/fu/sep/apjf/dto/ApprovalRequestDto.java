@@ -6,9 +6,6 @@ import fu.sep.apjf.entity.ApprovalRequest.TargetType;
 
 import java.time.Instant;
 
-/**
- * DTO for displaying ApprovalRequest information to clients
- */
 public record ApprovalRequestDto(
         Integer id,
         TargetType targetType,

@@ -31,7 +31,7 @@ public class Material {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Type type;                       // KANJI, GRAMMAR …
+    private EnumClass.MaterialType type;                       // KANJI, GRAMMAR …
 
     /* ------- owner Unit ------- */
     @ManyToOne
@@ -47,6 +47,4 @@ public class Material {
     @Builder.Default
     private Set<ApprovalRequest> approvalRequests = new HashSet<>();
 
-    /* enum */
-    public enum Type {KANJI, GRAMMAR, VOCAB, LISTENING, READING, WRITING}
 }
