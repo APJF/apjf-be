@@ -75,4 +75,8 @@ public class Course {
     @Builder.Default
     private Set<Exam> exams = new HashSet<>();
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<CourseReview> reviews = new HashSet<>();
+
 }

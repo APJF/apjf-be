@@ -78,4 +78,8 @@ public class User implements UserDetails {
         return authorities;
     }
 
+    /* 1-N User → CourseReview */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private transient List<CourseReview> courseReviews = new ArrayList<>();
+
 }
