@@ -40,23 +40,11 @@ public interface CourseRepository extends JpaRepository<Course, String>, JpaSpec
 
     Page<Course> findByLevel(EnumClass.Level level, Pageable pageable);
 
-    List<Course> findByPrerequisiteCourse(Course prerequisiteCourse);
-
     List<Course> findByPrerequisiteCourseIsNull();
 
     List<Course> findByTitleContainingIgnoreCase(String title);
 
     Page<Course> findByTitleContainingIgnoreCase(String title, Pageable pageable);
-
-    List<Course> findByDescriptionContainingIgnoreCase(String description);
-
-    List<Course> findByTitleStartingWithIgnoreCase(String titlePrefix);
-
-    List<Course> findByDurationGreaterThanEqual(BigDecimal minDuration);
-
-    List<Course> findByDurationLessThanEqual(BigDecimal maxDuration);
-
-    List<Course> findByDurationBetween(BigDecimal minDuration, BigDecimal maxDuration);
 
     List<Course> findByStatusAndLevel(EnumClass.Status status, EnumClass.Level level);
 

@@ -58,8 +58,6 @@ public interface ExamRepository extends JpaRepository<Exam, String>, JpaSpecific
     // Thêm phương thức phân trang
     Page<Exam> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
-    List<Exam> findByDescriptionContainingIgnoreCase(String description);
-
     // Thêm phương thức phân trang
     Page<Exam> findByDescriptionContainingIgnoreCase(String description, Pageable pageable);
 
@@ -68,30 +66,7 @@ public interface ExamRepository extends JpaRepository<Exam, String>, JpaSpecific
     // Thêm phương thức phân trang
     Page<Exam> findByDurationBetween(Double minDuration, Double maxDuration, Pageable pageable);
 
-    List<Exam> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-
-    // Thêm phương thức phân trang
-    Page<Exam> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
-
-    List<Exam> findByExamScopeTypeAndCourse(EnumClass.ExamScopeType scopeType, Course course);
-
-    // Thêm phương thức phân trang
-    Page<Exam> findByExamScopeTypeAndCourse(EnumClass.ExamScopeType scopeType, Course course, Pageable pageable);
-
-    List<Exam> findByExamScopeTypeAndChapter(EnumClass.ExamScopeType scopeType, Chapter chapter);
-
-    // Thêm phương thức phân trang
-    Page<Exam> findByExamScopeTypeAndChapter(EnumClass.ExamScopeType scopeType, Chapter chapter, Pageable pageable);
-
-    List<Exam> findByExamScopeTypeAndUnit(EnumClass.ExamScopeType scopeType, Unit unit);
-
-    // Thêm phương thức phân trang
-    Page<Exam> findByExamScopeTypeAndUnit(EnumClass.ExamScopeType scopeType, Unit unit, Pageable pageable);
-
     List<Exam> findByOrderByCreatedAtDesc();
-
-    // Thêm phương thức phân trang
-    Page<Exam> findByOrderByCreatedAtDesc(Pageable pageable);
 
     long countByExamScopeType(EnumClass.ExamScopeType scopeType);
 
