@@ -30,7 +30,7 @@ public class ExamResultService {
     private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
     private final ExamResultDetailRepository examResultDetailRepository;
-    private final QuestionOptionRepository questionOptionRepository;
+    private final OptionRepository optionRepository;
     private final UserRepository userRepository;
 
     public ExamResultResponseDto startExam(String examId, Long userId) {
@@ -126,7 +126,7 @@ public class ExamResultService {
                     .build();
 
             if (answerDto.selectedOptionId() != null) {
-                QuestionOption selectedOption = questionOptionRepository.findById(answerDto.selectedOptionId())
+                Option selectedOption = optionRepository.findById(answerDto.selectedOptionId())
                         .orElse(null);
                 answer.setSelectedOption(selectedOption);
             }
@@ -151,7 +151,7 @@ public class ExamResultService {
         return switch (question.getType()) {
             case MULTIPLE_CHOICE, TRUE_FALSE -> {
                 if (answerDto.selectedOptionId() != null) {
-                    QuestionOption selectedOption = questionOptionRepository.findById(answerDto.selectedOptionId())
+                    Option selectedOption = optionRepository.findById(answerDto.selectedOptionId())
                             .orElse(null);
                     yield selectedOption != null && selectedOption.getIsCorrect();
                 }

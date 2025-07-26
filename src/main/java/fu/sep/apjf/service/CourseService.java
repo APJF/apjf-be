@@ -10,7 +10,7 @@ import fu.sep.apjf.entity.User;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseMapper;
 import fu.sep.apjf.repository.CourseRepository;
-import fu.sep.apjf.repository.CourseReviewRepository;
+import fu.sep.apjf.repository.ReviewRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,7 +42,7 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final ApprovalRequestService approvalRequestService;
-    private final CourseReviewRepository courseReviewRepository;
+    private final ReviewRepository reviewRepository;
 
     /* ---------- READ ---------- */
 
@@ -219,7 +219,7 @@ public class CourseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
         CourseResponseDto baseDto = CourseMapper.toResponseDto(course);
-        Double averageRating = courseReviewRepository.calculateAverageRatingByCourse(course).orElse(0.0);
+        Double averageRating = reviewRepository.calculateAverageRatingByCourse(course).orElse(0.0);
 
         // Create a new DTO with all the original fields plus the rating
         return new CourseResponseDto(
@@ -247,7 +247,7 @@ public class CourseService {
             Course course = courseRepository.findById(dto.id()).orElse(null);
             if (course == null) return dto;
 
-            Double averageRating = courseReviewRepository.calculateAverageRatingByCourse(course).orElse(0.0);
+            Double averageRating = reviewRepository.calculateAverageRatingByCourse(course).orElse(0.0);
 
             return new CourseResponseDto(
                 dto.id(),

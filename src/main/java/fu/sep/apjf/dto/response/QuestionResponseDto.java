@@ -10,6 +10,6 @@ public record QuestionResponseDto(
         String correctAnswer,
         EnumClass.QuestionScope scope,
         EnumClass.QuestionType type,
-        List<QuestionOptionResponseDto> options
+        List<OptionResponseDto> options
 ) {
 }

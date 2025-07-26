@@ -1,7 +1,7 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.QuestionRequestDto;
-import fu.sep.apjf.dto.response.QuestionOptionResponseDto;
+import fu.sep.apjf.dto.response.OptionResponseDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.Question;
 
@@ -18,10 +18,10 @@ public final class QuestionMapper {
             return null;
         }
 
-        List<QuestionOptionResponseDto> optionDtos = null;
+        List<OptionResponseDto> optionDtos = null;
         if (question.getOptions() != null) {
             optionDtos = question.getOptions().stream()
-                    .map(option -> new QuestionOptionResponseDto(
+                    .map(option -> new OptionResponseDto(
                             option.getId(),
                             option.getContent(),
                             option.getIsCorrect()

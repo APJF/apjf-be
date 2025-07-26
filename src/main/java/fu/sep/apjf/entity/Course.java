@@ -79,7 +79,7 @@ public class Course {
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<CourseReview> reviews = new HashSet<>();
+    private Set<Review> reviews = new HashSet<>();
 
     @OneToMany(mappedBy = "course")
     @Builder.Default

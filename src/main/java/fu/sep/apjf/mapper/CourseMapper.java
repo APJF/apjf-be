@@ -177,4 +177,48 @@ public class CourseMapper {
                 rating
         );
     }
+
+    public static CourseResponseDto toResponseDto(Course course, Double averageRating) {
+        if (course == null) {
+            return null;
+        }
+        // Get prerequisiteCourse ID if it exists
+        String prerequisiteCourseId = course.getPrerequisiteCourse() != null ?
+                course.getPrerequisiteCourse().getId() : null;
+
+        Set<TopicDto> topicDtos = Collections.emptySet();
+        if (course.getTopics() != null && !course.getTopics().isEmpty()) {
+            topicDtos = course.getTopics().stream()
+                    .map(topic -> new TopicDto(topic.getId(), topic.getName()))
+                    .collect(Collectors.toSet());
+        }
+
+        Set<ExamSummaryDto> examDtos = Collections.emptySet();
+        if (course.getExams() != null && !course.getExams().isEmpty()) {
+            examDtos = course.getExams().stream()
+                    .map(exam -> new ExamSummaryDto(
+                            exam.getId(),
+                            exam.getTitle(),
+                            exam.getDescription(),
+                            exam.getDuration() != null ? exam.getDuration().intValue() : null,
+                            exam.getQuestions() != null ? exam.getQuestions().size() : 0,
+                            null))
+                    .collect(Collectors.toSet());
+        }
+
+        return new CourseResponseDto(
+                course.getId(),
+                course.getTitle(),
+                course.getDescription(),
+                course.getDuration(),
+                course.getLevel(),
+                course.getImage(),
+                course.getRequirement(),
+                course.getStatus(),
+                prerequisiteCourseId,
+                topicDtos,
+                examDtos,
+                averageRating
+        );
+    }
 }

@@ -2,14 +2,13 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.QuestionRequestDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
-import fu.sep.apjf.dto.response.QuestionOptionResponseDto;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Exam;
+import fu.sep.apjf.entity.Option;
 import fu.sep.apjf.entity.Question;
-import fu.sep.apjf.entity.QuestionOption;
 import fu.sep.apjf.mapper.QuestionMapper;
 import fu.sep.apjf.repository.ExamRepository;
-import fu.sep.apjf.repository.QuestionOptionRepository;
+import fu.sep.apjf.repository.OptionRepository;
 import fu.sep.apjf.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,7 +32,7 @@ import jakarta.persistence.criteria.Predicate;
 public class QuestionService {
 
     private final QuestionRepository questionRepository;
-    private final QuestionOptionRepository questionOptionRepository;
+    private final OptionRepository optionRepository;
     private final ExamRepository examRepository;
 
     /**
@@ -122,13 +121,13 @@ public class QuestionService {
         // Tạo options nếu có
         if (questionDto.options() != null && !questionDto.options().isEmpty()) {
             questionDto.options().forEach(optionDto -> {
-                QuestionOption option = QuestionOption.builder()
+                Option option = Option.builder()
                         .id(UUID.randomUUID().toString())
                         .content(optionDto.content())
                         .isCorrect(optionDto.isCorrect())
                         .question(savedQuestion)
                         .build();
-                questionOptionRepository.save(option);
+                optionRepository.save(option);
             });
         }
 

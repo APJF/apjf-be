@@ -78,7 +78,7 @@ public class User implements UserDetails {
 
     /* 1-N User → CourseReview */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private transient List<CourseReview> courseReviews = new ArrayList<>();
+    private transient List<Review> courseReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LearningPath> learningPaths = new ArrayList<>();

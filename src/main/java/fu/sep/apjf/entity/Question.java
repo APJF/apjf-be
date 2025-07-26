@@ -56,7 +56,7 @@ public class Question {
      */
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<QuestionOption> options = new ArrayList<>();
+    private List<Option> options = new ArrayList<>();
 
     /**
      * 1‑N với ExamResultDetail

@@ -11,8 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "question_option")
-public class QuestionOption {
+@Table(name = "option")
+public class Option {
 
     @Id
     private String id;
