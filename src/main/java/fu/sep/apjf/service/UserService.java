@@ -1,8 +1,8 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.LoginRequestDto;
-import fu.sep.apjf.dto.LoginResponseDto;
-import fu.sep.apjf.dto.RegisterDto;
+import fu.sep.apjf.dto.request.LoginRequestDto;
+import fu.sep.apjf.dto.request.RegisterDto;
+import fu.sep.apjf.dto.response.LoginResponseDto;
 import fu.sep.apjf.entity.Authority;
 import fu.sep.apjf.entity.Token;
 import fu.sep.apjf.entity.Token.TokenType;
@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -75,18 +76,19 @@ public class UserService {
         // 5. Tạo đối tượng UserInfo
         LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
                 user.getId(),
+                user.getEmail(),
                 user.getUsername(),
                 user.getAvatar(),
                 roles
+
         );
 
         // 6. Trả về đối tượng LoginResponse với cả access token và refresh token
         return new LoginResponseDto(
-                accessToken,        // access_token
-                "Bearer",           // token_type
-                3600,               // expires_in (1 hour in seconds)
-                refreshToken,       // refresh_token
-                userInfo            // user object
+                accessToken,
+                refreshToken,
+                "Bearer",
+                userInfo
         );
     }
 
@@ -118,16 +120,17 @@ public class UserService {
         // 5. Tạo response
         LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
                 user.getId(),
+                user.getEmail(),
                 user.getUsername(),
                 user.getAvatar(),
                 roles
+
         );
 
         return new LoginResponseDto(
                 newAccessToken,     // access_token mới
-                "Bearer",           // token_type
-                3600,               // expires_in
                 newRefreshToken,    // refresh_token mới
+                "Bearer",           // token_type
                 userInfo            // user object
         );
     }
@@ -267,5 +270,26 @@ public class UserService {
             user.setAuthorities(List.of(defaultRole));
         }
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public User createOAuth2User(String email, String name, String avatar) {
+        // Lookup default role
+        Authority userRole = authorityRepository.findByAuthority("ROLE_USER")
+                .orElseThrow(() -> new AppException("Default role not found: ROLE_USER"));
+
+        // Build new User
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setUsername(name);
+        newUser.setAvatar(avatar);
+        newUser.setEnabled(true);
+        newUser.setAuthorities(List.of(userRole));
+        // Generate a random password and encode it
+        String randomPwd = UUID.randomUUID().toString();
+        newUser.setPassword(passwordEncoder.encode(randomPwd));
+
+        // Persist and return
+        return userRepository.save(newUser);
     }
 }

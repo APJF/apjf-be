@@ -1,7 +1,7 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.LoginResponseDto;
-import fu.sep.apjf.dto.UserProfileDto;
+import fu.sep.apjf.dto.response.LoginResponseDto;
+import fu.sep.apjf.dto.response.ProfileResponseDto;
 import fu.sep.apjf.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -14,7 +14,7 @@ public final class UserMapper {
         // Private constructor to prevent instantiation
     }
 
-    public static UserProfileDto toProfileDto(User user) {
+    public static ProfileResponseDto toProfileDto(User user) {
         if (user == null) {
             return null;
         }
@@ -26,7 +26,7 @@ public final class UserMapper {
                     .toList();
         }
 
-        return new UserProfileDto(
+        return new ProfileResponseDto(
                 user.getId().toString(),
                 user.getEmail(),
                 user.getUsername(),
@@ -48,9 +48,10 @@ public final class UserMapper {
                     .toList();
         }
 
-        // Create the nested UserInfo object correctly
+        // Create the nested UserInfo object with the correct parameter order
         LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
                 user.getId(),
+                user.getEmail(),
                 user.getUsername(),
                 user.getAvatar(),
                 roles
@@ -58,14 +59,12 @@ public final class UserMapper {
 
         // Default token configuration values
         String tokenType = "Bearer";
-        int expiresIn = 3600; // 1 hour in seconds
         String refreshToken = ""; // Optional, leave empty if not used
 
         return new LoginResponseDto(
                 token,
-                tokenType,
-                expiresIn,
                 refreshToken,
+                tokenType,
                 userInfo
         );
     }

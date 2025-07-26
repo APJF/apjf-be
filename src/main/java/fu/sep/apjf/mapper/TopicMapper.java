@@ -1,6 +1,6 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.TopicDto;
+import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.entity.Topic;
 
 public final class TopicMapper {

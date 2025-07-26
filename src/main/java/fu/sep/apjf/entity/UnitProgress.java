@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class UnitProgress {
 
     @EmbeddedId
+    @Builder.Default
     private UnitProgressKey id = new UnitProgressKey();
 
     @ManyToOne

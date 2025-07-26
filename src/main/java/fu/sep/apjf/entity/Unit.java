@@ -67,6 +67,7 @@ public class Unit {
     private Set<Exam> exams = new HashSet<>();
 
     @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<UnitProgress> unitProgresses = new HashSet<>();
 
 }

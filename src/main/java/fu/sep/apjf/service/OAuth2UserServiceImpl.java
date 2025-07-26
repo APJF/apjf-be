@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -32,7 +31,6 @@ public class OAuth2UserServiceImpl implements OAuth2UserService<OAuth2UserReques
 
     private final UserService userService;
     private final AuthorityRepository authorityRepository;
-    private final PasswordEncoder passwordEncoder;
 
     private static final String GOOGLE_EMAIL_ATTRIBUTE = "email";
     private static final String GOOGLE_NAME_ATTRIBUTE = "name";
@@ -114,18 +112,7 @@ public class OAuth2UserServiceImpl implements OAuth2UserService<OAuth2UserReques
     }
 
     private User createNewUserFromOAuth2(String email, String name, String picture) {
-        Authority userRole = authorityRepository.findByAuthority(DEFAULT_ROLE)
-                .orElseThrow(() -> new OAuth2AuthenticationException("Default role not found: " + DEFAULT_ROLE));
-
-        User newUser = new User();
-        newUser.setEmail(email);
-        newUser.setUsername(name);
-        newUser.setAvatar(picture);
-        newUser.setEnabled(true);
-        newUser.setAuthorities(List.of(userRole));
-        newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-
-        return userService.save(newUser);
+        return userService.createOAuth2User(email, name, picture);
     }
 
     private Collection<GrantedAuthority> createGrantedAuthorities(User user) {

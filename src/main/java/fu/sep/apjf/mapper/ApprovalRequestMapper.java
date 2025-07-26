@@ -1,6 +1,6 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.ApprovalRequestDto;
+import fu.sep.apjf.dto.response.ApprovalRequestDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 
 import java.util.List;

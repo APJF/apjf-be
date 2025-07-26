@@ -1,15 +1,15 @@
 package fu.sep.apjf.repository;
 
-import fu.sep.apjf.entity.*;
+import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.ApprovalRequest.Decision;
 import fu.sep.apjf.entity.ApprovalRequest.RequestType;
 import fu.sep.apjf.entity.ApprovalRequest.TargetType;
+import fu.sep.apjf.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 

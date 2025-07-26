@@ -1,13 +1,20 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.*;
+import fu.sep.apjf.dto.request.LearningPathRequestDto;
+import fu.sep.apjf.dto.response.CourseOrderDto;
+import fu.sep.apjf.dto.response.ExamResponseDto;
+import fu.sep.apjf.dto.response.LearningPathResponseDto;
+import fu.sep.apjf.dto.response.UnitProgressDto;
 import fu.sep.apjf.entity.*;
-import fu.sep.apjf.mapper.*;
+import fu.sep.apjf.mapper.CourseLearningPathMapper;
+import fu.sep.apjf.mapper.LearningPathMapper;
+import fu.sep.apjf.mapper.UnitProgressMapper;
 import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,32 +30,32 @@ public class LearningPathService {
     private final UnitRepository unitRepository;
     private final ChapterRepository chapterRepository;
 
-    public LearningPathDto createLearningPath(LearningPathDto dto) {
+    public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto) {
         User user = userRepository.findById(dto.userId()).orElseThrow();
         LearningPath entity = LearningPathMapper.toEntity(dto, user);
-        return LearningPathMapper.toDto(learningPathRepository.save(entity));
+        return LearningPathMapper.toResponseDto(learningPathRepository.save(entity));
     }
 
-    public LearningPathDto updateLearningPath(Long id, LearningPathDto dto) {
+    public LearningPathResponseDto updateLearningPath(Long id, LearningPathRequestDto dto) {
         LearningPath entity = learningPathRepository.findById(id).orElseThrow();
         entity.setTitle(dto.title());
         entity.setDescription(dto.description());
-        entity.setTargetLevel(dto.targetLevel());
+        entity.setTargetLevel(dto.targetLevel() != null ? dto.targetLevel().toString() : null);
         entity.setPrimaryGoal(dto.primaryGoal());
         entity.setFocusSkill(dto.focusSkill());
-        entity.setStatus(dto.status());
-        entity.setDuration(dto.duration());
+        entity.setStatus(dto.status() != null ? EnumClass.PathStatus.valueOf(dto.status().name()) : null);
+        entity.setDuration(dto.duration() != null ? new BigDecimal(dto.duration()) : null);
         entity.setLastUpdatedAt(LocalDateTime.now());
-        return LearningPathMapper.toDto(learningPathRepository.save(entity));
+        return LearningPathMapper.toResponseDto(learningPathRepository.save(entity));
     }
 
     public void deleteLearningPath(Long id) {
         learningPathRepository.deleteById(id);
     }
 
-    public List<LearningPathDto> getLearningPathsByUser(Long userId) {
+    public List<LearningPathResponseDto> getLearningPathsByUser(Long userId) {
         return learningPathRepository.findByUserId(userId).stream()
-                .map(LearningPathMapper::toDto)
+                .map(LearningPathMapper::toResponseDto)
                 .toList();
     }
 

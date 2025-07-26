@@ -12,6 +12,7 @@ import lombok.*;
 public class CourseLearningPath {
 
     @EmbeddedId
+    @Builder.Default
     private CourseLearningPathKey id = new CourseLearningPathKey();
 
     @ManyToOne

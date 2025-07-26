@@ -40,6 +40,7 @@ public class LearningPath {
     private User user;
 
     @OneToMany(mappedBy = "learningPath", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<CourseLearningPath> courseLearningPaths = new ArrayList<>();
 }
 

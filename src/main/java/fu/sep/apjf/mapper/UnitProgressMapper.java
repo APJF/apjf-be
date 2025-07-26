@@ -1,6 +1,6 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.UnitProgressDto;
+import fu.sep.apjf.dto.response.UnitProgressDto;
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.entity.UnitProgress;
 import fu.sep.apjf.entity.UnitProgressKey;
@@ -29,4 +29,3 @@ public class UnitProgressMapper {
                 .build();
     }
 }
-

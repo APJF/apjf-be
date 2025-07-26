@@ -58,6 +58,7 @@ public class Exam {
             joinColumns = @JoinColumn(name = "exam_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )
+    @Builder.Default
     private List<Question> questions = new ArrayList<>();
 
  
@@ -65,5 +66,6 @@ public class Exam {
      * 1‑N với ExamResult
      */
     @OneToMany(mappedBy = "exam")
+    @Builder.Default
     private List<ExamResult> results = new ArrayList<>();
 }

@@ -1,6 +1,6 @@
 package fu.sep.apjf.service;
-
-import fu.sep.apjf.dto.MaterialDto;
+import fu.sep.apjf.dto.request.MaterialRequestDto;
+import fu.sep.apjf.dto.response.MaterialResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Material;
@@ -12,16 +12,11 @@ import fu.sep.apjf.repository.UnitRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,98 +28,49 @@ public class MaterialService {
     private final UnitRepository unitRepository;
     private final ApprovalRequestService approvalRequestService;
 
+    private static final String UNIT_NOT_FOUND_PREFIX = "Không tìm thấy bài học với ID: ";
+    private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
+
+    /**
+     * Tìm tất cả tài liệu dạng list
+     */
     @Transactional(readOnly = true)
-    public List<MaterialDto> findAll() {
+    public List<MaterialResponseDto> findAll() {
         return materialRepository.findAll().stream()
-                .map(MaterialMapper::toDto)
-               .toList();
+                .map(MaterialMapper::toResponseDto)
+                .toList();
     }
 
+    /**
+     * Tìm tài liệu theo đơn vị học tập
+     */
     @Transactional(readOnly = true)
-    public Page<MaterialDto> findAll(int page, int size, String sortBy, String direction) {
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ?
-                Sort.Direction.DESC : Sort.Direction.ASC;
-        Sort sort = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return materialRepository.findAll(pageable)
-                .map(MaterialMapper::toDto);
-    }
-
-    @Transactional(readOnly = true)
-    public MaterialDto findById(String id) {
-        return MaterialMapper.toDto(materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài liệu với ID: " + id)));
-    }
-
-    @Transactional(readOnly = true)
-    public List<MaterialDto> findByUnit(String unitId) {
+    public List<MaterialResponseDto> findByUnitId(String unitId) {
         Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + unitId));
+                .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
+
         return materialRepository.findByUnit(unit).stream()
-                .map(MaterialMapper::toDto)
-                .collect(Collectors.toList());
+                .map(MaterialMapper::toResponseDto)
+                .toList();
     }
 
+    /**
+     * Tìm tài liệu theo ID
+     */
     @Transactional(readOnly = true)
-    public Page<MaterialDto> findByUnit(String unitId, int page, int size) {
+    public MaterialResponseDto findById(String id) {
+        return MaterialMapper.toResponseDto(materialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id)));
+    }
+
+    /**
+     * Tạo tài liệu mới
+     */
+    public MaterialResponseDto create(@Valid MaterialRequestDto dto, String unitId, Long staffId) {
+        log.info("Nhân viên {} tạo tài liệu mới", staffId);
+
         Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + unitId));
-        Pageable pageable = PageRequest.of(page, size);
-        return materialRepository.findByUnit(unit, pageable)
-                .map(MaterialMapper::toDto);
-    }
-
-    @Transactional(readOnly = true)
-    public List<MaterialDto> findByType(EnumClass.MaterialType type) {
-        return materialRepository.findByType(type).stream()
-                .map(MaterialMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public Page<MaterialDto> findByType(EnumClass.MaterialType type, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return materialRepository.findByType(type, pageable)
-                .map(MaterialMapper::toDto);
-    }
-
-    @Transactional(readOnly = true)
-    public List<MaterialDto> findByUnitAndType(String unitId, EnumClass.MaterialType type) {
-        Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + unitId));
-        return materialRepository.findByUnitAndType(unit, type).stream()
-                .map(MaterialMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public Page<MaterialDto> findByUnitAndType(String unitId, EnumClass.MaterialType type, int page, int size) {
-        Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + unitId));
-        Pageable pageable = PageRequest.of(page, size);
-        return materialRepository.findByUnitAndType(unit, type, pageable)
-                .map(MaterialMapper::toDto);
-    }
-
-    @Transactional(readOnly = true)
-    public List<MaterialDto> searchByDescription(String keyword) {
-        return materialRepository.findByDescriptionContainingIgnoreCase(keyword).stream()
-                .map(MaterialMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public Page<MaterialDto> searchByDescription(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return materialRepository.findByDescriptionContainingIgnoreCase(keyword, pageable)
-                .map(MaterialMapper::toDto);
-    }
-
-    public MaterialDto create(@Valid MaterialDto dto, String staffId) {
-        log.info("Nhân viên {} tạo tài liệu mới với ID: {}", staffId, dto.id());
-
-        Unit unit = unitRepository.findById(dto.unitId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + dto.unitId()));
+                .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
 
         String materialId = dto.id() != null ? dto.id() : UUID.randomUUID().toString();
 
@@ -147,51 +93,55 @@ public class MaterialService {
         );
 
         log.info("Tạo tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
-        return MaterialMapper.toDto(savedMaterial);
+        return MaterialMapper.toResponseDto(savedMaterial);
     }
 
-    public MaterialDto update(String id, @Valid MaterialDto dto, String staffId) {
-        log.info("Nhân viên {} cập nhật tài liệu với ID: {}", staffId, id);
+    /**
+     * Cập nhật tài liệu
+     */
+    public MaterialResponseDto update(String id, @Valid MaterialRequestDto dto, String unitId, Long staffId) {
+        log.info("Nhân viên {} cập nhật tài liệu {}", staffId, id);
 
         Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài liệu với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
 
-        Unit unit = unitRepository.findById(dto.unitId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bài học với ID: " + dto.unitId()));
-
+        // Cập nhật thông tin
         material.setDescription(dto.description());
         material.setFileUrl(dto.fileUrl());
         material.setType(dto.type());
-        material.setUnit(unit);
 
-        Material savedMaterial = materialRepository.save(material);
+        // Cập nhật unit nếu có thay đổi
+        if (unitId != null && !material.getUnit().getId().equals(unitId)) {
+            Unit newUnit = unitRepository.findById(unitId)
+                    .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
+            material.setUnit(newUnit);
+        }
 
-        // Auto-create approval request for this material update
+        Material updatedMaterial = materialRepository.save(material);
+
+        // Auto-create approval request for this updated material
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.MATERIAL,
-                savedMaterial.getId(),
+                updatedMaterial.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        log.info("Cập nhật tài liệu {} và tạo yêu cầu phê duyệt thành công", savedMaterial.getId());
-        return MaterialMapper.toDto(savedMaterial);
+        log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", updatedMaterial.getId());
+        return MaterialMapper.toResponseDto(updatedMaterial);
     }
 
-    public void delete(String id, String staffId) {
-        log.info("Nhân viên {} xóa tài liệu với ID: {}", staffId, id);
+    /**
+     * Xóa tài liệu
+     */
+    public void delete(String id) {
+        log.info("Xóa tài liệu với ID: {}", id);
 
         Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài liệu với ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
 
-        // Auto-create approval request for this material deletion
-        approvalRequestService.autoCreateApprovalRequest(
-                ApprovalRequest.TargetType.MATERIAL,
-                material.getId(),
-                ApprovalRequest.RequestType.DEACTIVATE,
-                staffId
-        );
+        materialRepository.delete(material);
 
-        log.info("Đã tạo yêu cầu xóa tài liệu {} thành công", id);
+        log.info("Xóa tài liệu {} thành công", id);
     }
 }

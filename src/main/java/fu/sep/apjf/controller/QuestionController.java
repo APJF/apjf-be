@@ -1,13 +1,14 @@
 package fu.sep.apjf.controller;
 
-import fu.sep.apjf.dto.QuestionDto;
+import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.request.QuestionRequestDto;
+import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.service.QuestionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -16,51 +17,59 @@ public class QuestionController {
 
     private final QuestionService questionService;
 
+    /**
+     * Lấy danh sách câu hỏi với nhiều tùy chọn lọc, sắp xếp và phân trang
+     *
+     * @param page      Trang cần hiển thị, bắt đầu từ 0 (mặc định: 0)
+     * @param size      Số lượng mục trên mỗi trang (mặc định: 10)
+     * @param sort      Trường để sắp xếp (mặc định: "createdAt")
+     * @param direction Hướng sắp xếp: "asc" hoặc "desc" (mặc định: "desc")
+     * @param keyword   Từ khóa tìm kiếm trong nội dung và tiêu đề câu hỏi
+     * @param type      Loại câu hỏi (MULTIPLE_CHOICE, TRUE_FALSE, WRITING)
+     * @param examId    ID của bài thi (nếu muốn lọc theo bài thi)
+     * @param scope     Phạm vi của câu hỏi (UNIT, CHAPTER, COURSE)
+     * @return Page<QuestionResponseDto> Trang kết quả với các câu hỏi thỏa mãn điều kiện
+     */
     @GetMapping
-    public ResponseEntity<List<QuestionDto>> getAllQuestions() {
-        List<QuestionDto> questions = questionService.getAllQuestions();
-        return ResponseEntity.ok(questions);
+    public ResponseEntity<ApiResponseDto<Page<QuestionResponseDto>>> getAllQuestions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) EnumClass.QuestionType type,
+            @RequestParam(required = false) String examId,
+            @RequestParam(required = false) EnumClass.QuestionScope scope) {
+
+        Page<QuestionResponseDto> questions = questionService.getAllQuestions(
+                page, size, sort, direction, keyword, type, examId, scope);
+
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách câu hỏi", questions));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<QuestionDto> getQuestionById(@PathVariable String id) {
-        QuestionDto question = questionService.getQuestionById(id);
-        return ResponseEntity.ok(question);
-    }
-
-    @GetMapping("/type/{type}")
-    public ResponseEntity<List<QuestionDto>> getQuestionsByType(@PathVariable EnumClass.QuestionType type) {
-        List<QuestionDto> questions = questionService.getQuestionsByType(type);
-        return ResponseEntity.ok(questions);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<QuestionDto>> searchQuestions(@RequestParam String keyword) {
-        List<QuestionDto> questions = questionService.searchQuestions(keyword);
-        return ResponseEntity.ok(questions);
-    }
-
-    @GetMapping("/exam/{examId}")
-    public ResponseEntity<List<QuestionDto>> getQuestionsByExamId(@PathVariable String examId) {
-        List<QuestionDto> questions = questionService.getQuestionsByExamId(examId);
-        return ResponseEntity.ok(questions);
+    public ResponseEntity<ApiResponseDto<QuestionResponseDto>> findById(@PathVariable String id) {
+        QuestionResponseDto question = questionService.findById(id);
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết câu hỏi", question));
     }
 
     @PostMapping
-    public ResponseEntity<QuestionDto> createQuestion(@RequestBody QuestionDto questionDto) {
-        QuestionDto question = questionService.createQuestion(questionDto);
-        return ResponseEntity.ok(question);
+    public ResponseEntity<ApiResponseDto<QuestionResponseDto>> create(@RequestBody QuestionRequestDto questionDto) {
+        QuestionResponseDto question = questionService.createQuestion(questionDto);
+        return ResponseEntity.ok(ApiResponseDto.ok("Tạo câu hỏi thành công", question));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<QuestionDto> updateQuestion(@PathVariable String id, @RequestBody QuestionDto questionDto) {
-        QuestionDto question = questionService.updateQuestion(id, questionDto);
-        return ResponseEntity.ok(question);
+    public ResponseEntity<ApiResponseDto<QuestionResponseDto>> update(
+            @PathVariable String id,
+            @RequestBody QuestionRequestDto questionDto) {
+        QuestionResponseDto question = questionService.updateQuestion(id, questionDto);
+        return ResponseEntity.ok(ApiResponseDto.ok("Cập nhật câu hỏi thành công", question));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteQuestion(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<Void>> delete(@PathVariable String id) {
         questionService.deleteQuestion(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponseDto.ok("Xóa câu hỏi thành công", null));
     }
 }

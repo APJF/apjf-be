@@ -1,6 +1,6 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.ExamHistoryDto;
+import fu.sep.apjf.dto.response.ExamHistoryDto;
 import fu.sep.apjf.entity.ExamResult;
 
 import java.util.List;

@@ -1,136 +1,95 @@
 package fu.sep.apjf.controller;
 
-import fu.sep.apjf.dto.ApiResponse;
-import fu.sep.apjf.dto.CourseDetailDto;
-import fu.sep.apjf.dto.CourseDto;
+import fu.sep.apjf.dto.request.CourseSearchFilter;
+import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.request.CourseRequestDto;
+import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.entity.EnumClass;
+import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.CourseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/courses")
 @RequiredArgsConstructor
+@Slf4j
 public class CourseController {
 
     private final CourseService courseService;
 
-    /* -------- GET /api/courses -------- */
+    /**
+     * Lấy danh sách khóa học với nhiều tùy chọn lọc
+     * <p>
+     * Endpoint này được thiết kế để thay thế cho các endpoint riêng lẻ như:
+     * - /api/courses/status/{status}
+     * - /api/courses/level/{level}
+     * - /api/courses/search?title={title}
+     * - /api/courses/entry-level
+     * <p>
+     * Cách sử dụng:
+     * - Lọc theo trạng thái: ?status=PUBLISHED
+     * - Lọc theo cấp độ: ?level=N5
+     * - Lọc theo tiêu đề: ?title=Tiếng Nhật
+     * - Lọc khóa học đầu vào (không có khóa học tiên quyết): ?entryOnly=true
+     * - Kết hợp nhiều điều kiện: ?status=PUBLISHED&level=N5&title=Nhật&entryOnly=true
+     */
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<CourseDto>>> getAll(
+    public ResponseEntity<ApiResponseDto<Page<CourseResponseDto>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) EnumClass.Level level,
-            @RequestParam(required = false) EnumClass.Status status) {
+            @RequestParam(required = false) EnumClass.Status status,
+            @RequestParam(required = false, defaultValue = "false") Boolean entryOnly) {
+
+        // Create a filter object from individual parameters
+        CourseSearchFilter filter = new CourseSearchFilter(title, level, status, entryOnly);
+
         return ResponseEntity.ok(
-                ApiResponse.ok("Danh sách khóa học",
-                        courseService.findAll(page, size, sortBy, direction, title, level, status)));
+                ApiResponseDto.ok("Danh sách khóa học",
+                        courseService.findAll(page, size, sortBy, direction, filter)));
     }
 
     /* -------- GET /api/courses/{id} -------- */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CourseDto>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponse.ok("Chi tiết khóa học", courseService.findById(id)));
-    }
-
-    /* -------- GET /api/courses/{id}/detail -------- */
-    @GetMapping("/{id}/detail")
-    public ResponseEntity<ApiResponse<CourseDetailDto>> getFullDetail(@PathVariable String id) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Khóa học với chương và bài học", courseService.findDetail(id)));
-    }
-
-    /* -------- NEW ENDPOINTS USING UPDATED SERVICE -------- */
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<Page<CourseDto>>> getCoursesByStatus(
-            @PathVariable EnumClass.Status status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Khóa học theo trạng thái",
-                        courseService.findByStatus(status, page, size)));
-    }
-
-    @GetMapping("/level/{level}")
-    public ResponseEntity<ApiResponse<Page<CourseDto>>> getCoursesByLevel(
-            @PathVariable EnumClass.Level level,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Khóa học theo cấp độ",
-                        courseService.findByLevel(level, page, size)));
-    }
-
-    @GetMapping("/entry-level")
-    public ResponseEntity<ApiResponse<List<CourseDto>>> getEntryLevelCourses() {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Khóa học đầu vào", courseService.findEntryLevelCourses()));
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<CourseDto>>> searchCourses(
-            @RequestParam String title,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Kết quả tìm kiếm khóa học",
-                        courseService.searchByTitle(title, page, size)));
-    }
-
-    @GetMapping("/published/level/{level}")
-    public ResponseEntity<ApiResponse<List<CourseDto>>> getPublishedCoursesByLevel(
-            @PathVariable EnumClass.Level level) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Khóa học đã xuất bản theo cấp độ",
-                        courseService.findPublishedCoursesByLevel(level)));
-    }
-
-    @GetMapping("/stats/count-by-status/{status}")
-    public ResponseEntity<ApiResponse<Long>> countCoursesByStatus(@PathVariable EnumClass.Status status) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Số lượng khóa học theo trạng thái",
-                        courseService.countByStatus(status)));
-    }
-
-    @GetMapping("/stats/count-by-level/{level}")
-    public ResponseEntity<ApiResponse<Long>> countCoursesByLevel(@PathVariable EnumClass.Level level) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Số lượng khóa học theo cấp độ",
-                        courseService.countByLevel(level)));
-    }
-
-    @GetMapping("/exists/title/{title}")
-    public ResponseEntity<ApiResponse<Boolean>> checkTitleExists(@PathVariable String title) {
-        return ResponseEntity.ok(
-                ApiResponse.ok("Kiểm tra tên khóa học tồn tại",
-                        courseService.existsByTitle(title)));
+                ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
     }
 
     /* -------- POST /api/courses -------- */
     @PostMapping
-    public ResponseEntity<ApiResponse<CourseDto>> create(@Valid @RequestBody CourseDto dto,
-                                                         @RequestHeader("X-User-Id") String staffId) {
-        CourseDto created = courseService.create(dto, staffId);
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> create(
+            @Valid @RequestBody CourseRequestDto dto,
+            @AuthenticationPrincipal User user) {
+
+        log.info("Staff {} đang tạo khóa học mới: {}", user.getUsername(), dto.title());
+
+        CourseResponseDto created = courseService.create(dto, user.getId());
         return ResponseEntity.created(URI.create("/api/courses/" + created.id()))
-                .body(ApiResponse.ok("Tạo khóa học thành công", created));
+                .body(ApiResponseDto.ok("Tạo khóa học thành công", created));
     }
 
     /* -------- PUT /api/courses/{id} -------- */
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<CourseDto>> update(@PathVariable String id,
-                                                         @Valid @RequestBody CourseDto dto,
-                                                         @RequestHeader("X-User-Id") String staffId) {
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> update(
+            @PathVariable String id,
+            @Valid @RequestBody CourseRequestDto dto,
+            @AuthenticationPrincipal User user) {
+
+        log.info("Staff {} đang cập nhật khóa học: {}", user.getUsername(), id);
+
         return ResponseEntity.ok(
-                ApiResponse.ok("Cập nhật khóa học thành công", courseService.update(id, dto, staffId)));
+                ApiResponseDto.ok("Cập nhật khóa học thành công", courseService.update(id, dto, user.getId())));
     }
 }

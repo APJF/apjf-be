@@ -1,9 +1,8 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.CourseWithRatingDto;
+import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.entity.Course;
-
-import java.util.Collections;
 
 public final class CourseWithRatingMapper {
 
@@ -16,15 +15,21 @@ public final class CourseWithRatingMapper {
                 course.getId(),
                 course.getTitle(),
                 course.getDescription(),
-                course.getDuration(),
-                course.getLevel(),
                 course.getImage(),
-                course.getRequirement(),
-                course.getStatus(),
-                course.getPrerequisiteCourse(),
-                Collections.emptyList(),
                 averageRating
         );
     }
+    
+    public static CourseWithRatingDto fromCourseResponseDto(CourseResponseDto courseResponseDto) {
+        if (courseResponseDto == null) return null;
+        
+        return new CourseWithRatingDto(
+                courseResponseDto.id(),
+                courseResponseDto.title(),
+                courseResponseDto.description(),
+                courseResponseDto.image(),
+                courseResponseDto.averageRating() != null ?
+                    courseResponseDto.averageRating() : 0.0
+        );
+    }
 }
-

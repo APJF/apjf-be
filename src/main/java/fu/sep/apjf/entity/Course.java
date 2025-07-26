@@ -82,6 +82,7 @@ public class Course {
     private Set<CourseReview> reviews = new HashSet<>();
 
     @OneToMany(mappedBy = "course")
+    @Builder.Default
     private List<CourseLearningPath> courseLearningPaths = new ArrayList<>();
 
 }

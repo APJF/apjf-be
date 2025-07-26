@@ -31,5 +31,6 @@ public class QuestionOption {
      * 1‑N ngược với ExamResultDetail (khi học sinh chọn)
      */
     @OneToMany(mappedBy = "selectedOption")
+    @Builder.Default
     private List<ExamResultDetail> selectedByAnswers = new ArrayList<>();
 }
