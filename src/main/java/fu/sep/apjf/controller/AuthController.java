@@ -3,6 +3,7 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.ChangePasswordDto;
 import fu.sep.apjf.dto.request.LoginRequestDto;
 import fu.sep.apjf.dto.request.RegisterDto;
+import fu.sep.apjf.dto.request.RefreshTokenRequest;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
 import fu.sep.apjf.dto.response.ProfileResponseDto;
@@ -83,8 +84,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponseDto<LoginResponseDto>> refreshToken(@RequestParam String refreshToken) {
-        LoginResponseDto payload = userService.refreshToken(refreshToken);
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> refreshToken(@RequestBody RefreshTokenRequest request) {
+        LoginResponseDto payload = userService.refreshToken(request.getRefreshToken());
         return ResponseEntity.ok(ApiResponseDto.ok("Làm mới token thành công", payload));
     }
 
