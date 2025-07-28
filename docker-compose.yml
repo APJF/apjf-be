@@ -36,6 +36,10 @@ services:
       - pg-network
 
 volumes:
+  data:
+    driver: local
+  config:
+    driver: local
   pgvector-data:
 
 networks:

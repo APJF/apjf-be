@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/approval-requests")
+@RequestMapping("api/approval-requests")
 @RequiredArgsConstructor
 @Slf4j
 public class ApprovalRequestController {
