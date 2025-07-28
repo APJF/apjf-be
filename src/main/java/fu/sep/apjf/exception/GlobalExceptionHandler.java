@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,19 +46,36 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponseDto<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity.badRequest().body(ApiResponseDto.error("Validation failed", errors));
+    public ResponseEntity<ApiResponseDto<Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        // Lấy thông báo lỗi đầu tiên
+        String message = ex.getBindingResult()
+                .getAllErrors()
+                .get(0)
+                .getDefaultMessage();
+
+        return ResponseEntity.badRequest()
+                .body(new ApiResponseDto<>(
+                        false,
+                        message,
+                        null,
+                        Instant.now().toEpochMilli()
+                ));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponseDto<Object>> handleGenericException(Exception ex) {
         ApiResponseDto<Object> response = ApiResponseDto.error("An unexpected error occurred: " + ex.getMessage());
         return ResponseEntity.internalServerError().body(response);
+    }
+
+    @ExceptionHandler(UnverifiedAccountException.class)
+    public ResponseEntity<ApiResponseDto<Object>> handleUnverifiedAccountException(UnverifiedAccountException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponseDto<>(
+                        false,
+                        ex.getMessage(),
+                        ex.getEmail(),
+                        Instant.now().toEpochMilli()
+                ));
     }
 }

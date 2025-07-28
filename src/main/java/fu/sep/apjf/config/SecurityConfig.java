@@ -1,13 +1,10 @@
 package fu.sep.apjf.config;
 
-import fu.sep.apjf.utils.AuthEntryPointJwt;
-import fu.sep.apjf.utils.AuthTokenFilter;
-import fu.sep.apjf.utils.OAuth2AuthenticationFailureHandler;
-import fu.sep.apjf.utils.OAuth2AuthenticationSuccessHandler;
-import org.springframework.beans.factory.annotation.Autowired;
+import fu.sep.apjf.utils.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -35,11 +32,18 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String[] PUBLIC_ENDPOINTS = {
+    private static final String[] AUTH_ENDPOINTS = {
             "/api/auth/**",
             "/oauth2/**",
-            "/login/oauth2/**",
-            "/api/courses/**" // Thêm tất cả các endpoint liên quan đến khóa học vào public
+            "/login/oauth2/**"
+    };
+
+    private static final String[] PUBLIC_GET_ENDPOINTS = {
+            "/api/courses/**",
+            "/api/chapters/**",
+            "/api/units/**",
+            "/api/materials/**",
+            "/api/exams/**"
     };
 
     private static final String[] EXAMS_ENDPOINTS = {
@@ -47,23 +51,21 @@ public class SecurityConfig {
     };
 
     private static final String[] USER_ALLOWED_ENDPOINTS = {
+            "/api/exams/*/start",  // Endpoint bắt đầu làm bài thi cần ROLE_USER
+            "/api/exam-results/**" // Kết quả thi cũng cần ROLE_USER
     };
 
-    @Autowired
-    @Lazy
-    private OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
+    private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
-    @Autowired
-    @Lazy
-    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-
-    @Autowired
-    @Lazy
-    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
+    public SecurityConfig(
+            @Lazy OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService,
+            @Lazy OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
+            @Lazy OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler) {
+        this.oAuth2UserService = oAuth2UserService;
+        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+        this.oAuth2AuthenticationFailureHandler = oAuth2AuthenticationFailureHandler;
     }
 
     @Bean
@@ -73,11 +75,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(EXAMS_ENDPOINTS).permitAll()
+                        .requestMatchers(AUTH_ENDPOINTS).permitAll()  // Allow all methods for auth endpoints
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()  // Only GET for public endpoints
                         .requestMatchers(USER_ALLOWED_ENDPOINTS).hasAnyRole("USER", "MANAGER", "ADMIN", "STAFF")
                         .anyRequest().hasAnyRole("MANAGER", "ADMIN", "STAFF"))
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(unauthorizedHandler))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(unauthorizedHandler)
+                        .accessDeniedHandler(new CustomAccessDeniedHandler()))
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint
                                 .authorizationRequestRepository(authorizationRequestRepository()))
@@ -102,10 +106,14 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthTokenFilter authenticationJwtTokenFilter() {
+        return new AuthTokenFilter();
+    }
+
+    @Bean
     public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
         return new HttpSessionOAuth2AuthorizationRequestRepository();
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {

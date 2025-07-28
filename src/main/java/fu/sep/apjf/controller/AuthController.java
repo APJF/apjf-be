@@ -1,9 +1,6 @@
 package fu.sep.apjf.controller;
 
-import fu.sep.apjf.dto.request.ChangePasswordDto;
-import fu.sep.apjf.dto.request.LoginRequestDto;
-import fu.sep.apjf.dto.request.RegisterDto;
-import fu.sep.apjf.dto.request.RefreshTokenRequest;
+import fu.sep.apjf.dto.request.*;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
 import fu.sep.apjf.dto.response.ProfileResponseDto;
@@ -65,11 +62,12 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponseDto<Object>> resetPassword(
-            @RequestParam String email,
-            @RequestParam String otp,
-            @RequestParam String newPassword) {
-        userService.resetPassword(email, otp, newPassword);
+    public ResponseEntity<ApiResponseDto<Object>> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+        userService.resetPassword(
+                resetPasswordDto.email(),
+                resetPasswordDto.otp(),
+                resetPasswordDto.newPassword()
+        );
         return ResponseEntity.ok(ApiResponseDto.ok("Đặt lại mật khẩu thành công.", null));
     }
 
@@ -85,7 +83,7 @@ public class AuthController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponseDto<LoginResponseDto>> refreshToken(@RequestBody RefreshTokenRequest request) {
-        LoginResponseDto payload = userService.refreshToken(request.getRefreshToken());
+        LoginResponseDto payload = userService.refreshToken(request.refreshToken());
         return ResponseEntity.ok(ApiResponseDto.ok("Làm mới token thành công", payload));
     }
 
@@ -104,8 +102,7 @@ public class AuthController {
 
         // Kiểm tra authentication principal
         Object principal = authentication.getPrincipal();
-        if (principal instanceof User) {
-            User userFromToken = (User) principal;
+        if (principal instanceof User userFromToken) {
             log.info("User from token - ID: {}, Username: {}, Email: {}",
                     userFromToken.getId(), userFromToken.getUsername(), userFromToken.getEmail());
 
@@ -129,5 +126,11 @@ public class AuthController {
         ProfileResponseDto userProfileDto = UserMapper.toProfileDto(user);
 
         return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", userProfileDto));
+    }
+
+    @PostMapping("/send-verification-otp")
+    public ResponseEntity<ApiResponseDto<Object>> sendVerificationOtp(@RequestParam String email) {
+        userService.sendVerificationOtp(email);
+        return ResponseEntity.ok(ApiResponseDto.ok("Đã gửi mã OTP xác thực tài khoản vào email của bạn.", null));
     }
 }

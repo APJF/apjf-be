@@ -8,6 +8,7 @@ import fu.sep.apjf.entity.Token;
 import fu.sep.apjf.entity.Token.TokenType;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.exception.AppException;
+import fu.sep.apjf.exception.UnverifiedAccountException;
 import fu.sep.apjf.repository.AuthorityRepository;
 import fu.sep.apjf.repository.TokenRepository;
 import fu.sep.apjf.repository.UserRepository;
@@ -52,7 +53,7 @@ public class UserService {
     @Transactional
     public LoginResponseDto login(LoginRequestDto loginDTO) {
         // 1. Kiểm tra email có tồn tại không
-        User user = userRepository.findByEmail(loginDTO.email())
+        User user = userRepository.findByEmailIgnoreCase(loginDTO.email())
                 .orElseThrow(() -> new BadCredentialsException("Email không tồn tại trong hệ thống"));
 
         // 2. Kiểm tra mật khẩu có khớp không
@@ -62,7 +63,7 @@ public class UserService {
 
         // 3. Kiểm tra tài khoản đã được kích hoạt chưa
         if (!user.isEnabled()) {
-            throw new BadCredentialsException("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email để kích hoạt tài khoản");
+            throw new UnverifiedAccountException("Tài khoản chưa được xác thực.", user.getEmail());
         }
 
         // 4. Lấy role & sinh cả access token và refresh token
@@ -80,7 +81,6 @@ public class UserService {
                 user.getUsername(),
                 user.getAvatar(),
                 roles
-
         );
 
         // 6. Trả về đối tượng LoginResponse với cả access token và refresh token
@@ -101,7 +101,7 @@ public class UserService {
 
         // 2. Lấy thông tin user từ refresh token
         String email = jwtUtils.getEmailFromJwtToken(refreshToken);
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new BadCredentialsException("Người dùng không tồn tại"));
 
         // 3. Kiểm tra tài khoản vẫn còn active
@@ -137,19 +137,22 @@ public class UserService {
 
     @Transactional
     public void register(RegisterDto registerDTO) {
-        if (userRepository.existsByEmail(registerDTO.email())) {
+        if (userRepository.existsByEmailIgnoreCase(registerDTO.email())) {
             throw new IllegalArgumentException("Email đã tồn tại.");
         }
+
+        // Tìm ROLE_USER và xử lý nếu không tìm thấy
         Authority userRole = authorityRepository.findByAuthority("ROLE_USER")
-                .orElseThrow();
+                .orElseThrow(() -> new AppException("Không tìm thấy ROLE_USER trong hệ thống."));
+
         User user = new User();
         user.setUsername("new user");
-
         user.setAuthorities(new ArrayList<>(List.of(userRole)));
         user.setPassword(passwordEncoder.encode(registerDTO.password()));
         user.setEmail(registerDTO.email());
         user.setAvatar("https://engineering.usask.ca/images/no_avatar.jpg");
         user.setEnabled(false);
+
         userRepository.save(user);
 
         createAndSendToken(user, TokenType.REGISTRATION);
@@ -157,7 +160,7 @@ public class UserService {
 
     @Transactional
     public void verifyAccount(String email, String otp) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("Email không tồn tại."));
 
         // Tìm token mới nhất (bất kể type nào)
@@ -182,7 +185,7 @@ public class UserService {
 
     @Transactional
     public void regenerateOtp(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("User không tồn tại."));
         Token token = tokenRepository
                 .findTopByUserAndTypeOrderByRequestedTimeDesc(user, TokenType.REGISTRATION)
@@ -198,7 +201,7 @@ public class UserService {
 
     @Transactional
     public void forgotPassword(String email) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new AppException("User không tồn tại."));
         createAndSendToken(user, TokenType.RESET_PASSWORD);
     }
@@ -226,17 +229,22 @@ public class UserService {
 
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) {
-        User user = findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Email không tồn tại"));
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
-        // Kiểm tra mật khẩu cũ có đúng không
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new BadCredentialsException("Mật khẩu không chính xác");
+            throw new BadCredentialsException("Mật khẩu cũ không chính xác");
         }
 
-        // Đặt mật khẩu mới
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new BadCredentialsException("Mật khẩu mới không được trùng với mật khẩu cũ");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
-        save(user);
+        userRepository.save(user);
+
+        // Xóa tất cả token sau khi đổi mật khẩu
+        tokenRepository.deleteAllByUser(user);
     }
 
     private void createAndSendToken(User user, TokenType type) {
@@ -259,7 +267,7 @@ public class UserService {
     }
 
     public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmailIgnoreCase(email);
     }
 
 
@@ -291,5 +299,18 @@ public class UserService {
 
         // Persist and return
         return userRepository.save(newUser);
+    }
+
+    @Transactional
+    public void sendVerificationOtp(String email) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AppException("Email không tồn tại."));
+
+        if (user.isEnabled()) {
+            throw new AppException("Tài khoản đã được xác thực.");
+        }
+
+        // Tạo và gửi OTP mới
+        createAndSendToken(user, TokenType.REGISTRATION);
     }
 }
