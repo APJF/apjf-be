@@ -46,10 +46,6 @@ public class SecurityConfig {
             "/api/exams/**"
     };
 
-    private static final String[] EXAMS_ENDPOINTS = {
-            "/api/exams/**"
-    };
-
     private static final String[] USER_ALLOWED_ENDPOINTS = {
             "/api/exams/*/start",  // Endpoint bắt đầu làm bài thi cần ROLE_USER
             "/api/exam-results/**" // Kết quả thi cũng cần ROLE_USER

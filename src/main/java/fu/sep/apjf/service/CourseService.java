@@ -183,7 +183,6 @@ public class CourseService {
         course.setTitle(dto.title());
         course.setDescription(dto.description());
         course.setDuration(dto.duration());  // Thêm cập nhật duration
-        course.setImage(dto.image());
         course.setLevel(dto.level());
         course.setStatus(EnumClass.Status.DRAFT); // Reset trạng thái về DRAFT khi cập nhật
 
@@ -206,7 +205,7 @@ public class CourseService {
                 staffId
         );
 
-        log.info("Cập nhật khóa học {} và tạo yêu cầu phê duyệt thành công", updatedCourse.getId());
+        log.info("Cập nhật khóa học {} và yêu cầu phê duyệt thành công", updatedCourse.getId());
         return CourseMapper.toResponseDto(updatedCourse);
     }
 
