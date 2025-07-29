@@ -34,4 +34,7 @@ public class EnumClass {
         KANJI, GRAMMAR, VOCAB, LISTENING, READING, WRITING
     }
 
+    public enum PathStatus {
+        FINISHED, STUDYING
+    }
 }

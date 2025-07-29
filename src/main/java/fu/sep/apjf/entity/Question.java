@@ -48,18 +48,21 @@ public class Question {
      * N‑N với Exam qua bảng trung gian exam_questions
      */
     @ManyToMany(mappedBy = "questions")
+    @Builder.Default
     private List<Exam> exams = new ArrayList<>();
 
     /**
      * 1‑N với QuestionOption
      */
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<QuestionOption> options = new ArrayList<>();
+    @Builder.Default
+    private List<Option> options = new ArrayList<>();
 
     /**
      * 1‑N với ExamResultDetail
      */
     @OneToMany(mappedBy = "question")
+    @Builder.Default
     private List<ExamResultDetail> examResultDetails = new ArrayList<>();
 
     /**

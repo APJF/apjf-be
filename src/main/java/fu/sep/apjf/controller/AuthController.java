@@ -1,6 +1,9 @@
 package fu.sep.apjf.controller;
 
-import fu.sep.apjf.dto.*;
+import fu.sep.apjf.dto.request.*;
+import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.LoginResponseDto;
+import fu.sep.apjf.dto.response.ProfileResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.UserMapper;
 import fu.sep.apjf.service.UserService;
@@ -24,73 +27,74 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequest) {
         LoginResponseDto payload = userService.login(loginRequest);
-        return ResponseEntity.ok(ApiResponse.ok("Đăng nhập thành công", payload));
+        return ResponseEntity.ok(ApiResponseDto.ok("Đăng nhập thành công", payload));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Object>> register(@Valid @RequestBody RegisterDto registerRequest) {
+    public ResponseEntity<ApiResponseDto<Object>> register(@Valid @RequestBody RegisterDto registerRequest) {
         userService.register(registerRequest);
         return new ResponseEntity<>(
-                ApiResponse.ok("Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.", null),
+                ApiResponseDto.ok("Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.", null),
                 HttpStatus.CREATED
         );
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<Object>> verifyAccount(
+    public ResponseEntity<ApiResponseDto<Object>> verifyAccount(
             @RequestParam String email,
             @RequestParam String otp) {
         userService.verifyAccount(email, otp);
-        return ResponseEntity.ok(ApiResponse.ok("Xác thực tài khoản thành công.", null));
+        return ResponseEntity.ok(ApiResponseDto.ok("Xác thực tài khoản thành công.", null));
     }
 
     @PostMapping("/otp")
-    public ResponseEntity<ApiResponse<Object>> regenerateOtp(@RequestParam String email) {
+    public ResponseEntity<ApiResponseDto<Object>> regenerateOtp(@RequestParam String email) {
         userService.regenerateOtp(email);
-        return ResponseEntity.ok(ApiResponse.ok("OTP đã được gửi lại thành công.", null));
+        return ResponseEntity.ok(ApiResponseDto.ok("OTP đã được gửi lại thành công.", null));
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Object>> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<ApiResponseDto<Object>> forgotPassword(@RequestParam String email) {
         userService.forgotPassword(email);
-        return ResponseEntity.ok(ApiResponse.ok("Đã gửi email xác thực đặt lại mật khẩu.", null));
+        return ResponseEntity.ok(ApiResponseDto.ok("Đã gửi email xác thực đặt lại mật khẩu.", null));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Object>> resetPassword(
-            @RequestParam String email,
-            @RequestParam String otp,
-            @RequestParam String newPassword) {
-        userService.resetPassword(email, otp, newPassword);
-        return ResponseEntity.ok(ApiResponse.ok("Đặt lại mật khẩu thành công.", null));
+    public ResponseEntity<ApiResponseDto<Object>> resetPassword(@Valid @RequestBody ResetPasswordDto resetPasswordDto) {
+        userService.resetPassword(
+                resetPasswordDto.email(),
+                resetPasswordDto.otp(),
+                resetPasswordDto.newPassword()
+        );
+        return ResponseEntity.ok(ApiResponseDto.ok("Đặt lại mật khẩu thành công.", null));
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse<Object>> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
+    public ResponseEntity<ApiResponseDto<Object>> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
         userService.changePassword(
                 changePasswordDto.email(),
                 changePasswordDto.oldPassword(),
                 changePasswordDto.newPassword()
         );
-        return ResponseEntity.ok(ApiResponse.ok("Thay đổi mật khẩu thành công.", null));
+        return ResponseEntity.ok(ApiResponseDto.ok("Thay đổi mật khẩu thành công.", null));
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> refreshToken(@Valid @RequestBody RefreshTokenRequestDto refreshTokenRequest) {
-        LoginResponseDto payload = userService.refreshToken(refreshTokenRequest.refreshToken());
-        return ResponseEntity.ok(ApiResponse.ok("Làm mới token thành công", payload));
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> refreshToken(@RequestBody RefreshTokenRequest request) {
+        LoginResponseDto payload = userService.refreshToken(request.refreshToken());
+        return ResponseEntity.ok(ApiResponseDto.ok("Làm mới token thành công", payload));
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<UserProfileDto>> getCurrentUser() {
+    public ResponseEntity<ApiResponseDto<ProfileResponseDto>> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
             log.error("Authentication is null, not authenticated, or anonymous user");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Chưa xác thực", null));
+                    .body(ApiResponseDto.error("Chưa xác thực", null));
         }
 
         String email = authentication.getName(); // Email từ JWT token (vì subject là email)
@@ -98,10 +102,9 @@ public class AuthController {
 
         // Kiểm tra authentication principal
         Object principal = authentication.getPrincipal();
-        if (principal instanceof User) {
-            User userFromToken = (User) principal;
+        if (principal instanceof User userFromToken) {
             log.info("User from token - ID: {}, Username: {}, Email: {}",
-                userFromToken.getId(), userFromToken.getUsername(), userFromToken.getEmail());
+                    userFromToken.getId(), userFromToken.getUsername(), userFromToken.getEmail());
 
             // Sử dụng email từ User object trong token
             email = userFromToken.getEmail();
@@ -115,13 +118,19 @@ public class AuthController {
         if (userOptional.isEmpty()) {
             log.error("No user found with email: {}", email);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.error("Không tìm thấy người dùng", null));
+                    .body(ApiResponseDto.error("Không tìm thấy người dùng", null));
         }
 
         User user = userOptional.get();
         log.info("User found - ID: {}, Username: {}, Email: {}", user.getId(), user.getUsername(), user.getEmail());
-        UserProfileDto userProfileDto = UserMapper.toProfileDto(user);
+        ProfileResponseDto userProfileDto = UserMapper.toProfileDto(user);
 
-        return ResponseEntity.ok(ApiResponse.ok("Thông tin người dùng", userProfileDto));
+        return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", userProfileDto));
+    }
+
+    @PostMapping("/send-verification-otp")
+    public ResponseEntity<ApiResponseDto<Object>> sendVerificationOtp(@RequestParam String email) {
+        userService.sendVerificationOtp(email);
+        return ResponseEntity.ok(ApiResponseDto.ok("Đã gửi mã OTP xác thực tài khoản vào email của bạn.", null));
     }
 }

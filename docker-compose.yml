@@ -1,4 +1,7 @@
+version: '3.9'
+
 services:
+  # === PostgreSQL Vector ===
   pgvector:
     image: pgvector/pgvector:pg16
     container_name: pgvector-container
@@ -10,7 +13,7 @@ services:
     volumes:
       - pgvector-data:/var/lib/postgresql/data
     networks:
-      - pg-network
+      - backend-network
 
   pgadmin:
     image: dpage/pgadmin4:9.4
@@ -21,11 +24,30 @@ services:
     ports:
       - "5050:80"
     networks:
-      - pg-network
+      - backend-network
+
+  # === MinIO ===
+  minio:
+    image: bitnami/minio:latest
+    container_name: minio-container
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin@2024
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./minio-data:/bitnami/minio/data
+      - ./minio-config:/opt/bitnami/minio/config
+    command: minio server /bitnami/minio/data --console-address ":9001"
+    networks:
+      - backend-network
 
 volumes:
   pgvector-data:
+  minio-data:
+  minio-config:
 
 networks:
-  pg-network:
+  backend-network:
     driver: bridge

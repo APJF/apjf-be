@@ -14,4 +14,6 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
     Optional<Token> findTopByUserOrderByRequestedTimeDesc(User user);
 
     void deleteAllByUserAndType(User user, Token.TokenType type);
+
+    void deleteAllByUser(User user);
 }

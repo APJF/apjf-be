@@ -1,23 +1,12 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.ApprovalDecisionDto;
-import fu.sep.apjf.dto.ApprovalRequestDto;
-import fu.sep.apjf.dto.CreateApprovalRequestDto;
-import fu.sep.apjf.entity.ApprovalRequest;
+import fu.sep.apjf.dto.request.ApprovalDecisionDto;
+import fu.sep.apjf.dto.response.ApprovalRequestDto;
+import fu.sep.apjf.entity.*;
 import fu.sep.apjf.entity.ApprovalRequest.Decision;
 import fu.sep.apjf.entity.ApprovalRequest.TargetType;
-import fu.sep.apjf.entity.Chapter;
-import fu.sep.apjf.entity.Course;
-import fu.sep.apjf.entity.Material;
-import fu.sep.apjf.entity.Unit;
-import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.ApprovalRequestMapper;
-import fu.sep.apjf.repository.ApprovalRequestRepository;
-import fu.sep.apjf.repository.ChapterRepository;
-import fu.sep.apjf.repository.CourseRepository;
-import fu.sep.apjf.repository.MaterialRepository;
-import fu.sep.apjf.repository.UnitRepository;
-import fu.sep.apjf.repository.UserRepository;
+import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -100,47 +89,14 @@ public class ApprovalRequestService {
     }
 
     /* ---------- STAFF OPERATIONS ---------- */
-
-    public ApprovalRequestDto createApprovalRequest(CreateApprovalRequestDto dto, String staffId) {
-        log.info("Nhân viên {} tạo yêu cầu phê duyệt cho {} với ID: {}",
-                staffId, dto.targetType(), dto.targetId());
-
-        // Tìm user creator
-        User creator = userRepository.findById(Long.parseLong(staffId))
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user: " + staffId));
-
-        // Check if there's already a pending request for this target
-        Optional<ApprovalRequest> existingPending = approvalRequestRepository
-                .findPendingRequestByTargetId(dto.targetId());
-
-        if (existingPending.isPresent()) {
-            throw new IllegalArgumentException("Đã có approval request đang chờ duyệt cho đối tượng này");
-        }
-
-        ApprovalRequest approvalRequest = ApprovalRequest.builder()
-                .targetType(dto.targetType())
-                .requestType(dto.requestType())
-                .decision(Decision.PENDING)
-                .creator(creator)
-                .createdAt(Instant.now())
-                .build();
-
-        // For now, we'll rely on the targetType field - entity relationships will be set later
-        ApprovalRequest saved = approvalRequestRepository.save(approvalRequest);
-
-        log.info("Tạo yêu cầu phê duyệt thành công với ID: {} cho đối tượng: {}",
-                saved.getId(), dto.targetId());
-        return ApprovalRequestMapper.toDto(saved);
-    }
-
     /* ---------- AUTO-CREATE APPROVAL REQUEST OPERATIONS ---------- */
 
     public void autoCreateApprovalRequest(TargetType targetType, String targetId,
-                                        ApprovalRequest.RequestType requestType, String staffId) {
+                                          ApprovalRequest.RequestType requestType, Long staffId) {
         log.info("Tự động tạo yêu cầu phê duyệt cho {} {} bởi nhân viên {}", requestType, targetType, staffId);
 
         // Tìm user creator
-        User creator = userRepository.findById(Long.parseLong(staffId))
+        User creator = userRepository.findById(staffId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user: " + staffId));
 
         Optional<ApprovalRequest> existingPending = approvalRequestRepository
@@ -188,7 +144,7 @@ public class ApprovalRequestService {
         log.info("Tự động tạo yêu cầu phê duyệt thành công cho {} {}", targetType, targetId);
     }
 
-    public ApprovalRequestDto processApproval(Integer id, @Valid ApprovalDecisionDto decision, String managerId) {
+    public ApprovalRequestDto processApproval(Integer id, @Valid ApprovalDecisionDto decision, Long managerId) {
         log.info("Xử lý yêu cầu phê duyệt ID: {} bởi quản lý: {} với quyết định: {}",
                 id, managerId, decision.decision());
 
@@ -196,7 +152,7 @@ public class ApprovalRequestService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu phê duyệt với ID: " + id));
 
         // Tìm user reviewer
-        User reviewer = userRepository.findById(Long.parseLong(managerId))
+        User reviewer = userRepository.findById(managerId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy manager: " + managerId));
 
         // Validate current status

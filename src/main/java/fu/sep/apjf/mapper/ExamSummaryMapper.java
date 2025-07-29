@@ -1,7 +1,8 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.ExamSummaryDto;
+import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.entity.Exam;
+import fu.sep.apjf.entity.EnumClass;
 
 import java.util.Collections;
 import java.util.Set;
@@ -22,9 +23,9 @@ public final class ExamSummaryMapper {
                 exam.getId(),
                 exam.getTitle(),
                 exam.getDescription(),
-                exam.getDuration(),
-                exam.getExamScopeType(),
-                exam.getCreatedAt()
+                exam.getDuration() != null ? exam.getDuration().intValue() : null,
+                exam.getQuestions() != null ? exam.getQuestions().size() : 0,
+                EnumClass.Status.DRAFT // Giá trị mặc định hoặc lấy từ exam nếu có
         );
     }
 

@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -74,5 +76,13 @@ public class Course {
     @OneToMany(mappedBy = "course")
     @Builder.Default
     private Set<Exam> exams = new HashSet<>();
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Review> reviews = new HashSet<>();
+
+    @OneToMany(mappedBy = "course")
+    @Builder.Default
+    private List<CourseLearningPath> courseLearningPaths = new ArrayList<>();
 
 }

@@ -1,7 +1,8 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.QuestionDto;
-import fu.sep.apjf.dto.QuestionOptionDto;
+import fu.sep.apjf.dto.request.QuestionRequestDto;
+import fu.sep.apjf.dto.response.OptionResponseDto;
+import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.Question;
 
 import java.util.List;
@@ -12,15 +13,15 @@ public final class QuestionMapper {
         // Private constructor to prevent instantiation
     }
 
-    public static QuestionDto toDto(Question question) {
+    public static QuestionResponseDto toResponseDto(Question question) {
         if (question == null) {
             return null;
         }
 
-        List<QuestionOptionDto> optionDtos = null;
+        List<OptionResponseDto> optionDtos = null;
         if (question.getOptions() != null) {
             optionDtos = question.getOptions().stream()
-                    .map(option -> new QuestionOptionDto(
+                    .map(option -> new OptionResponseDto(
                             option.getId(),
                             option.getContent(),
                             option.getIsCorrect()
@@ -28,20 +29,17 @@ public final class QuestionMapper {
                     .toList();
         }
 
-        return new QuestionDto(
+        return new QuestionResponseDto(
                 question.getId(),
                 question.getContent(),
                 question.getCorrectAnswer(),
-                question.getType(),
                 question.getScope(),
-                question.getExplanation(),
-                question.getFileUrl(),
-                question.getCreatedAt(),
+                question.getType(),
                 optionDtos
         );
     }
 
-    public static Question toEntity(QuestionDto questionDto) {
+    public static Question toEntity(QuestionRequestDto questionDto) {
         if (questionDto == null) {
             return null;
         }
@@ -52,19 +50,17 @@ public final class QuestionMapper {
         question.setCorrectAnswer(questionDto.correctAnswer());
         question.setType(questionDto.type());
         question.setScope(questionDto.scope());
-        question.setExplanation(questionDto.explanation());
-        question.setFileUrl(questionDto.fileUrl());
 
         return question;
     }
 
-    public static List<QuestionDto> toDtoList(List<Question> questions) {
+    public static List<QuestionResponseDto> toResponseDtoList(List<Question> questions) {
         if (questions == null) {
             return List.of();
         }
 
         return questions.stream()
-                .map(QuestionMapper::toDto)
+                .map(QuestionMapper::toResponseDto)
                 .toList();
     }
 }

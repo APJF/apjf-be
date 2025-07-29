@@ -1,11 +1,12 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.ChapterDto;
-import fu.sep.apjf.dto.CourseDetailDto;
-import fu.sep.apjf.dto.CourseDto;
-import fu.sep.apjf.dto.ExamSummaryDto;
+import fu.sep.apjf.dto.request.TopicDto;
+import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.entity.Course;
+import fu.sep.apjf.entity.Topic;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,30 +14,41 @@ public final class CourseDetailMapper {
     private CourseDetailMapper() {
     }
 
-    public static CourseDetailDto toDto(Course course) {
+    public static CourseResponseDto toDto(Course course) {
         if (course == null) {
             return null;
         }
 
-        // Create a detailed CourseDto with chapters and exams nested
-        CourseDto courseDto = createDetailedCourseDto(course);
+        // Get prerequisiteCourse ID if it exists
+        String prerequisiteCourseId = course.getPrerequisiteCourse() != null ?
+                course.getPrerequisiteCourse().getId() : null;
 
-        return new CourseDetailDto(courseDto);
-    }
-
-    private static CourseDto createDetailedCourseDto(Course course) {
-        // Get course exams
-        Set<ExamSummaryDto> courseExams = course.getExams().stream()
-                .map(ExamSummaryMapper::toDto)
+        // Convert topics to TopicDto objects
+        Set<TopicDto> topicDtos = course.getTopics().stream()
+                .map(topic -> new TopicDto(topic.getId(), topic.getName()))
                 .collect(Collectors.toSet());
 
-        // Get chapters with their units and exams
-        Set<ChapterDto> chapterDtos = course.getChapters().stream()
-                .map(ChapterMapper::toDto)
-                .collect(Collectors.toSet());
+        // Convert exams to ExamSummaryDto objects
+        Set<ExamSummaryDto> examDtos = course.getExams() != null ?
+                course.getExams().stream()
+                        .map(exam -> new ExamSummaryDto(
+                                exam.getId(),
+                                exam.getTitle(),
+                                exam.getDescription(),
+                                exam.getDuration() != null ? exam.getDuration().intValue() : null,
+                                exam.getQuestions() != null ? exam.getQuestions().size() : 0,
+                                null))
+                        .collect(Collectors.toSet()) :
+                new HashSet<>();
 
-        // Create the course DTO with all its relationships
-        return new CourseDto(
+        // Calculate average rating if available
+        Double averageRating = course.getReviews().isEmpty() ? 0.0 :
+                course.getReviews().stream()
+                        .mapToDouble(review -> review.getRating())
+                        .average()
+                        .orElse(0.0);
+
+        return new CourseResponseDto(
                 course.getId(),
                 course.getTitle(),
                 course.getDescription(),
@@ -45,12 +57,10 @@ public final class CourseDetailMapper {
                 course.getImage(),
                 course.getRequirement(),
                 course.getStatus(),
-                course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
-                course.getTopics().stream()
-                        .map(topic -> new fu.sep.apjf.dto.TopicDto(topic.getId(), topic.getName()))
-                        .collect(Collectors.toSet()),
-                courseExams,
-                chapterDtos
+                prerequisiteCourseId,
+                topicDtos,
+                examDtos,
+                averageRating
         );
     }
 }

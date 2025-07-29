@@ -9,6 +9,7 @@ spring:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -46,9 +47,18 @@ spring:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
             token-uri: https://www.googleapis.com/oauth2/v4/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
-            user-name-attribute: name
+            user-name-attribute: sub
 
 # Cấu hình cho OAuth2 redirect
 app:
   oauth2:
     redirectUri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/redirect}
+
+
+minio:
+  url: http://localhost:9000
+  access-key: admin
+  secret-key: admin@2024
+  buckets:
+    avatar: avatar
+    document: documents

@@ -1,11 +1,11 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.ExamSummaryDto;
-import fu.sep.apjf.dto.UnitDto;
+import fu.sep.apjf.dto.request.UnitRequestDto;
+import fu.sep.apjf.dto.response.ExamSummaryDto;
+import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Unit;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,28 +15,50 @@ public final class UnitMapper {
         // Private constructor to prevent instantiation
     }
 
-    public static UnitDto toDto(Unit unit) {
+    /**
+     * Convert Unit entity to UnitResponseDto (used for responses to clients)
+     */
+    public static UnitResponseDto toDto(Unit unit) {
         if (unit == null) {
             return null;
         }
 
-        // Get exams for this unit
-        Set<ExamSummaryDto> examDtos = unit.getExams().stream()
-                .map(ExamSummaryMapper::toDto)
-                .collect(Collectors.toSet());
+        return new UnitResponseDto(
+                unit.getId(),
+                unit.getTitle(),
+                unit.getDescription(),
+                unit.getStatus(),
+                unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null
+        );
+    }
 
-        return new UnitDto(
+    /**
+     * Convert Unit entity to UnitRequestDto (used for testing or internal purposes)
+     */
+    public static UnitRequestDto toRequestDto(Unit unit) {
+        if (unit == null) {
+            return null;
+        }
+
+        // Get exam IDs for this unit
+        Set<String> examIds = unit.getExams() != null ?
+            unit.getExams().stream()
+                .map(exam -> exam.getId())
+                .collect(Collectors.toSet()) :
+            null;
+
+        return new UnitRequestDto(
                 unit.getId(),
                 unit.getTitle(),
                 unit.getDescription(),
                 unit.getStatus(),
                 unit.getChapter().getId(),
                 unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null,
-                examDtos
+                examIds
         );
     }
 
-    public static Unit toEntity(UnitDto unitDto) {
+    public static Unit toEntity(UnitRequestDto unitDto) {
         if (unitDto == null) {
             return null;
         }
@@ -50,7 +72,7 @@ public final class UnitMapper {
         return unit;
     }
 
-    public static Unit toEntity(UnitDto unitDto, Chapter chapter) {
+    public static Unit toEntity(UnitRequestDto unitDto, Chapter chapter) {
         Unit unit = toEntity(unitDto);
         if (unit != null && chapter != null) {
             unit.setChapter(chapter);

@@ -1,11 +1,10 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.AnswerSubmissionDto;
-import fu.sep.apjf.dto.ExamHistoryDto;
-import fu.sep.apjf.dto.ExamResultDto;
-import fu.sep.apjf.dto.ExamStatusDto;
-import fu.sep.apjf.dto.StartExamDto;
-import fu.sep.apjf.dto.SubmitExamDto;
+import fu.sep.apjf.dto.request.ExamAnswerRequestDto;
+import fu.sep.apjf.dto.request.ExamStatusDto;
+import fu.sep.apjf.dto.request.SubmitExamDto;
+import fu.sep.apjf.dto.response.ExamHistoryDto;
+import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.ExamHistoryMapper;
 import fu.sep.apjf.mapper.ExamResultMapper;
@@ -31,18 +30,17 @@ public class ExamResultService {
     private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
     private final ExamResultDetailRepository examResultDetailRepository;
-    private final QuestionOptionRepository questionOptionRepository;
+    private final OptionRepository optionRepository;
     private final UserRepository userRepository;
 
-    public ExamResultDto startExam(StartExamDto startExamDto) {
+    public ExamResultResponseDto startExam(String examId, Long userId) {
         // Kiểm tra exam có tồn tại không
-        Exam exam = examRepository.findById(startExamDto.examId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + startExamDto.examId()));
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
 
         // Tìm user
-        Long userId = Long.parseLong(startExamDto.userId());
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + startExamDto.userId()));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
 
         // Kiểm tra xem có bài thi đang làm dở không
         Optional<ExamResult> inProgressExam = examResultRepository.findByUserAndExamAndSubmittedAtIsNull(user, exam);
@@ -78,15 +76,14 @@ public class ExamResultService {
     }
 
     // Đơn giản hóa method submitExam - loại bỏ isAutoSubmit
-    public ExamResultDto submitExam(SubmitExamDto submitExamDto, String userId) {
+    public ExamResultResponseDto submitExam(SubmitExamDto submitExamDto, Long userId) {
         // Tìm bài thi dựa vào examId
         String examId = submitExamDto.examId();
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
 
         // Tìm user
-        Long userIdLong = Long.parseLong(userId);
-        User user = userRepository.findById(userIdLong)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
 
         // Tìm bài làm đang dở
@@ -113,7 +110,7 @@ public class ExamResultService {
         int totalQuestionsInExam = exam.getQuestions().size();
 
         // Lưu các câu trả lời từ request
-        for (AnswerSubmissionDto answerDto : submitExamDto.answers()) {
+        for (ExamAnswerRequestDto answerDto : submitExamDto.answers()) {
             Question question = questionRepository.findById(answerDto.questionId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy câu hỏi: " + answerDto.questionId()));
 
@@ -129,7 +126,7 @@ public class ExamResultService {
                     .build();
 
             if (answerDto.selectedOptionId() != null) {
-                QuestionOption selectedOption = questionOptionRepository.findById(answerDto.selectedOptionId())
+                Option selectedOption = optionRepository.findById(answerDto.selectedOptionId())
                         .orElse(null);
                 answer.setSelectedOption(selectedOption);
             }
@@ -150,11 +147,11 @@ public class ExamResultService {
         return ExamResultMapper.toDto(savedResult);
     }
 
-    private boolean checkAnswer(Question question, AnswerSubmissionDto answerDto) {
+    private boolean checkAnswer(Question question, ExamAnswerRequestDto answerDto) {
         return switch (question.getType()) {
             case MULTIPLE_CHOICE, TRUE_FALSE -> {
                 if (answerDto.selectedOptionId() != null) {
-                    QuestionOption selectedOption = questionOptionRepository.findById(answerDto.selectedOptionId())
+                    Option selectedOption = optionRepository.findById(answerDto.selectedOptionId())
                             .orElse(null);
                     yield selectedOption != null && selectedOption.getIsCorrect();
                 }
@@ -166,39 +163,39 @@ public class ExamResultService {
         };
     }
 
-    public ExamResultDto getExamResultById(String id) {
+    public ExamResultResponseDto getExamResultById(String id) {
         ExamResult result = examResultRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kết quả bài thi: " + id));
         return ExamResultMapper.toDto(result);
     }
 
-    public List<ExamResultDto> getExamResultsByUserId(Long userId) {
+    public List<ExamResultResponseDto> getExamResultsByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         List<ExamResult> results = examResultRepository.findByUser(user);
         return ExamResultMapper.toDtoList(results);
     }
 
-    public List<ExamResultDto> getExamResultsByExamId(String examId) {
+    public List<ExamResultResponseDto> getExamResultsByExamId(String examId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
         List<ExamResult> results = examResultRepository.findByExam(exam);
         return ExamResultMapper.toDtoList(results);
     }
 
-    public List<ExamResultDto> getInProgressExams() {
+    public List<ExamResultResponseDto> getInProgressExams() {
         List<ExamResult> results = examResultRepository.findBySubmittedAtIsNull();
         return ExamResultMapper.toDtoList(results);
     }
 
-    public List<ExamResultDto> getPassedExamsByUser(Long userId) {
+    public List<ExamResultResponseDto> getPassedExamsByUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         List<ExamResult> results = examResultRepository.findByUserAndStatus(user, EnumClass.ExamStatus.PASSED);
         return ExamResultMapper.toDtoList(results);
     }
 
-    public List<ExamResultDto> getFailedExamsByUser(Long userId) {
+    public List<ExamResultResponseDto> getFailedExamsByUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         List<ExamResult> results = examResultRepository.findByUserAndStatus(user, EnumClass.ExamStatus.FAILED);
@@ -220,7 +217,7 @@ public class ExamResultService {
 
     public boolean hasUserTakenExam(Long userId, String examId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
+                .orElseThrow(() -> new RuntimeException("Không tìm th��y người dùng: " + userId));
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
         return examResultRepository.existsByUserAndExam(user, exam);
@@ -256,24 +253,18 @@ public class ExamResultService {
         return ExamHistoryMapper.toDtoList(results.getContent());
     }
 
-    // Method mới: Bắt đầu làm bài thi với examId và userId
-    public ExamResultDto startExam(String examId, String userId) {
-        StartExamDto startExamDto = new StartExamDto(examId, userId);
-        return this.startExam(startExamDto);
-    }
 
     // Method mới: Submit bài thi với examId
-    public ExamResultDto submitExam(String examId, SubmitExamDto submitExamDto, String userId) {
+    public ExamResultResponseDto submitExam(String examId, SubmitExamDto submitExamDto, Long userId) {
         return this.submitExam(submitExamDto, userId);
     }
 
     // Method mới: Lấy kết quả bài thi của user cho exam cụ thể
-    public ExamResultDto getExamResult(String examId, String userId) {
+    public ExamResultResponseDto getExamResult(String examId, Long userId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
 
-        Long userIdLong = Long.parseLong(userId);
-        User user = userRepository.findById(userIdLong)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
 
         ExamResult examResult = examResultRepository.findByUserAndExam(user, exam)
@@ -283,12 +274,11 @@ public class ExamResultService {
     }
 
     // Method mới: Kiểm tra trạng thái bài thi của user
-    public ExamStatusDto getExamStatus(String examId, String userId) {
+    public ExamStatusDto getExamStatus(String examId, Long userId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
 
-        Long userIdLong = Long.parseLong(userId);
-        User user = userRepository.findById(userIdLong)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
 
         Optional<ExamResult> examResultOpt = examResultRepository.findByUserAndExam(user, exam);
@@ -306,11 +296,11 @@ public class ExamResultService {
         } else {
             // Đã hoàn thành
             return ExamStatusDto.completed(
-                examResult.getId(),
-                examResult.getStartedAt(),
-                examResult.getSubmittedAt(),
-                examResult.getStatus(),
-                examResult.getScore()
+                    examResult.getId(),
+                    examResult.getStartedAt(),
+                    examResult.getSubmittedAt(),
+                    examResult.getStatus(),
+                    examResult.getScore()
             );
         }
     }

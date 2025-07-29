@@ -1,7 +1,7 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.ExamResultDetailDto;
-import fu.sep.apjf.dto.ExamResultDto;
+import fu.sep.apjf.dto.response.ExamResultResponseDto;
+import fu.sep.apjf.dto.response.ExamResultDetailDto;
 import fu.sep.apjf.entity.ExamResult;
 import fu.sep.apjf.entity.ExamResultDetail;
 
@@ -12,7 +12,7 @@ public final class ExamResultMapper {
     private ExamResultMapper() {
     }
 
-    public static ExamResultDto toDto(ExamResult examResult) {
+    public static ExamResultResponseDto toDto(ExamResult examResult) {
         if (examResult == null) {
             return null;
         }
@@ -35,7 +35,7 @@ public final class ExamResultMapper {
 
         int totalQuestions = examResult.getExam().getQuestions().size();
 
-        return new ExamResultDto(
+        return new ExamResultResponseDto(
                 examResult.getId(),
                 examResult.getStartedAt(),
                 examResult.getSubmittedAt(),
@@ -50,7 +50,7 @@ public final class ExamResultMapper {
         );
     }
 
-    public static List<ExamResultDto> toDtoList(List<ExamResult> examResults) {
+    public static List<ExamResultResponseDto> toDtoList(List<ExamResult> examResults) {
         if (examResults == null) {
             return List.of();
         }
