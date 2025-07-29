@@ -94,12 +94,6 @@ public class ExamResultService {
             throw new RuntimeException("Bài thi đã được nộp rồi");
         }
 
-        // Kiểm tra thời gian làm bài - CHO PHÉP submit dù đã hết giờ
-        LocalDateTime startedAt = examResult.getStartedAt();
-        Double duration = examResult.getExam().getDuration();
-        LocalDateTime expectedEndTime = startedAt.plusMinutes(duration.longValue());
-        boolean isTimeExpired = LocalDateTime.now().isAfter(expectedEndTime);
-
         // Xóa các câu trả lời cũ và lưu câu trả lời mới
         if (!examResult.getDetails().isEmpty()) {
             examResultDetailRepository.deleteAll(examResult.getDetails());
