@@ -53,3 +53,12 @@ spring:
 app:
   oauth2:
     redirectUri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/redirect}
+
+
+minio:
+  url: http://localhost:9000
+  access-key: admin
+  secret-key: admin@2024
+  buckets:
+    avatar: avatar
+    document: documents
