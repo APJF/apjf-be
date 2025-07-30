@@ -3,13 +3,12 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.QuestionRequestDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.EnumClass;
-import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.Option;
 import fu.sep.apjf.entity.Question;
 import fu.sep.apjf.mapper.QuestionMapper;
-import fu.sep.apjf.repository.ExamRepository;
 import fu.sep.apjf.repository.OptionRepository;
 import fu.sep.apjf.repository.QuestionRepository;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,9 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -33,15 +29,11 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
-    private final ExamRepository examRepository;
 
-    /**
-     * Lấy danh sách câu hỏi với các tùy chọn lọc, sắp xếp và phân trang
-     */
     public Page<QuestionResponseDto> getAllQuestions(
             int page, int size, String sort, String direction,
             String keyword, EnumClass.QuestionType type,
-            String examId, EnumClass.QuestionScope scope) {
+            EnumClass.QuestionScope scope) {
 
         // Tạo đối tượng Pageable cho phân trang và sắp xếp
         Sort.Direction sortDirection = direction.equalsIgnoreCase("asc")
@@ -70,12 +62,6 @@ public class QuestionService {
                 predicates.add(cb.equal(root.get("scope"), scope));
             }
 
-            // Lọc theo bài thi
-            if (examId != null && !examId.trim().isEmpty()) {
-                Join<Question, Exam> examJoin = root.join("exams", JoinType.INNER);
-                predicates.add(cb.equal(examJoin.get("id"), examId));
-            }
-
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -86,25 +72,10 @@ public class QuestionService {
         return questionsPage.map(QuestionMapper::toResponseDto);
     }
 
-    public List<QuestionResponseDto> getAllQuestions() {
-        List<Question> questions = questionRepository.findAll();
-        return QuestionMapper.toResponseDtoList(questions);
-    }
-
     public QuestionResponseDto findById(String id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found: " + id));
         return QuestionMapper.toResponseDto(question);
-    }
-
-    public List<QuestionResponseDto> getQuestionsByType(EnumClass.QuestionType type) {
-        List<Question> questions = questionRepository.findByType(type);
-        return QuestionMapper.toResponseDtoList(questions);
-    }
-
-    public List<QuestionResponseDto> searchQuestions(String keyword) {
-        List<Question> questions = questionRepository.findByContentContainingIgnoreCase(keyword);
-        return QuestionMapper.toResponseDtoList(questions);
     }
 
     public QuestionResponseDto createQuestion(QuestionRequestDto questionDto) {
@@ -151,12 +122,4 @@ public class QuestionService {
         questionRepository.deleteById(id);
     }
 
-    public List<QuestionResponseDto> getQuestionsByExamId(String examId) {
-        return examRepository.findById(examId)
-                .map(exam -> {
-                    List<Question> questions = questionRepository.findByExamsContaining(exam);
-                    return QuestionMapper.toResponseDtoList(questions);
-                })
-                .orElseThrow(() -> new RuntimeException("Exam not found: " + examId));
-    }
 }

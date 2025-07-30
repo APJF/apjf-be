@@ -177,11 +177,6 @@ public class ExamResultService {
         return ExamResultMapper.toDtoList(results);
     }
 
-    public List<ExamResultResponseDto> getInProgressExams() {
-        List<ExamResult> results = examResultRepository.findBySubmittedAtIsNull();
-        return ExamResultMapper.toDtoList(results);
-    }
-
     public List<ExamResultResponseDto> getPassedExamsByUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
@@ -194,12 +189,6 @@ public class ExamResultService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         List<ExamResult> results = examResultRepository.findByUserAndStatus(user, EnumClass.ExamStatus.FAILED);
         return ExamResultMapper.toDtoList(results);
-    }
-
-    public Double getAverageScoreByExamId(String examId) {
-        Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
-        return examResultRepository.getAverageScoreByExam(exam);
     }
 
     public long countCompletedExamsByUser(Long userId) {

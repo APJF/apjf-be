@@ -25,7 +25,7 @@ public final class ExamSummaryMapper {
                 exam.getDescription(),
                 exam.getDuration() != null ? exam.getDuration().intValue() : null,
                 exam.getQuestions() != null ? exam.getQuestions().size() : 0,
-                EnumClass.Status.DRAFT // Giá trị mặc định hoặc lấy từ exam nếu có
+                EnumClass.Status.INACTIVE // Giá trị mặc định hoặc lấy từ exam nếu có
         );
     }
 
