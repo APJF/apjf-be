@@ -112,14 +112,11 @@ public class ExamController {
         List<ExamHistoryDto> filteredHistory = examResultService.getExamHistoryByStatus(user.getId(), status);
         Page<ExamHistoryDto> pageResult = new org.springframework.data.domain.PageImpl<>(filteredHistory);
 
-        String message;
-        if (status == EnumClass.ExamStatus.PASSED) {
-            message = "Lịch sử bài thi đã đậu";
-        } else if (status == EnumClass.ExamStatus.FAILED) {
-            message = "Lịch sử bài thi chưa đậu";
-        } else {
-            message = "Lịch sử bài thi đang làm";
-        }
+        String message = switch (status) {
+            case PASSED -> "Lịch sử bài thi đã đậu";
+            case FAILED -> "Lịch sử bài thi chưa đậu";
+            case IN_PROGRESS -> "Lịch sử bài thi đang làm";
+        };
 
         return ResponseEntity.ok(ApiResponseDto.ok(message, pageResult));
     }

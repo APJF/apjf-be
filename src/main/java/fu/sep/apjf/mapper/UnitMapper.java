@@ -1,9 +1,9 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.UnitRequestDto;
-import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.Chapter;
+import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.Unit;
 
 import java.util.Set;
@@ -42,10 +42,10 @@ public final class UnitMapper {
 
         // Get exam IDs for this unit
         Set<String> examIds = unit.getExams() != null ?
-            unit.getExams().stream()
-                .map(exam -> exam.getId())
-                .collect(Collectors.toSet()) :
-            null;
+                unit.getExams().stream()
+                        .map(Exam::getId)
+                        .collect(Collectors.toSet()) :
+                null;
 
         return new UnitRequestDto(
                 unit.getId(),

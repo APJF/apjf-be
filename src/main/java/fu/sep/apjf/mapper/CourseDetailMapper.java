@@ -1,14 +1,14 @@
 package fu.sep.apjf.mapper;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.entity.Course;
-import fu.sep.apjf.entity.Topic;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import fu.sep.apjf.entity.Review;
 
 public final class CourseDetailMapper {
     private CourseDetailMapper() {
@@ -29,24 +29,43 @@ public final class CourseDetailMapper {
                 .collect(Collectors.toSet());
 
         // Convert exams to ExamSummaryDto objects
-        Set<ExamSummaryDto> examDtos = course.getExams() != null ?
-                course.getExams().stream()
-                        .map(exam -> new ExamSummaryDto(
+        Set<ExamSummaryDto> examDtos;
+        if (course.getExams() == null) {
+            examDtos = new HashSet<>();
+        } else {
+            examDtos = course.getExams().stream()
+                    .map(exam -> {
+                        Integer duration = null;
+                        if (exam.getDuration() != null) {
+                            duration = exam.getDuration().intValue();
+                        }
+
+                        int questionCount = 0;
+                        if (exam.getQuestions() != null) {
+                            questionCount = exam.getQuestions().size();
+                        }
+
+                        return new ExamSummaryDto(
                                 exam.getId(),
                                 exam.getTitle(),
                                 exam.getDescription(),
-                                exam.getDuration() != null ? exam.getDuration().intValue() : null,
-                                exam.getQuestions() != null ? exam.getQuestions().size() : 0,
-                                null))
-                        .collect(Collectors.toSet()) :
-                new HashSet<>();
+                                duration,
+                                questionCount,
+                                null);
+                    })
+                    .collect(Collectors.toSet());
+        }
 
         // Calculate average rating if available
-        Double averageRating = course.getReviews().isEmpty() ? 0.0 :
-                course.getReviews().stream()
-                        .mapToDouble(review -> review.getRating())
-                        .average()
-                        .orElse(0.0);
+        double averageRating;
+        if (course.getReviews() == null || course.getReviews().isEmpty()) {
+            averageRating = 0.0;
+        } else {
+            averageRating = course.getReviews().stream()
+                    .mapToDouble(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+        }
 
         return new CourseResponseDto(
                 course.getId(),

@@ -1,19 +1,30 @@
 package fu.sep.apjf.controller;
 
+import java.net.URI;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import fu.sep.apjf.dto.request.MaterialRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.MaterialResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.MaterialService;
+import fu.sep.apjf.service.MinioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/materials")
@@ -22,6 +33,7 @@ import java.util.List;
 public class MaterialController {
 
     private final MaterialService materialService;
+    private final MinioService minioService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<MaterialResponseDto>>> getAll() {
@@ -63,5 +75,21 @@ public class MaterialController {
 
         MaterialResponseDto updated = materialService.update(id, dto, null, user.getId());
         return ResponseEntity.ok(ApiResponseDto.ok("Cập nhật tài liệu thành công", updated));
+    }
+
+    @PreAuthorize("hasRole('STAFF')")
+    @PostMapping("/upload")
+    public ResponseEntity<ApiResponseDto<String>> uploadPdf(@RequestParam("file") MultipartFile file,
+                                                           @AuthenticationPrincipal User user) {
+        try {
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
+                return ResponseEntity.badRequest().body(ApiResponseDto.error("Chỉ chấp nhận file PDF", null));
+            }
+            String objectName = minioService.uploadDocument(file, user.getUsername());
+            return ResponseEntity.ok(ApiResponseDto.ok("Upload PDF thành công", objectName));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponseDto.error("Lỗi upload PDF: " + e.getMessage(), null));
+        }
     }
 }

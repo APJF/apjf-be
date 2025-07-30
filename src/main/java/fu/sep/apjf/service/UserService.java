@@ -1,5 +1,19 @@
 package fu.sep.apjf.service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import fu.sep.apjf.dto.request.LoginRequestDto;
 import fu.sep.apjf.dto.request.RegisterDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
@@ -19,19 +33,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -151,6 +152,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(registerDTO.password()));
         user.setEmail(registerDTO.email());
         user.setAvatar("https://engineering.usask.ca/images/no_avatar.jpg");
+        user.setEmailVerified(false);
         user.setEnabled(false);
 
         userRepository.save(user);
@@ -160,8 +162,14 @@ public class UserService {
 
     @Transactional
     public void verifyAccount(String email, String otp) {
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new AppException("Email không tồn tại."));
+        // Tìm user theo email chính hoặc pendingEmail
+        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findAll().stream()
+                    .filter(u -> email.equalsIgnoreCase(u.getPendingEmail()))
+                    .findFirst();
+        }
+        User user = userOpt.orElseThrow(() -> new AppException("Email không tồn tại."));
 
         // Tìm token mới nhất (bất kể type nào)
         Token token = tokenRepository
@@ -174,8 +182,18 @@ public class UserService {
 
         // Xử lý dựa trên type của token
         if (token.getType() == TokenType.REGISTRATION) {
-            user.setEnabled(true);
-            userRepository.save(user);
+            // Nếu xác thực đổi email
+            if (email.equalsIgnoreCase(user.getPendingEmail())) {
+                user.setEmail(user.getPendingEmail());
+                user.setPendingEmail(null);
+                user.setEmailVerified(true);
+                user.setEnabled(true);
+                userRepository.save(user);
+            } else {
+                user.setEmailVerified(true);
+                user.setEnabled(true);
+                userRepository.save(user);
+            }
         }
         // Với reset password, chỉ cần xóa token, không cần thay đổi user
         // Logic reset password đã được xử lý ở method resetPassword
@@ -245,6 +263,44 @@ public class UserService {
 
         // Xóa tất cả token sau khi đổi mật khẩu
         tokenRepository.deleteAllByUser(user);
+    }
+
+    @Transactional
+    public String updateProfile(String currentEmail, fu.sep.apjf.dto.request.ProfileRequestDto dto) {
+        User user = userRepository.findByEmailIgnoreCase(currentEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
+        boolean needSave = false;
+        // Đổi email
+        if (dto.email() != null && !dto.email().equalsIgnoreCase(user.getEmail())) {
+            if (userRepository.existsByEmailIgnoreCase(dto.email())) {
+                throw new IllegalArgumentException("Email đã tồn tại.");
+            }
+            user.setPendingEmail(dto.email());
+            createAndSendToken(user, TokenType.REGISTRATION);
+            needSave = true;
+        }
+        // Đổi username
+        if (dto.username() != null && !dto.username().equals(user.getUsername())) {
+            user.setUsername(dto.username());
+            needSave = true;
+        }
+        // Đổi phone
+        if (dto.phone() != null && !dto.phone().equals(user.getPhone())) {
+            user.setPhone(dto.phone());
+            needSave = true;
+        }
+        // Đổi avatar
+        if (dto.avatar() != null && !dto.avatar().equals(user.getAvatar())) {
+            user.setAvatar(dto.avatar());
+            needSave = true;
+        }
+        if (needSave) {
+            userRepository.save(user);
+        }
+        if (dto.email() != null && !dto.email().equalsIgnoreCase(user.getEmail())) {
+            return "Đã gửi OTP xác thực đến email mới. Vui lòng xác thực để hoàn tất đổi email.";
+        }
+        return "Cập nhật thông tin thành công.";
     }
 
     private void createAndSendToken(User user, TokenType type) {
