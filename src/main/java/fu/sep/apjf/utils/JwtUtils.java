@@ -28,13 +28,13 @@ import java.util.List;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${spring.app.jwtSecret}")
+    @Value("${app.jwt.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${spring.app.jwtExpirationMs}")
+    @Value("${app.jwt.jwtExpirationMs}")
     private int jwtExpirationMs;
 
-    @Value("${spring.app.jwtRefreshExpirationMs:604800000}")
+    @Value("${app.jwt.jwtRefreshExpirationMs:604800000}")
     private int jwtRefreshExpirationMs;
 
     /**

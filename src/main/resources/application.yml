@@ -1,10 +1,7 @@
 spring:
   application:
-    name: APJF-PROJECT
-  app:
-    jwtSecret: ${JWT_SECRET}
-    jwtExpirationMs: ${JWT_EXPIRATION:3600000} # 1 hour
-    jwtRefreshExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
+    name: APJF-BE
+
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
@@ -15,6 +12,7 @@ spring:
       ddl-auto: update
     show-sql: true
     open-in-view: false
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -27,8 +25,8 @@ spring:
           starttls:
             enable: true
             required: true
-          ssl:
-            trust: smtp.gmail.com
+          ssl.trust: smtp.gmail.com
+
   security:
     oauth2:
       client:
@@ -36,10 +34,7 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope:
-              - openid
-              - profile
-              - email
+            scope: [ openid, profile, email ]
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             client-name: Google
         provider:
@@ -49,16 +44,19 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
 
-# Cấu hình cho OAuth2 redirect
 app:
+  jwt:
+    jwtSecret: ${JWT_SECRET}
+    jwtExpirationMs: ${JWT_EXPIRATION:3600000}
+    jwtRefreshExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000}
   oauth2:
     redirectUri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/redirect}
 
-
-minio:
-  url: http://localhost:9000
-  access-key: admin
-  secret-key: admin@2024
-  buckets:
-    avatar: avatar
-    document: documents
+integration:
+  minio:
+    access-key: admin
+    secret-key: admin@2024
+    url: http://localhost:9000
+    buckets:
+      avatar: avatar
+      document: document

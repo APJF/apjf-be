@@ -1,22 +1,22 @@
 package fu.sep.apjf.mapper;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
-import fu.sep.apjf.entity.Topic;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Mapper class để chuyển đổi giữa Course entity và CourseRequestDto
  */
-public class CourseMapper {
+public final class CourseMapper {
+    private CourseMapper() {}
 
     public static CourseRequestDto toDto(Course course) {
         if (course == null) {
@@ -39,7 +39,7 @@ public class CourseMapper {
         Set<String> examIds = Collections.emptySet();
         if (course.getExams() != null && !course.getExams().isEmpty()) {
             examIds = course.getExams().stream()
-                    .map(exam -> exam.getId().toString()) // Convert to String if needed
+                    .map(exam -> exam.getId()) 
                     .collect(Collectors.toSet());
         }
 

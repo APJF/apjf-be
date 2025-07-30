@@ -71,6 +71,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml"
+                        ).permitAll()
                         .requestMatchers(AUTH_ENDPOINTS).permitAll()  // Allow all methods for auth endpoints
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()  // Only GET for public endpoints
                         .requestMatchers(USER_ALLOWED_ENDPOINTS).hasAnyRole("USER", "MANAGER", "ADMIN", "STAFF")
