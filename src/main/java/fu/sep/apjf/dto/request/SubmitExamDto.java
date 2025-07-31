@@ -4,7 +4,7 @@ import java.util.List;
 
 public record SubmitExamDto(
         String examId,
-        List<ExamAnswerRequestDto> answers
+        List<ExamResultAnswerRequestDto> answers
 ) {
 
 }

@@ -27,6 +27,8 @@ public class ExamResult {
 
     private Float score;
 
+    private String advice;
+
     @Enumerated(EnumType.STRING)
     private EnumClass.ExamStatus status;
 
@@ -34,7 +36,6 @@ public class ExamResult {
     @JoinColumn(name = "user_id")
     private User user;
 
-    /* ==== Quan hệ ==== */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id")
     private Exam exam;

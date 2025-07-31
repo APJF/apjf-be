@@ -1,6 +1,6 @@
 package fu.sep.apjf.mapper;
 
-import fu.sep.apjf.dto.response.ExamHistoryDto;
+import fu.sep.apjf.dto.response.ExamResultSummaryDto;
 import fu.sep.apjf.entity.ExamResult;
 
 import java.util.List;
@@ -10,7 +10,7 @@ public final class ExamHistoryMapper {
     private ExamHistoryMapper() {
     }
 
-    public static ExamHistoryDto toDto(ExamResult examResult) {
+    public static ExamResultSummaryDto toDto(ExamResult examResult) {
         if (examResult == null) {
             return null;
         }
@@ -19,7 +19,7 @@ public final class ExamHistoryMapper {
                 .filter(detail -> detail.getIsCorrect())
                 .count();
 
-        return new ExamHistoryDto(
+        return new ExamResultSummaryDto(
                 examResult.getId(),
                 examResult.getExam().getId(),
                 examResult.getExam().getTitle(),
@@ -41,7 +41,7 @@ public final class ExamHistoryMapper {
         );
     }
 
-    public static List<ExamHistoryDto> toDtoList(List<ExamResult> examResults) {
+    public static List<ExamResultSummaryDto> toDtoList(List<ExamResult> examResults) {
         if (examResults == null) {
             return List.of();
         }

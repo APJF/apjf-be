@@ -1,9 +1,9 @@
 package fu.sep.apjf.service;
 
-import fu.sep.apjf.dto.request.ExamAnswerRequestDto;
-import fu.sep.apjf.dto.request.ExamStatusDto;
+import fu.sep.apjf.dto.request.ExamResultAnswerRequestDto;
+import fu.sep.apjf.dto.request.ExamResultStatusDto;
 import fu.sep.apjf.dto.request.SubmitExamDto;
-import fu.sep.apjf.dto.response.ExamHistoryDto;
+import fu.sep.apjf.dto.response.ExamResultSummaryDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.ExamHistoryMapper;
@@ -104,7 +104,7 @@ public class ExamResultService {
         int totalQuestionsInExam = exam.getQuestions().size();
 
         // Lưu các câu trả lời từ request
-        for (ExamAnswerRequestDto answerDto : submitExamDto.answers()) {
+        for (ExamResultAnswerRequestDto answerDto : submitExamDto.answers()) {
             Question question = questionRepository.findById(answerDto.questionId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy câu hỏi: " + answerDto.questionId()));
 
@@ -141,7 +141,7 @@ public class ExamResultService {
         return ExamResultMapper.toDto(savedResult);
     }
 
-    private boolean checkAnswer(Question question, ExamAnswerRequestDto answerDto) {
+    private boolean checkAnswer(Question question, ExamResultAnswerRequestDto answerDto) {
         return switch (question.getType()) {
             case MULTIPLE_CHOICE, TRUE_FALSE -> {
                 if (answerDto.selectedOptionId() != null) {
@@ -206,14 +206,14 @@ public class ExamResultService {
         return examResultRepository.existsByUserAndExam(user, exam);
     }
 
-    public List<ExamHistoryDto> getExamHistory(Long userId) {
+    public List<ExamResultSummaryDto> getExamHistory(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         List<ExamResult> results = examResultRepository.findByUserAndSubmittedAtIsNotNullOrderBySubmittedAtDesc(user);
         return ExamHistoryMapper.toDtoList(results);
     }
 
-    public Page<ExamHistoryDto> getExamHistory(Long userId, int page, int size) {
+    public Page<ExamResultSummaryDto> getExamHistory(Long userId, int page, int size) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         Pageable pageable = PageRequest.of(page, size);
@@ -221,14 +221,14 @@ public class ExamResultService {
         return results.map(ExamHistoryMapper::toDto);
     }
 
-    public List<ExamHistoryDto> getExamHistoryByStatus(Long userId, EnumClass.ExamStatus status) {
+    public List<ExamResultSummaryDto> getExamHistoryByStatus(Long userId, EnumClass.ExamStatus status) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         List<ExamResult> results = examResultRepository.findByUserAndStatusOrderBySubmittedAtDesc(user, status);
         return ExamHistoryMapper.toDtoList(results);
     }
 
-    public List<ExamHistoryDto> getRecentExamHistory(Long userId, int limit) {
+    public List<ExamResultSummaryDto> getRecentExamHistory(Long userId, int limit) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + userId));
         Pageable pageable = PageRequest.of(0, limit);
@@ -257,7 +257,7 @@ public class ExamResultService {
     }
 
     // Method mới: Kiểm tra trạng thái bài thi của user
-    public ExamStatusDto getExamStatus(String examId, Long userId) {
+    public ExamResultStatusDto getExamStatus(String examId, Long userId) {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đề thi: " + examId));
 
@@ -268,17 +268,17 @@ public class ExamResultService {
 
         if (examResultOpt.isEmpty()) {
             // Chưa bắt đầu làm bài
-            return ExamStatusDto.notStarted();
+            return ExamResultStatusDto.notStarted();
         }
 
         ExamResult examResult = examResultOpt.get();
 
         if (examResult.getSubmittedAt() == null) {
             // Đang làm bài
-            return ExamStatusDto.inProgress(examResult.getId(), examResult.getStartedAt());
+            return ExamResultStatusDto.inProgress(examResult.getId(), examResult.getStartedAt());
         } else {
             // Đã hoàn thành
-            return ExamStatusDto.completed(
+            return ExamResultStatusDto.completed(
                     examResult.getId(),
                     examResult.getStartedAt(),
                     examResult.getSubmittedAt(),

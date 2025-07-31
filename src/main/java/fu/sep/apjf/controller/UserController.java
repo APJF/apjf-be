@@ -2,7 +2,7 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.ProfileRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.ExamHistoryDto;
+import fu.sep.apjf.dto.response.ExamResultSummaryDto;
 import fu.sep.apjf.dto.response.ProfileResponseDto;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.User;
@@ -12,13 +12,10 @@ import fu.sep.apjf.service.MinioService;
 import fu.sep.apjf.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -30,13 +27,13 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/{userId}/exam-history")
-    public ResponseEntity<ApiResponseDto<Page<ExamHistoryDto>>> getUserExamHistory(
+    public ResponseEntity<ApiResponseDto<Page<ExamResultSummaryDto>>> getUserExamHistory(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) EnumClass.ExamStatus status
     ) {
-        Page<ExamHistoryDto> history;
+        Page<ExamResultSummaryDto> history;
 
         if (status != null) {
             history = examResultService.getExamHistoryByStatus(userId, status, page, size);
