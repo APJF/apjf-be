@@ -2,7 +2,6 @@ package fu.sep.apjf.repository;
 
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.ApprovalRequest.Decision;
-import fu.sep.apjf.entity.ApprovalRequest.RequestType;
 import fu.sep.apjf.entity.ApprovalRequest.TargetType;
 import fu.sep.apjf.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,8 +17,6 @@ public interface ApprovalRequestRepository extends JpaRepository<ApprovalRequest
     List<ApprovalRequest> findByDecision(Decision decision);
 
     List<ApprovalRequest> findByTargetType(TargetType targetType);
-
-    List<ApprovalRequest> findByRequestType(RequestType requestType);
 
     List<ApprovalRequest> findByCreator(User creator);
 

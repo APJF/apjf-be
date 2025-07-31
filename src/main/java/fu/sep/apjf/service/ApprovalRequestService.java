@@ -88,9 +88,6 @@ public class ApprovalRequestService {
                 .toList();
     }
 
-    /* ---------- STAFF OPERATIONS ---------- */
-    /* ---------- AUTO-CREATE APPROVAL REQUEST OPERATIONS ---------- */
-
     public void autoCreateApprovalRequest(TargetType targetType, String targetId,
                                           ApprovalRequest.RequestType requestType, Long staffId) {
         log.info("Tự động tạo yêu cầu phê duyệt cho {} {} bởi nhân viên {}", requestType, targetType, staffId);

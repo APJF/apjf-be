@@ -46,15 +46,4 @@ public class ReviewController {
         return ResponseEntity.ok(ApiResponseDto.ok("Đánh giá thành công", created));
     }
 
-    @GetMapping("/top-rated")
-    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getTopRatedCourses() {
-        List<CourseResponseDto> topCourses = reviewService.getTopRatedCourses(3);
-        return ResponseEntity.ok(ApiResponseDto.ok("Top 3 khóa học được đánh giá cao nhất", topCourses));
-    }
-
-    @GetMapping("/{courseId}/avg-rating")
-    public ResponseEntity<ApiResponseDto<Double>> getAverageRating(@PathVariable("courseId") String courseId) {
-        double avg = reviewService.getAverageRating(courseId);
-        return ResponseEntity.ok(ApiResponseDto.ok("Điểm trung bình đánh giá", avg));
-    }
 }

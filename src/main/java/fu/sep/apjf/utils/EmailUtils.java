@@ -42,7 +42,6 @@ public class EmailUtils {
                 """, verifyLink, otp);
     }
 
-    @Async("taskExecutor")
     public void sendEmailAsync(String email, String otp, Token.TokenType type) {
         try {
             switch (type) {

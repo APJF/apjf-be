@@ -14,7 +14,7 @@ public record LearningPathResponseDto(
         EnumClass.Level targetLevel,
         String primaryGoal,
         String focusSkill,
-        EnumClass.Status status,
+        EnumClass.PathStatus pathStatus,
         Integer duration,
         Long userId,
         String username,
@@ -22,10 +22,10 @@ public record LearningPathResponseDto(
         LocalDateTime lastUpdatedAt
 ) {
     public static LearningPathResponseDto of(Long id, String title, String description, EnumClass.Level targetLevel,
-                                     String primaryGoal, String focusSkill, EnumClass.Status status,
+                                     String primaryGoal, String focusSkill, EnumClass.PathStatus pathStatus,
                                      Integer duration, Long userId, String username,
                                      LocalDateTime createdAt, LocalDateTime lastUpdatedAt) {
         return new LearningPathResponseDto(id, title, description, targetLevel, primaryGoal, focusSkill,
-                                        status, duration, userId, username, createdAt, lastUpdatedAt);
+                                        pathStatus, duration, userId, username, createdAt, lastUpdatedAt);
     }
 }

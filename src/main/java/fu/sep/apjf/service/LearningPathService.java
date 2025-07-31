@@ -2,7 +2,6 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
-import fu.sep.apjf.dto.response.ExamResponseDto;
 import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.dto.response.UnitProgressDto;
 import fu.sep.apjf.entity.*;

@@ -28,7 +28,6 @@ public class UnitService {
     private final ChapterRepository chapterRepo;
     private final ApprovalRequestService approvalRequestService;
 
-    /*------------- READ -------------*/
     @Transactional(readOnly = true)
     public List<UnitResponseDto> list() {
         return unitRepo.findAll()
@@ -49,7 +48,7 @@ public class UnitService {
     }
 
     @Transactional(readOnly = true)
-    public UnitResponseDto get(String id) {
+    public UnitResponseDto getUnitById(String id) {
         return UnitMapper.toDto(unitRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Unit not found")));
     }
@@ -68,7 +67,7 @@ public class UnitService {
                 .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
-                .status(EnumClass.Status.DRAFT) // Set as DRAFT until approved
+                .status(EnumClass.Status.INACTIVE) // Set as DRAFT until approved
                 .chapter(parent)
                 .build();
 
@@ -94,7 +93,7 @@ public class UnitService {
     }
 
     /* ---------- UPDATE ---------- */
-    public UnitResponseDto update(String currentId, @Valid UnitRequestDto dto, Long staffId) {
+    public UnitResponseDto update(String currentId, UnitRequestDto dto, Long staffId) {
         log.info("Nhân viên {} cập nhật đơn vị học tập với mã: {}", staffId, currentId);
 
         Unit unit = unitRepo.findById(currentId)
@@ -102,7 +101,7 @@ public class UnitService {
 
         unit.setTitle(dto.title());
         unit.setDescription(dto.description());
-        unit.setStatus(EnumClass.Status.DRAFT); // Reset to DRAFT when updated
+        unit.setStatus(EnumClass.Status.INACTIVE); // Reset to DRAFT when updated
 
         // Update prerequisite unit
         if (dto.prerequisiteUnitId() != null) {
@@ -115,7 +114,6 @@ public class UnitService {
 
         Unit updatedUnit = unitRepo.save(unit);
 
-        // Auto-create approval request for this updated unit
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.UNIT,
                 updatedUnit.getId(),
@@ -127,15 +125,4 @@ public class UnitService {
         return UnitMapper.toDto(updatedUnit);
     }
 
-    /* ---------- DELETE ---------- */
-    public void delete(String id) {
-        log.info("Xóa đơn vị học tập với mã: {}", id);
-
-        Unit unit = unitRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập"));
-
-        unitRepo.delete(unit);
-
-        log.info("Xóa đơn vị học tập {} thành công", id);
-    }
 }

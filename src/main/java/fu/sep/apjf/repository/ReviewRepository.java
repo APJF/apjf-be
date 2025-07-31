@@ -3,7 +3,6 @@ package fu.sep.apjf.repository;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,10 +24,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "FROM Review r GROUP BY r.course " +
             "ORDER BY avgRating DESC")
     List<Object[]> findTopRatedCourses(Pageable pageable);
-
-    default List<Object[]> findTopRatedCourses(int topN) {
-        return findTopRatedCourses(PageRequest.of(0, topN));
-    }
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.course = :course")
     Optional<Double> calculateAverageRatingByCourse(@Param("course") Course course);

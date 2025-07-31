@@ -8,14 +8,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-/**
- * Một bản ghi đại diện cho “phiếu” gửi duyệt (CREATE / UPDATE / DEACTIVATE)
- * của Staff và quyết định APPROVED / REJECTED của Manager.
- * <p>
- * • Mỗi phiếu chỉ trỏ tới duy nhất một trong bốn đối tượng:
- * Course - Chapter - Unit - Material.
- * • Enum {@code targetType} giúp lọc / thống kê nhanh mà không cần JOIN.
- */
 @Entity
 @Table(
         name = "approval_request",
@@ -77,7 +69,6 @@ public class ApprovalRequest {
 
     @Column(name = "reviewed_at")
     private Instant reviewedAt;
-    /* ---------- workflow ---------- */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private RequestType requestType;       // CREATE / UPDATE / DEACTIVATE
@@ -107,7 +98,7 @@ public class ApprovalRequest {
 
     public enum TargetType {COURSE, CHAPTER, UNIT, MATERIAL}
 
-    public enum RequestType {CREATE, UPDATE, DEACTIVATE}
+    public enum RequestType {CREATE, UPDATE}
 
     public enum Decision {PENDING, APPROVED, REJECTED}
 }

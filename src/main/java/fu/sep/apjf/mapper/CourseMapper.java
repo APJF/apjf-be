@@ -18,7 +18,7 @@ import fu.sep.apjf.entity.EnumClass;
 public final class CourseMapper {
     private CourseMapper() {}
 
-    public static CourseRequestDto toDto(Course course) {
+    public static CourseRequestDto toRequestDto(Course course) {
         if (course == null) {
             return null;
         }
@@ -71,7 +71,7 @@ public final class CourseMapper {
                 .level(courseDto.level())
                 .image(courseDto.image())
                 .requirement(courseDto.requirement())
-                .status(courseDto.status() != null ? courseDto.status() : EnumClass.Status.DRAFT)
+                .status(courseDto.status() != null ? courseDto.status() : EnumClass.Status.INACTIVE)
                 .build();
     }
 
@@ -128,53 +128,6 @@ public final class CourseMapper {
                 topicDtos,
                 examDtos,
                 null  // No average rating by default
-        );
-    }
-
-    public static CourseResponseDto toResponseDtoWithRating(Course course, Double rating) {
-        if (course == null) {
-            return null;
-        }
-
-        // Get prerequisiteCourse ID if it exists
-        String prerequisiteCourseId = course.getPrerequisiteCourse() != null ?
-                course.getPrerequisiteCourse().getId() : null;
-
-        // Chuyển đổi Topics thành TopicDto
-        Set<TopicDto> topicDtos = Collections.emptySet();
-        if (course.getTopics() != null && !course.getTopics().isEmpty()) {
-            topicDtos = course.getTopics().stream()
-                    .map(topic -> new TopicDto(topic.getId(), topic.getName()))
-                    .collect(Collectors.toSet());
-        }
-
-        // Chuyển đổi Exams thành ExamSummaryDto
-        Set<ExamSummaryDto> examDtos = Collections.emptySet();
-        if (course.getExams() != null && !course.getExams().isEmpty()) {
-            examDtos = course.getExams().stream()
-                    .map(exam -> new ExamSummaryDto(
-                            exam.getId(),
-                            exam.getTitle(),
-                            exam.getDescription(),
-                            exam.getDuration() != null ? exam.getDuration().intValue() : null,
-                            exam.getQuestions() != null ? exam.getQuestions().size() : 0,
-                            null))
-                    .collect(Collectors.toSet());
-        }
-
-        return new CourseResponseDto(
-                course.getId(),
-                course.getTitle(),
-                course.getDescription(),
-                course.getDuration(),
-                course.getLevel(),
-                course.getImage(),
-                course.getRequirement(),
-                course.getStatus(),
-                prerequisiteCourseId,
-                topicDtos,
-                examDtos,
-                rating
         );
     }
 

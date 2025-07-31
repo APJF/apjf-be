@@ -38,7 +38,7 @@ public class UnitController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết bài học", unitService.get(id)));
+                ApiResponseDto.ok("Chi tiết bài học", unitService.getUnitById(id)));
     }
 
     @PostMapping
@@ -65,14 +65,4 @@ public class UnitController {
                 ApiResponseDto.ok("Cập nhật bài học thành công", unitService.update(id, dto, user.getId())));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<Void>> delete(
-            @PathVariable String id,
-            @AuthenticationPrincipal User user) {
-
-        log.info("Staff {} đang xóa bài học {}", user.getUsername(), id);
-
-        unitService.delete(id);
-        return ResponseEntity.ok(ApiResponseDto.ok("Xóa bài học thành công", null));
-    }
 }
