@@ -82,7 +82,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     }
 
     private User createNewUser(UserInfo userInfo) {
-        Authority userRole = authorityRepository.findByAuthority(DEFAULT_ROLE)
+        Authority userRole = authorityRepository.findByName(DEFAULT_ROLE)
                 .orElseThrow(() -> new IllegalStateException("Default role not found: " + DEFAULT_ROLE));
 
         User newUser = new User();

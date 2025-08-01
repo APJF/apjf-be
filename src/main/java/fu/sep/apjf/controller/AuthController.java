@@ -104,25 +104,4 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponseDto.ok("Làm mới token thành công", payload));
     }
 
-    @PostMapping("/avatar")
-    public ResponseEntity<ApiResponseDto<String>> uploadAvatar(@RequestParam("file") MultipartFile file,
-                                                              @AuthenticationPrincipal User user) throws Exception {
-        String objectName = minioService.uploadAvatar(file, user.getEmail());
-        return ResponseEntity.ok(ApiResponseDto.ok("Upload avatar thành công", objectName));
-    }
-
-    @PostMapping("/profile")
-    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@RequestBody ProfileRequestDto dto,
-                                                               @AuthenticationPrincipal User user) {
-        String message = userService.updateProfile(user.getEmail(), dto);
-        return ResponseEntity.ok(ApiResponseDto.ok(message, null));
-    }
-
-    @GetMapping("/profile")
-    public ResponseEntity<ApiResponseDto<ProfileResponseDto>> getCurrentUser(@AuthenticationPrincipal User user) {
-        ProfileResponseDto userProfileDto = UserMapper.toProfileDto(user);
-        return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", userProfileDto));
-    }
-
-
 }

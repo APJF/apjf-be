@@ -30,13 +30,14 @@ public class ReviewService {
     private final ReviewRepository reviewRepo;
     private final CourseRepository courseRepo;
     private final UserRepository userRepo;
+    private static final String COURSE_NOT_FOUND = "Không tìm thấy khóa học";
 
     public CourseResponseDto addReview(Long userId, String courseId, @Min(1) @Max(5) int rating, String comment) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
         Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+                .orElseThrow(() -> new EntityNotFoundException(COURSE_NOT_FOUND));
 
         if (reviewRepo.findByUserAndCourse(user, course).isPresent()) {
             throw new IllegalArgumentException("Người dùng đã đánh giá khóa học này");
@@ -52,14 +53,14 @@ public class ReviewService {
                 .build();
 
         reviewRepo.save(review);
-        // Return the updated course as CourseResponseDto
+
         Course updatedCourse = courseRepo.findById(courseId).orElseThrow();
         return CourseMapper.toResponseDto(updatedCourse, getAverageRating(courseId));
     }
 
     public List<CourseResponseDto> getReviewsByCourse(String courseId) {
         Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+                .orElseThrow(() -> new EntityNotFoundException(COURSE_NOT_FOUND));
 
         return reviewRepo.findByCourse(course)
                 .stream()
@@ -88,6 +89,13 @@ public class ReviewService {
         reviewRepo.delete(review);
     }
 
+    public double getAverageRating(String courseId) {
+        Course course = courseRepo.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException(COURSE_NOT_FOUND));
+
+        return reviewRepo.calculateAverageRatingByCourse(course).orElse(0.0);
+    }
+
     public List<CourseResponseDto> getTopRatedCourses(int topN) {
         List<Object[]> result = reviewRepo.findTopRatedCourses(PageRequest.of(0, topN));
         List<CourseResponseDto> topCourses = new ArrayList<>();
@@ -101,10 +109,4 @@ public class ReviewService {
         return topCourses;
     }
 
-    public double getAverageRating(String courseId) {
-        Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
-
-        return reviewRepo.calculateAverageRatingByCourse(course).orElse(0.0);
-    }
 }

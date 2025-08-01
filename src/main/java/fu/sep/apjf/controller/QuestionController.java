@@ -26,7 +26,6 @@ public class QuestionController {
      * @param direction Hướng sắp xếp: "asc" hoặc "desc" (mặc định: "desc")
      * @param keyword   Từ khóa tìm kiếm trong nội dung và tiêu đề câu hỏi
      * @param type      Loại câu hỏi (MULTIPLE_CHOICE, TRUE_FALSE, WRITING)
-     * @param examId    ID của bài thi (nếu muốn lọc theo bài thi)
      * @param scope     Phạm vi của câu hỏi (UNIT, CHAPTER, COURSE)
      * @return Page<QuestionResponseDto> Trang kết quả với các câu hỏi thỏa mãn điều kiện
      */
@@ -38,11 +37,10 @@ public class QuestionController {
             @RequestParam(defaultValue = "desc") String direction,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) EnumClass.QuestionType type,
-            @RequestParam(required = false) String examId,
             @RequestParam(required = false) EnumClass.QuestionScope scope) {
 
         Page<QuestionResponseDto> questions = questionService.getAllQuestions(
-                page, size, sort, direction, keyword, type, examId, scope);
+                page, size, sort, direction, keyword, type, scope);
 
         return ResponseEntity.ok(ApiResponseDto.ok("Danh sách câu hỏi", questions));
     }

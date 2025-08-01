@@ -6,12 +6,9 @@ public class EnumClass {
         N5, N4, N3, N2, N1
     }
 
-    public enum Status {
-        DRAFT,       // đang biên soạn
-        PENDING,     // staff gửi duyệt
-        PUBLISHED,   // manager duyệt
-        REJECTED,    // manager từ chối
-        ARCHIVED     // ngưng sử dụng
+    public enum Status {// staff gửi duyệt
+        ACTIVE,   // manager duyệt// manager từ chối
+        INACTIVE     // ngưng sử dụng
     }
 
     public enum QuestionType {

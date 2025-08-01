@@ -28,8 +28,6 @@ public class ChapterService {
     private final CourseRepository courseRepo;
     private final ApprovalRequestService approvalRequestService;
 
-    /* ---------- READ ---------- */
-
     @Transactional(readOnly = true)
     public List<ChapterResponseDto> findAll() {
         return chapterRepo.findAll().stream()
@@ -53,7 +51,6 @@ public class ChapterService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học")));
     }
 
-    /* ---------- CREATE ---------- */
     public ChapterResponseDto create(@Valid ChapterRequestDto dto, Long staffId) {
         log.info("Nhân viên {} tạo chương học mới với mã: {}", staffId, dto.id());
 
@@ -67,11 +64,10 @@ public class ChapterService {
                 .id(dto.id())
                 .title(dto.title())
                 .description(dto.description())
-                .status(EnumClass.Status.DRAFT) // Set as DRAFT until approved
+                .status(EnumClass.Status.INACTIVE)
                 .course(parent)
                 .build();
 
-        // Set prerequisite chapter if provided
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
@@ -80,7 +76,6 @@ public class ChapterService {
 
         Chapter savedChapter = chapterRepo.save(ch);
 
-        // Auto-create approval request for this new chapter
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.CHAPTER,
                 savedChapter.getId(),
@@ -92,7 +87,6 @@ public class ChapterService {
         return ChapterMapper.toResponseDto(savedChapter);
     }
 
-    /* ---------- UPDATE ---------- */
     public ChapterResponseDto update(String currentId, @Valid ChapterRequestDto dto, Long staffId) {
         log.info("Nhân viên {} cập nhật chương học với mã: {}", staffId, currentId);
 
@@ -101,9 +95,8 @@ public class ChapterService {
 
         chapter.setTitle(dto.title());
         chapter.setDescription(dto.description());
-        chapter.setStatus(EnumClass.Status.DRAFT); // Reset to DRAFT when updated
+        chapter.setStatus(EnumClass.Status.INACTIVE);
 
-        // Update prerequisite chapter if provided
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
@@ -114,7 +107,6 @@ public class ChapterService {
 
         Chapter updatedChapter = chapterRepo.save(chapter);
 
-        // Auto-create approval request for this updated chapter
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.CHAPTER,
                 updatedChapter.getId(),
@@ -126,7 +118,6 @@ public class ChapterService {
         return ChapterMapper.toResponseDto(updatedChapter);
     }
 
-    /* ---------- DELETE ---------- */
     public void delete(String id) {
         log.info("Xóa chương học với mã: {}", id);
 

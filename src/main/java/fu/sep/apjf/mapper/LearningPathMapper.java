@@ -31,8 +31,8 @@ public final class LearningPathMapper {
                 EnumClass.Level.valueOf(learningPath.getTargetLevel()) : null;
 
         // Convert PathStatus to Status (if needed) or pass null if status is null
-        EnumClass.Status status = learningPath.getStatus() != null ?
-                EnumClass.Status.valueOf(learningPath.getStatus().name()) : null;
+        EnumClass.PathStatus pathStatus = learningPath.getStatus() != null ?
+                EnumClass.PathStatus.valueOf(learningPath.getStatus().name()) : null;
 
         // Convert BigDecimal to Integer
         Integer duration = learningPath.getDuration() != null ?
@@ -45,7 +45,7 @@ public final class LearningPathMapper {
                 targetLevel,
                 learningPath.getPrimaryGoal(),
                 learningPath.getFocusSkill(),
-                status,
+                pathStatus,
                 duration,
                 userId,
                 username,

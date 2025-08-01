@@ -31,9 +31,6 @@ public class MaterialService {
     private static final String UNIT_NOT_FOUND_PREFIX = "Không tìm thấy bài học với ID: ";
     private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
 
-    /**
-     * Tìm tất cả tài liệu dạng list
-     */
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findAll() {
         return materialRepository.findAll().stream()
@@ -41,9 +38,6 @@ public class MaterialService {
                 .toList();
     }
 
-    /**
-     * Tìm tài liệu theo đơn vị học tập
-     */
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findByUnitId(String unitId) {
         Unit unit = unitRepository.findById(unitId)
@@ -54,9 +48,6 @@ public class MaterialService {
                 .toList();
     }
 
-    /**
-     * Tìm tài liệu theo ID
-     */
     @Transactional(readOnly = true)
     public MaterialResponseDto findById(String id) {
         return MaterialMapper.toResponseDto(materialRepository.findById(id)
@@ -131,17 +122,4 @@ public class MaterialService {
         return MaterialMapper.toResponseDto(updatedMaterial);
     }
 
-    /**
-     * Xóa tài liệu
-     */
-    public void delete(String id) {
-        log.info("Xóa tài liệu với ID: {}", id);
-
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
-
-        materialRepository.delete(material);
-
-        log.info("Xóa tài liệu {} thành công", id);
-    }
 }

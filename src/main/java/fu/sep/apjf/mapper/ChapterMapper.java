@@ -65,6 +65,6 @@ public final class ChapterMapper {
         }
         return chapters.stream()
                 .map(ChapterMapper::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

@@ -50,6 +50,7 @@ public class UserService {
     private final EmailUtils emailUtils;
     private final JwtUtils jwtUtils;
     private final AuthorityRepository authorityRepository;
+    private static final String ROLE_USER = "ROLE_USER";
 
     @Transactional
     public LoginResponseDto login(LoginRequestDto loginDTO) {
@@ -143,7 +144,7 @@ public class UserService {
         }
 
         // Tìm ROLE_USER và xử lý nếu không tìm thấy
-        Authority userRole = authorityRepository.findByAuthority("ROLE_USER")
+        Authority userRole = authorityRepository.findByName(ROLE_USER)
                 .orElseThrow(() -> new AppException("Không tìm thấy ROLE_USER trong hệ thống."));
 
         User user = new User();
@@ -186,14 +187,10 @@ public class UserService {
             if (email.equalsIgnoreCase(user.getPendingEmail())) {
                 user.setEmail(user.getPendingEmail());
                 user.setPendingEmail(null);
-                user.setEmailVerified(true);
-                user.setEnabled(true);
-                userRepository.save(user);
-            } else {
-                user.setEmailVerified(true);
-                user.setEnabled(true);
-                userRepository.save(user);
             }
+            user.setEmailVerified(true);
+            user.setEnabled(true);
+            userRepository.save(user);
         }
         // Với reset password, chỉ cần xóa token, không cần thay đổi user
         // Logic reset password đã được xử lý ở method resetPassword
@@ -318,10 +315,6 @@ public class UserService {
         emailUtils.sendEmailAsync(user.getEmail(), otp, type);
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmailIgnoreCase(email);
     }
@@ -329,7 +322,7 @@ public class UserService {
 
     public User save(User user) {
         if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
-            Authority defaultRole = authorityRepository.findByAuthority("ROLE_USER")
+            Authority defaultRole = authorityRepository.findByName(ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role mặc định ROLE_USER"));
             user.setAuthorities(List.of(defaultRole));
         }
@@ -339,7 +332,7 @@ public class UserService {
     @Transactional
     public User createOAuth2User(String email, String name, String avatar) {
         // Lookup default role
-        Authority userRole = authorityRepository.findByAuthority("ROLE_USER")
+        Authority userRole = authorityRepository.findByName(ROLE_USER)
                 .orElseThrow(() -> new AppException("Default role not found: ROLE_USER"));
 
         // Build new User
