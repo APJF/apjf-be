@@ -75,14 +75,14 @@ public final class CourseMapper {
                 .build();
     }
 
-    public static List<CourseRequestDto> toDtoList(List<Course> courses) {
-        if (courses == null) {
-            return Collections.emptyList();
-        }
-        return courses.stream()
-                .map(CourseMapper::toDto)
-                .toList();
-    }
+//    public static List<CourseRequestDto> toDtoList(List<Course> courses) {
+//        if (courses == null) {
+//            return Collections.emptyList();
+//        }
+//        return courses.stream()
+//                .map(CourseMapper::toDto)
+//                .toList();
+//    }
 
     public static CourseResponseDto toResponseDto(Course course) {
         if (course == null) {

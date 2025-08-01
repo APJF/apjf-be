@@ -144,7 +144,7 @@ public class UserService {
         }
 
         // Tìm ROLE_USER và xử lý nếu không tìm thấy
-        Authority userRole = authorityRepository.findByAuthority(ROLE_USER)
+        Authority userRole = authorityRepository.findByName(ROLE_USER)
                 .orElseThrow(() -> new AppException("Không tìm thấy ROLE_USER trong hệ thống."));
 
         User user = new User();
@@ -322,7 +322,7 @@ public class UserService {
 
     public User save(User user) {
         if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
-            Authority defaultRole = authorityRepository.findByAuthority(ROLE_USER)
+            Authority defaultRole = authorityRepository.findByName(ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role mặc định ROLE_USER"));
             user.setAuthorities(List.of(defaultRole));
         }
@@ -332,7 +332,7 @@ public class UserService {
     @Transactional
     public User createOAuth2User(String email, String name, String avatar) {
         // Lookup default role
-        Authority userRole = authorityRepository.findByAuthority(ROLE_USER)
+        Authority userRole = authorityRepository.findByName(ROLE_USER)
                 .orElseThrow(() -> new AppException("Default role not found: ROLE_USER"));
 
         // Build new User
