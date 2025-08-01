@@ -17,5 +17,5 @@ public record ExamResultResponseDto(
         List<ExamResultDetailDto> answers,
         int totalQuestions,
         int correctAnswers
-) {
-}
+) {}
+

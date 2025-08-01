@@ -16,12 +16,11 @@ public class ExamResultDetail {
     private String id;
 
     @Column(name = "user_answer")
-    private String userAnswer;        // tự luận; MCQ thì = selectedOption.content
+    private String userAnswer;
 
     @Column(name = "is_correct")
     private Boolean isCorrect;
 
-    /* ==== Quan hệ ==== */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_result_id")
     private ExamResult examResult;
@@ -30,9 +29,6 @@ public class ExamResultDetail {
     @JoinColumn(name = "question_id")
     private Question question;
 
-    /**
-     * Option mà học sinh chọn (nếu dạng MCQ)
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "selected_option_id")
     private Option selectedOption;
