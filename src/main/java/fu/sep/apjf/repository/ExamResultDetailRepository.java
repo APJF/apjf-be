@@ -9,17 +9,17 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ExamResultDetailRepository extends JpaRepository<ExamResultDetail, String> {
-    List<ExamResultDetail> findByExamResultId(String examResultId);
+public interface ExamResultDetailRepository extends JpaRepository<ExamResultDetail, Long> {
+    List<ExamResultDetail> findByExamResultId(Long examResultId);
 
     List<ExamResultDetail> findByQuestionId(String questionId);
 
     @Query("SELECT erd FROM ExamResultDetail erd WHERE erd.examResult.id = :examResultId AND erd.question.id = :questionId")
-    ExamResultDetail findByExamResultIdAndQuestionId(@Param("examResultId") String examResultId, @Param("questionId") String questionId);
+    ExamResultDetail findByExamResultIdAndQuestionId(@Param("examResultId") Long examResultId, @Param("questionId") String questionId);
 
     @Query("SELECT COUNT(erd) FROM ExamResultDetail erd WHERE erd.examResult.id = :examResultId AND erd.isCorrect = true")
-    int countCorrectAnswersByExamResultId(@Param("examResultId") String examResultId);
+    int countCorrectAnswersByExamResultId(@Param("examResultId") Long examResultId);
 
     @Query("SELECT COUNT(erd) FROM ExamResultDetail erd WHERE erd.examResult.id = :examResultId")
-    int countTotalAnswersByExamResultId(@Param("examResultId") String examResultId);
+    int countTotalAnswersByExamResultId(@Param("examResultId") Long examResultId);
 }

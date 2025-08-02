@@ -53,6 +53,16 @@ public class User implements UserDetails {
     @Column(name = "vip_expiration")
     private LocalDateTime vipExpiration;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "level")
+    private EnumClass.Level level;
+
+    @Column(name = "target")
+    private String target;
+
+    @Column(name = "hobby")
+    private String hobby;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_authority",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),

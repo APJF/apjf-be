@@ -54,9 +54,10 @@ app:
 
 integration:
   minio:
-    access-key: admin
-    secret-key: admin@2024
-    url: http://localhost:9000
+    access-key: ${MINIO_ACCESS_KEY}
+    secret-key: ${MINIO_SECRET_KEY}
+    url: ${MINIO_URL:http://localhost:9000}
     buckets:
       avatar: avatar
       document: document
+      course-image: course-image

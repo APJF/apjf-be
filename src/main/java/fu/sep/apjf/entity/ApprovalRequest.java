@@ -25,7 +25,6 @@ import java.util.stream.Stream;
 @EqualsAndHashCode(of = "id")
 public class ApprovalRequest {
 
-    /* ---------- PK ---------- */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -51,31 +50,32 @@ public class ApprovalRequest {
     @JsonBackReference
     private Material material;
 
-    /* ---------- enum nhận diện loại đích ---------- */
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false, length = 20)
     private TargetType targetType;
-    /* ---------- audit ---------- */
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
-    private User creator;              // staff gửi yêu cầu
+    private User creator;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewed_by")
-    private User reviewer;             // manager duyệt / từ chối
+    private User reviewer;
 
     @Column(name = "reviewed_at")
     private Instant reviewedAt;
     @Enumerated(EnumType.STRING)
+
     @Column(nullable = false, length = 20)
-    private RequestType requestType;       // CREATE / UPDATE / DEACTIVATE
-    @Builder.Default
+    private RequestType requestType;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Decision decision = Decision.PENDING;
+
     @Column()
     private String feedback;
 

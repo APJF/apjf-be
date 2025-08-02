@@ -7,7 +7,7 @@ import java.util.List;
 
 public record ExamResultSubmitRequestDto(
         @NotBlank(message = "ID bài kiểm tra không được để trống")
-        String examId,
+        String examId,  // Exam ID vẫn là String
 
         @NotEmpty(message = "Danh sách câu trả lời không được để trống")
         List<ExamResultAnswerRequestDto> answers

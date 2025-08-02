@@ -13,7 +13,8 @@ import lombok.*;
 public class ExamResultDetail {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "user_answer")
     private String userAnswer;

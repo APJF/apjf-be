@@ -17,7 +17,8 @@ import java.util.List;
 public class ExamResult {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "started_at")
     private LocalDateTime startedAt;

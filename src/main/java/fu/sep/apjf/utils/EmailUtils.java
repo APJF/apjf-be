@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -42,11 +41,11 @@ public class EmailUtils {
                 """, verifyLink, otp);
     }
 
-    public void sendEmailAsync(String email, String otp, Token.TokenType type) {
+    public void sendEmailType(String email, String otp, Token.TokenType type) {
         try {
             switch (type) {
                 case REGISTRATION:
-                    sendOtpEmail(email, otp);
+                    sendRegisterOtpEmail(email, otp);
                     break;
                 case RESET_PASSWORD:
                     sendResetPasswordEmail(email, otp);
@@ -60,7 +59,7 @@ public class EmailUtils {
     }
 
     // Gửi email OTP cho đăng ký
-    private void sendOtpEmail(String email, String otp) throws MessagingException {
+    private void sendRegisterOtpEmail(String email, String otp) throws MessagingException {
         String subject = "Xác thực tài khoản";
         String htmlContent = getHtmlContent(email, otp, "http://localhost:8080/auth/verify?email=%s&otp=%s");
         sendEmail(email, subject, htmlContent);

@@ -41,7 +41,7 @@ public final class ExamResultMapper {
                 examResult.getSubmittedAt(),
                 examResult.getScore(),
                 examResult.getStatus(),
-                examResult.getUser().getId().toString(),
+                examResult.getUser().getId(),
                 examResult.getExam().getId(),
                 examResult.getExam().getTitle(),
                 answers,

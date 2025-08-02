@@ -25,7 +25,7 @@ VALUES ('course-01', 'Tieng Nhat N5', 'Khoa hoc co ban', 40.5, 'N5', 'ACTIVE');
 
 /* Add second course after first one works */
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id)
-VALUES ('course-02', 'Tieng Nhat N4', 'Khoa hoc nang cao', 60.0, 'N3', 'ACTIVE', 'course-01');
+VALUES ('course-02', 'Tieng Nhat N4', 'Khoa hoc nang cao', 60.0, 'N4', 'ACTIVE', 'course-01');
 
 /* ---------- CHAPTER ---------- */
 INSERT INTO chapter (id, title, description, status, course_id)
@@ -55,7 +55,10 @@ VALUES ('material-01', 'Video Hiragana', '/videos/hiragana.mp4', 'GRAMMAR', 'uni
 /* ---------- COURSE_TOPIC ---------- */
 INSERT INTO course_topic (course_id, topic_id)
 VALUES ('course-01', 1),
-       ('course-02', 1);
+       ('course-02', 1),
+       ('course-02', 2);
+
+
 
 /* ---------- APPROVAL_REQUEST ---------- */
 INSERT INTO approval_request (course_id, chapter_id, unit_id, material_id, target_type, created_by, created_at,

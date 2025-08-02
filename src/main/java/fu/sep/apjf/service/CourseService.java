@@ -15,21 +15,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
-
 public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final ApprovalRequestService approvalRequestService;
+    private final MinioService minioService;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
-        List<Course> courses = courseRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<Course> courses = courseRepository.findAll();
         return courses.stream()
                 .map(CourseMapper::toResponseDto)
                 .toList();
@@ -43,7 +45,7 @@ public class CourseService {
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
-        if (dto.id() != null && courseRepository.existsById(dto.id())) {
+        if (courseRepository.existsById(dto.id())) {
             throw new EntityExistsException("ID khóa học đã tồn tại");
         }
 
@@ -94,6 +96,27 @@ public class CourseService {
         );
 
         return CourseMapper.toResponseDto(updatedCourse);
+    }
+
+    public String uploadCourseImage(String courseId, MultipartFile file) throws Exception {
+        // Validate course exists
+        if (!courseRepository.existsById(courseId)) {
+            throw new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId);
+        }
+
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, etc.)");
+        }
+
+        // Validate file size (5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
+        }
+
+        // Upload to MinIO
+        return minioService.uploadCourseImage(file, courseId);
     }
 
 }

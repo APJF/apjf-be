@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.util.Set;
 
 public record CourseRequestDto(
+
+        @NotNull(message ="ID khoá học không được để trống")
         String id,
         @NotBlank(message = "Tiêu đề khóa học không được để trống")
         @Size(min = 1, max = 255, message = "Tiêu đề khóa học phải từ 1 đến 255 ký tự")

@@ -35,17 +35,6 @@ public class ApprovalRequestService {
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
 
-    /* ---------- READ OPERATIONS ---------- */
-
-    @Transactional(readOnly = true)
-    public List<ApprovalRequestDto> findPending() {
-        log.info("Lấy danh sách tất cả yêu cầu phê duyệt đang chờ");
-        return approvalRequestRepository.findByDecision(Decision.PENDING)
-                .stream()
-                .map(ApprovalRequestMapper::toDto)
-                .toList();
-    }
-
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findAll() {
         log.info("Lấy danh sách tất cả yêu cầu phê duyệt");
@@ -83,6 +72,15 @@ public class ApprovalRequestService {
         User reviewer = userRepository.findById(Long.parseLong(managerId))
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy manager: " + managerId));
         return approvalRequestRepository.findByReviewer(reviewer)
+                .stream()
+                .map(ApprovalRequestMapper::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApprovalRequestDto> findByDecision(Decision decision) {
+        log.info("Lấy danh sách yêu cầu phê duyệt theo trạng thái quyết định: {}", decision);
+        return approvalRequestRepository.findByDecision(decision)
                 .stream()
                 .map(ApprovalRequestMapper::toDto)
                 .toList();
