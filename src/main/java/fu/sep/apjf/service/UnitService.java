@@ -27,30 +27,34 @@ public class UnitService {
     private final UnitRepository unitRepo;
     private final ChapterRepository chapterRepo;
     private final ApprovalRequestService approvalRequestService;
+    private final UnitMapper unitMapper;
 
     @Transactional(readOnly = true)
     public List<UnitResponseDto> list() {
         return unitRepo.findAll()
                 .stream()
-                .map(UnitMapper::toDto)
+                .map(unitMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UnitResponseDto> findByChapterId(String chapterId) {
-        Chapter chapter = chapterRepo.findById(chapterId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Unit chương với ID: " + chapterId));
+        List<Unit> units = unitRepo.findByChapterId(chapterId);
 
-        return unitRepo.findByChapter(chapter)
-                .stream()
-                .map(UnitMapper::toDto)
+        // Lazy validation: chỉ check chapter existence nếu list rỗng để tối ưu queries
+        if (units.isEmpty() && !chapterRepo.existsById(chapterId)) {
+            throw new EntityNotFoundException("Không tìm thấy chapter với ID: " + chapterId);
+        }
+
+        return units.stream()
+                .map(unitMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public UnitResponseDto getUnitById(String id) {
-        return UnitMapper.toDto(unitRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Unit not found")));
+    public UnitResponseDto findById(String id) {
+        return unitMapper.toDto(unitRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Unit not found with ID: " + id)));
     }
 
     /* ---------- CREATE ---------- */
@@ -89,7 +93,7 @@ public class UnitService {
         );
 
         log.info("Tạo đơn vị học tập {} và yêu cầu phê duyệt thành công", savedUnit.getId());
-        return UnitMapper.toDto(savedUnit);
+        return unitMapper.toDto(savedUnit);
     }
 
     /* ---------- UPDATE ---------- */
@@ -122,7 +126,6 @@ public class UnitService {
         );
 
         log.info("Cập nhật đơn vị học tập {} và yêu cầu phê duyệt thành công", updatedUnit.getId());
-        return UnitMapper.toDto(updatedUnit);
+        return unitMapper.toDto(updatedUnit);
     }
-
 }

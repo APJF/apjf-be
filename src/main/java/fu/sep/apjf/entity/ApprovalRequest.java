@@ -74,6 +74,7 @@ public class ApprovalRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private Decision decision = Decision.PENDING;
 
     @Column()

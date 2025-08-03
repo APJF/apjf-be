@@ -29,28 +29,34 @@ public class ChapterService {
     private final ChapterRepository chapterRepo;
     private final CourseRepository courseRepo;
     private final ApprovalRequestService approvalRequestService;
+    private final ChapterMapper chapterMapper; // Thêm injection
 
     @Transactional(readOnly = true)
     public List<ChapterResponseDto> findAll() {
         return chapterRepo.findAll().stream()
-                .map(ChapterMapper::toResponseDto)
+                .map(chapterMapper::toDto) // Sử dụng injected mapper với method mới
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ChapterResponseDto> findByCourseId(String courseId) {
-        Course course = courseRepo.findById(courseId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+        List<Chapter> chapters = chapterRepo.findByCourseId(courseId);
 
-        return chapterRepo.findByCourse(course).stream()
-                .map(ChapterMapper::toResponseDto)
+        // Lazy validation: chỉ check course existence nếu list rỗng để tối ưu queries
+        if (chapters.isEmpty() && !courseRepo.existsById(courseId)) {
+            throw new EntityNotFoundException("Không tìm thấy course với ID: " + courseId);
+        }
+
+        return chapters.stream()
+                .map(chapterMapper::toDto) // Sử dụng injected mapper
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public ChapterResponseDto findById(String id) {
-        return ChapterMapper.toResponseDto(chapterRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND)));
+        Chapter chapter = chapterRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND));
+        return chapterMapper.toDtoWithExams(chapter); // Load exams cho detail
     }
 
     public ChapterResponseDto create(@Valid ChapterRequestDto dto, Long staffId) {
@@ -62,13 +68,10 @@ public class ChapterService {
         if (chapterRepo.existsById(dto.id()))
             throw new IllegalArgumentException("Mã chương học đã tồn tại");
 
-        Chapter ch = Chapter.builder()
-                .id(dto.id())
-                .title(dto.title())
-                .description(dto.description())
-                .status(EnumClass.Status.INACTIVE)
-                .course(parent)
-                .build();
+        // Sử dụng mapper để tạo entity
+        Chapter ch = chapterMapper.toEntity(dto);
+        ch.setCourse(parent);
+        ch.setStatus(EnumClass.Status.INACTIVE);
 
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
@@ -86,7 +89,7 @@ public class ChapterService {
         );
 
         log.info("Tạo chương học {} và yêu cầu phê duyệt thành công", savedChapter.getId());
-        return ChapterMapper.toResponseDto(savedChapter);
+        return chapterMapper.toDto(savedChapter); // Sử dụng injected mapper
     }
 
     public ChapterResponseDto update(String currentId, @Valid ChapterRequestDto dto, Long staffId) {
@@ -117,6 +120,6 @@ public class ChapterService {
         );
 
         log.info("Cập nhật chương học {} và yêu cầu phê duyệt thành công", updatedChapter.getId());
-        return ChapterMapper.toResponseDto(updatedChapter);
+        return chapterMapper.toDto(updatedChapter); // Sử dụng injected mapper
     }
 }

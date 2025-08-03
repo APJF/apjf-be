@@ -2,40 +2,24 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.entity.Exam;
-import fu.sep.apjf.entity.EnumClass;
+import org.mapstruct.*;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class ExamSummaryMapper {
+@Mapper(componentModel = "spring")
+public interface ExamSummaryMapper {
 
-    private ExamSummaryMapper() {
-        // Private constructor to prevent instantiation
-    }
+    // MapStruct tự động map id và title (tên giống nhau)
+    ExamSummaryDto toDto(Exam exam);
 
-    public static ExamSummaryDto toDto(Exam exam) {
-        if (exam == null) {
-            return null;
-        }
-
-        return new ExamSummaryDto(
-                exam.getId(),
-                exam.getTitle(),
-                exam.getDescription(),
-                exam.getDuration() != null ? exam.getDuration().intValue() : null,
-                exam.getQuestions() != null ? exam.getQuestions().size() : 0,
-                EnumClass.Status.INACTIVE // Giá trị mặc định hoặc lấy từ exam nếu có
-        );
-    }
-
-    public static Set<ExamSummaryDto> toDtoSet(Set<Exam> exams) {
+    // Convert Set<Exam> to Set<ExamSummaryDto>
+    default Set<ExamSummaryDto> toDtoSet(Set<Exam> exams) {
         if (exams == null) {
-            return Collections.emptySet();
+            return java.util.Collections.emptySet();
         }
-
         return exams.stream()
-                .map(ExamSummaryMapper::toDto)
+                .map(this::toDto)
                 .collect(Collectors.toSet());
     }
 }

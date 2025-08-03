@@ -38,16 +38,13 @@ public class UnitController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết bài học", unitService.getUnitById(id)));
+                ApiResponseDto.ok("Chi tiết bài học", unitService.findById(id)));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> create(
             @Valid @RequestBody UnitRequestDto dto,
             @AuthenticationPrincipal User user) {
-
-        log.info("Staff {} đang tạo bài học mới: {}", user.getUsername(), dto.id());
-
         UnitResponseDto unitDto = unitService.create(dto, user.getId());
         return ResponseEntity.created(URI.create("/api/units/" + unitDto.id()))
                 .body(ApiResponseDto.ok("Tạo bài học thành công", unitDto));
@@ -58,9 +55,6 @@ public class UnitController {
             @PathVariable String id,
             @Valid @RequestBody UnitRequestDto dto,
             @AuthenticationPrincipal User user) {
-
-        log.info("Staff {} đang cập nhật bài học: {}", user.getUsername(), id);
-
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Cập nhật bài học thành công", unitService.update(id, dto, user.getId())));
     }

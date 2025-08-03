@@ -4,8 +4,6 @@ import fu.sep.apjf.entity.EnumClass.Status;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.Set;
-
 /**
  * DTO đại diện cho thông tin yêu cầu về bài học (Unit)
  */
@@ -20,7 +18,6 @@ public record UnitRequestDto(
         Status status,
         @NotBlank(message = "ID chương không được để trống")
         String chapterId,
-        String prerequisiteUnitId,
-        Set<String> examIds
+        String prerequisiteUnitId
 ) {
 }

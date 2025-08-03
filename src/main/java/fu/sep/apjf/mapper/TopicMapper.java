@@ -2,30 +2,13 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.entity.Topic;
+import org.mapstruct.*;
 
-public final class TopicMapper {
+@Mapper(componentModel = "spring")
+public interface TopicMapper {
 
-    private TopicMapper() {
-        // Private constructor to prevent instantiation
-    }
+    TopicDto toDto(Topic topic);
 
-    public static TopicDto toDto(Topic topic) {
-        if (topic == null) {
-            return null;
-        }
-
-        return new TopicDto(topic.getId(), topic.getName());
-    }
-
-    public static Topic toEntity(TopicDto topicDto) {
-        if (topicDto == null) {
-            return null;
-        }
-
-        Topic topic = new Topic();
-        topic.setId(topicDto.id());
-        topic.setName(topicDto.name());
-
-        return topic;
-    }
+    @Mapping(target = "courses", ignore = true)
+    Topic toEntity(TopicDto topicDto);
 }

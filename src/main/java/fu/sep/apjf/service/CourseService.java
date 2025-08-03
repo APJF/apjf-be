@@ -12,7 +12,6 @@ import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,12 +27,13 @@ public class CourseService {
     private final UserRepository userRepository;
     private final ApprovalRequestService approvalRequestService;
     private final MinioService minioService;
+    private final CourseMapper courseMapper; // Thêm injection
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
-                .map(CourseMapper::toResponseDto)
+                .map(courseMapper::toDto) // Sử dụng injected mapper
                 .toList();
     }
 
@@ -41,7 +41,7 @@ public class CourseService {
     public CourseResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-        return CourseMapper.toResponseDto(course);
+        return courseMapper.toDtoWithExams(course); // Sử dụng injected mapper
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
@@ -49,7 +49,7 @@ public class CourseService {
             throw new EntityExistsException("ID khóa học đã tồn tại");
         }
 
-        Course course = CourseMapper.toEntity(dto);
+        Course course = courseMapper.toEntity(dto); // Sử dụng mapper thay vì manual
 
         if (!userRepository.existsById(staffId)) {
             throw new EntityNotFoundException("Không tìm thấy nhân viên");
@@ -64,7 +64,7 @@ public class CourseService {
                 staffId
         );
 
-        return CourseMapper.toResponseDto(savedCourse);
+        return courseMapper.toDto(savedCourse);
     }
 
     public CourseResponseDto update(String currentId, CourseRequestDto dto, Long staffId) {
@@ -95,7 +95,7 @@ public class CourseService {
                 staffId
         );
 
-        return CourseMapper.toResponseDto(updatedCourse);
+        return courseMapper.toDto(updatedCourse); // Sử dụng toDto thay vì toResponseDto
     }
 
     public String uploadCourseImage(String courseId, MultipartFile file) throws Exception {
@@ -118,5 +118,4 @@ public class CourseService {
         // Upload to MinIO
         return minioService.uploadCourseImage(file, courseId);
     }
-
 }

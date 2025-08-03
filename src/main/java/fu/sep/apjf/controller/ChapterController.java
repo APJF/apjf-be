@@ -3,8 +3,10 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.ChapterRequestDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
+import fu.sep.apjf.service.UnitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import java.util.List;
 public class ChapterController {
 
     private final ChapterService chapterService;
+    private final UnitService unitService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<ChapterResponseDto>>> getAll() {
@@ -27,16 +30,18 @@ public class ChapterController {
                 ApiResponseDto.ok("Danh sách chương", chapterService.findAll()));
     }
 
-    @GetMapping("/course/{courseId}")
-    public ResponseEntity<ApiResponseDto<List<ChapterResponseDto>>> getAllByCourseId(@PathVariable String courseId) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Danh sách chương theo khóa học", chapterService.findByCourseId(courseId)));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<ChapterResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết chương", chapterService.findById(id)));
+    }
+
+    @GetMapping("/{chapterId}/units")
+    public ResponseEntity<ApiResponseDto<List<UnitResponseDto>>> getChapterUnits(
+            @PathVariable String chapterId) {
+
+        List<UnitResponseDto> units = unitService.findByChapterId(chapterId);
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách units của chapter", units));
     }
 
     @PostMapping

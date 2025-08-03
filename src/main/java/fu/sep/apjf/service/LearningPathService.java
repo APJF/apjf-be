@@ -28,11 +28,14 @@ public class LearningPathService {
     private final UserRepository userRepository;
     private final UnitRepository unitRepository;
     private final ChapterRepository chapterRepository;
+    private final LearningPathMapper learningPathMapper;
+    private final CourseLearningPathMapper courseLearningPathMapper;
+    private final UnitProgressMapper unitProgressMapper;
 
     public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto) {
         User user = userRepository.findById(dto.userId()).orElseThrow();
-        LearningPath entity = LearningPathMapper.toEntity(dto, user);
-        return LearningPathMapper.toResponseDto(learningPathRepository.save(entity));
+        LearningPath entity = learningPathMapper.toEntity(dto, user);
+        return learningPathMapper.toDto(learningPathRepository.save(entity));
     }
 
     public LearningPathResponseDto updateLearningPath(Long id, LearningPathRequestDto dto) {
@@ -45,7 +48,7 @@ public class LearningPathService {
         entity.setStatus(dto.status() != null ? EnumClass.PathStatus.valueOf(dto.status().name()) : null);
         entity.setDuration(dto.duration() != null ? new BigDecimal(dto.duration()) : null);
         entity.setLastUpdatedAt(LocalDateTime.now());
-        return LearningPathMapper.toResponseDto(learningPathRepository.save(entity));
+        return learningPathMapper.toDto(learningPathRepository.save(entity));
     }
 
     public void deleteLearningPath(Long id) {
@@ -54,14 +57,14 @@ public class LearningPathService {
 
     public List<LearningPathResponseDto> getLearningPathsByUser(Long userId) {
         return learningPathRepository.findByUserId(userId).stream()
-                .map(LearningPathMapper::toResponseDto)
+                .map(learningPathMapper::toDto)
                 .toList();
     }
 
     public void addCourseToLearningPath(CourseOrderDto dto) {
         Course course = courseRepository.findById(dto.courseId()).orElseThrow();
         LearningPath path = learningPathRepository.findById(dto.learningPathId()).orElseThrow();
-        CourseLearningPath entity = CourseLearningPathMapper.toEntity(dto, course, path);
+        CourseLearningPath entity = courseLearningPathMapper.toEntity(dto, course, path);
         courseLearningPathRepository.save(entity);
     }
 
@@ -77,10 +80,10 @@ public class LearningPathService {
                 .id(new UnitProgressKey(unitId, userId))
                 .unit(unit)
                 .user(user)
-                .isPassed(true)
+                .passed(true)
                 .passedAt(LocalDateTime.now())
                 .build();
-        return UnitProgressMapper.toDto(unitProgressRepository.save(progress));
+        return unitProgressMapper.toDto(unitProgressRepository.save(progress));
     }
     /*
     public boolean isChapterPassed(Long chapterId, Long userId) {

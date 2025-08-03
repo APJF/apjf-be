@@ -29,6 +29,7 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
+    private final QuestionMapper questionMapper;
 
     public Page<QuestionResponseDto> getAllQuestions(
             int page, int size, String sort, String direction,
@@ -69,13 +70,13 @@ public class QuestionService {
         Page<Question> questionsPage = questionRepository.findAll(spec, pageable);
 
         // Chuyển đổi kết quả sang DTO
-        return questionsPage.map(QuestionMapper::toResponseDto);
+        return questionsPage.map(questionMapper::toDto);
     }
 
     public QuestionResponseDto findById(String id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Question not found: " + id));
-        return QuestionMapper.toResponseDto(question);
+        return questionMapper.toDto(question);
     }
 
     public QuestionResponseDto createQuestion(QuestionRequestDto questionDto) {
@@ -102,7 +103,7 @@ public class QuestionService {
             });
         }
 
-        return QuestionMapper.toResponseDto(savedQuestion);
+        return questionMapper.toDto(savedQuestion);
     }
 
     public QuestionResponseDto updateQuestion(String id, QuestionRequestDto questionDto) {
@@ -115,7 +116,7 @@ public class QuestionService {
         question.setScope(questionDto.scope());
 
         Question updatedQuestion = questionRepository.save(question);
-        return QuestionMapper.toResponseDto(updatedQuestion);
+        return questionMapper.toDto(updatedQuestion);
     }
 
     public void deleteQuestion(String id) {

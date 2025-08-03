@@ -4,9 +4,8 @@ import fu.sep.apjf.entity.EnumClass;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.Set;
-
 public record ChapterRequestDto(
+        @NotBlank
         String id,
         @NotBlank(message = "Tiêu đề chương không được để trống")
         @Size(min = 1, max = 255, message = "Tiêu đề chương phải từ 1 đến 255 ký tự")

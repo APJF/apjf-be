@@ -20,6 +20,7 @@ public class UserController {
 
     private final MinioService minioService;
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @PostMapping("/avatar")
     public ResponseEntity<ApiResponseDto<String>> uploadAvatar(@RequestParam("file") MultipartFile file,
@@ -40,8 +41,6 @@ public class UserController {
         // Lấy thông tin mới nhất từ database thay vì từ JWT
         User freshUser = userService.findByEmail(user.getEmail())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        ProfileResponseDto userProfileDto = UserMapper.toProfileDto(freshUser);
-        return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", userProfileDto));
+        return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", userMapper.toProfileDto(freshUser)));
     }
 }

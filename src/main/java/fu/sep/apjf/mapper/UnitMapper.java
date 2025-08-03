@@ -2,81 +2,33 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.UnitRequestDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
-import fu.sep.apjf.entity.Chapter;
-import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.Unit;
+import org.mapstruct.*;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+@Mapper(componentModel = "spring", uses = {ExamSummaryMapper.class})
+public interface UnitMapper {
 
-public final class UnitMapper {
+    // Mặc định không load exams (cho findAll)
+    @Mapping(target = "exams", ignore = true)
+    @Mapping(target = "chapterId", source = "chapter.id")
+    @Mapping(target = "prerequisiteUnitId", source = "prerequisiteUnit.id")
+    // id, title, description, status tự động map
+    UnitResponseDto toDto(Unit unit);
 
-    private UnitMapper() {
-        // Private constructor to prevent instantiation
-    }
+    // Load cả exams (cho findById)
+    @Mapping(target = "chapterId", source = "chapter.id")
+    @Mapping(target = "prerequisiteUnitId", source = "prerequisiteUnit.id")
+    // exams, id, title, description, status tự động map
+    UnitResponseDto toDtoWithExams(Unit unit);
 
-    /**
-     * Convert Unit entity to UnitResponseDto (used for responses to clients)
-     */
-    public static UnitResponseDto toDto(Unit unit) {
-        if (unit == null) {
-            return null;
-        }
-
-        return new UnitResponseDto(
-                unit.getId(),
-                unit.getTitle(),
-                unit.getDescription(),
-                unit.getStatus(),
-                unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null
-        );
-    }
-
-    /**
-     * Convert Unit entity to UnitRequestDto (used for testing or internal purposes)
-     */
-    public static UnitRequestDto toRequestDto(Unit unit) {
-        if (unit == null) {
-            return null;
-        }
-
-        // Get exam IDs for this unit
-        Set<String> examIds = unit.getExams() != null ?
-                unit.getExams().stream()
-                        .map(Exam::getId)
-                        .collect(Collectors.toSet()) :
-                null;
-
-        return new UnitRequestDto(
-                unit.getId(),
-                unit.getTitle(),
-                unit.getDescription(),
-                unit.getStatus(),
-                unit.getChapter().getId(),
-                unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null,
-                examIds
-        );
-    }
-
-    public static Unit toEntity(UnitRequestDto unitDto) {
-        if (unitDto == null) {
-            return null;
-        }
-
-        Unit unit = new Unit();
-        unit.setId(unitDto.id());
-        unit.setTitle(unitDto.title());
-        unit.setDescription(unitDto.description());
-        unit.setStatus(unitDto.status());
-
-        return unit;
-    }
-
-    public static Unit toEntity(UnitRequestDto unitDto, Chapter chapter) {
-        Unit unit = toEntity(unitDto);
-        if (unit != null && chapter != null) {
-            unit.setChapter(chapter);
-        }
-        return unit;
-    }
+    // Entity mapping (giữ lại cho create/update)
+    @Mapping(target = "chapter", ignore = true)
+    @Mapping(target = "prerequisiteUnit", ignore = true)
+    @Mapping(target = "exams", ignore = true)
+    @Mapping(target = "materials", ignore = true)
+    @Mapping(target = "approvalRequests", ignore = true)
+    @Mapping(target = "questions", ignore = true)
+    @Mapping(target = "unitProgresses", ignore = true)
+    // id, title, description, status tự động map
+    Unit toEntity(UnitRequestDto unitDto);
 }

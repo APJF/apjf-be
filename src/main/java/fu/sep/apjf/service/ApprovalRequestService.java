@@ -34,17 +34,18 @@ public class ApprovalRequestService {
     private final UnitRepository unitRepository;
     private final MaterialRepository materialRepository;
     private final UserRepository userRepository;
+    private final ApprovalRequestMapper approvalRequestMapper;
 
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findAll() {
         log.info("Lấy danh sách tất cả yêu cầu phê duyệt");
-        return ApprovalRequestMapper.toDtoList(approvalRequestRepository.findAll());
+        return approvalRequestMapper.toDtoList(approvalRequestRepository.findAll());
     }
 
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByTargetType(TargetType targetType) {
         log.info("Lấy danh sách yêu cầu phê duyệt theo loại đối tượng: {}", targetType);
-        return ApprovalRequestMapper.toDtoList(approvalRequestRepository.findByTargetType(targetType));
+        return approvalRequestMapper.toDtoList(approvalRequestRepository.findByTargetType(targetType));
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +53,7 @@ public class ApprovalRequestService {
         log.info("Lấy chi tiết yêu cầu phê duyệt với ID: {}", id);
         ApprovalRequest approvalRequest = approvalRequestRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy yêu cầu phê duyệt"));
-        return ApprovalRequestMapper.toDto(approvalRequest);
+        return approvalRequestMapper.toDto(approvalRequest);
     }
 
     @Transactional(readOnly = true)
@@ -62,18 +63,18 @@ public class ApprovalRequestService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy user: " + staffId));
         return approvalRequestRepository.findByCreator(creator)
                 .stream()
-                .map(ApprovalRequestMapper::toDto)
+                .map(approvalRequestMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByReviewedBy(String managerId) {
-        log.info("Lấy danh sách yêu cầu phê duyệt được duyệt bởi: {}", managerId);
+        log.info("Lấy danh sách yêu cầu phê duyệt được duy���t bởi: {}", managerId);
         User reviewer = userRepository.findById(Long.parseLong(managerId))
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy manager: " + managerId));
         return approvalRequestRepository.findByReviewer(reviewer)
                 .stream()
-                .map(ApprovalRequestMapper::toDto)
+                .map(approvalRequestMapper::toDto)
                 .toList();
     }
 
@@ -82,7 +83,7 @@ public class ApprovalRequestService {
         log.info("Lấy danh sách yêu cầu phê duyệt theo trạng thái quyết định: {}", decision);
         return approvalRequestRepository.findByDecision(decision)
                 .stream()
-                .map(ApprovalRequestMapper::toDto)
+                .map(approvalRequestMapper::toDto)
                 .toList();
     }
 
@@ -169,6 +170,6 @@ public class ApprovalRequestService {
         ApprovalRequest saved = approvalRequestRepository.save(approvalRequest);
 
         log.info("Xử lý yêu cầu phê duyệt thành công ID: {} với quyết định: {}", id, decision.decision());
-        return ApprovalRequestMapper.toDto(saved);
+        return approvalRequestMapper.toDto(saved);
     }
 }

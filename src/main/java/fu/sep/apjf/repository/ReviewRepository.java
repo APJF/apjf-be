@@ -14,7 +14,8 @@ import java.util.Optional;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    List<Review> findByCourse(Course course);
+
+    List<Review> findByCourseId(String courseId);
 
     List<Review> findByUser(User user);
 
@@ -25,7 +26,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "ORDER BY avgRating DESC")
     List<Object[]> findTopRatedCourses(Pageable pageable);
 
-    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.course = :course")
-    Optional<Double> calculateAverageRatingByCourse(@Param("course") Course course);
-
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.course.id = :courseId")
+    Optional<Double> calculateAverageRatingByCourseId(@Param("courseId") String courseId);
 }

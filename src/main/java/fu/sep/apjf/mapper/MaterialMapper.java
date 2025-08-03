@@ -4,41 +4,19 @@ import fu.sep.apjf.dto.request.MaterialRequestDto;
 import fu.sep.apjf.dto.response.MaterialResponseDto;
 import fu.sep.apjf.entity.Material;
 import fu.sep.apjf.entity.Unit;
+import org.mapstruct.*;
 
-public final class MaterialMapper {
+@Mapper(componentModel = "spring")
+public interface MaterialMapper {
 
-    private MaterialMapper() {
-        // Private constructor to prevent instantiation
-    }
+    MaterialResponseDto toDto(Material material);
 
-    public static MaterialResponseDto toResponseDto(Material material) {
-        if (material == null) {
-            return null;
-        }
+    @Mapping(target = "unit", ignore = true)
+    @Mapping(target = "approvalRequests", ignore = true)
+    Material toEntity(MaterialRequestDto materialDto);
 
-        return new MaterialResponseDto(
-                material.getId(),
-                material.getDescription(),
-                material.getFileUrl(),
-                material.getType()
-        );
-    }
-
-    public static Material toEntity(MaterialRequestDto materialDto) {
-        if (materialDto == null) {
-            return null;
-        }
-
-        Material material = new Material();
-        material.setId(materialDto.id());
-        material.setDescription(materialDto.description());
-        material.setFileUrl(materialDto.fileUrl());
-        material.setType(materialDto.type());
-
-        return material;
-    }
-
-    public static Material toEntity(MaterialRequestDto materialDto, Unit unit) {
+    // Entity mapping với Unit
+    default Material toEntity(MaterialRequestDto materialDto, Unit unit) {
         Material material = toEntity(materialDto);
         if (material != null && unit != null) {
             material.setUnit(unit);

@@ -5,20 +5,22 @@ import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.CourseLearningPath;
 import fu.sep.apjf.entity.CourseLearningPathKey;
 import fu.sep.apjf.entity.LearningPath;
+import org.mapstruct.*;
 
-public class CourseLearningPathMapper {
+@Mapper(componentModel = "spring")
+public interface CourseLearningPathMapper {
 
-    private CourseLearningPathMapper() {}
+    @Mapping(target = "courseId", source = "course.id")
+    @Mapping(target = "learningPathId", source = "learningPath.id")
+    @Mapping(target = "courseOrderNumber", source = "courseOrderNumber")
+    CourseOrderDto toDto(CourseLearningPath entity);
 
-    public static CourseOrderDto toDto(CourseLearningPath entity) {
-        return new CourseOrderDto(
-                entity.getCourse().getId(),
-                entity.getLearningPath().getId(),
-                entity.getCourseOrderNumber()
-        );
-    }
+    // Entity mapping với composite key
+    default CourseLearningPath toEntity(CourseOrderDto dto, Course course, LearningPath path) {
+        if (dto == null || course == null || path == null) {
+            return null;
+        }
 
-    public static CourseLearningPath toEntity(CourseOrderDto dto, Course course, LearningPath path) {
         return CourseLearningPath.builder()
                 .id(new CourseLearningPathKey(dto.courseId(), dto.learningPathId()))
                 .course(course)
@@ -27,4 +29,3 @@ public class CourseLearningPathMapper {
                 .build();
     }
 }
-
