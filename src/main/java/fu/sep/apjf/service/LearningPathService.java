@@ -3,11 +3,9 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
 import fu.sep.apjf.dto.response.LearningPathResponseDto;
-import fu.sep.apjf.dto.response.UnitProgressDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.CourseLearningPathMapper;
 import fu.sep.apjf.mapper.LearningPathMapper;
-import fu.sep.apjf.mapper.UnitProgressMapper;
 import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,7 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -23,47 +22,94 @@ public class LearningPathService {
 
     private final LearningPathRepository learningPathRepository;
     private final CourseLearningPathRepository courseLearningPathRepository;
-    private final UnitProgressRepository unitProgressRepository;
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
-    private final UnitRepository unitRepository;
-    private final ChapterRepository chapterRepository;
     private final LearningPathMapper learningPathMapper;
     private final CourseLearningPathMapper courseLearningPathMapper;
-    private final UnitProgressMapper unitProgressMapper;
 
-    public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto) {
-        User user = userRepository.findById(dto.userId()).orElseThrow();
-        LearningPath entity = learningPathMapper.toEntity(dto, user);
-        return learningPathMapper.toDto(learningPathRepository.save(entity));
+    public LearningPathResponseDto getLearningPathById(Long id) {
+        LearningPath path = learningPathRepository.findById(id).orElseThrow();
+        List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(id).stream()
+                .map(courseLearningPathMapper::toDto)
+                .toList();
+
+        return learningPathMapper.toResponseDto(path, courseDtos);
     }
 
-    public LearningPathResponseDto updateLearningPath(Long id, LearningPathRequestDto dto) {
-        LearningPath entity = learningPathRepository.findById(id).orElseThrow();
-        entity.setTitle(dto.title());
-        entity.setDescription(dto.description());
-        entity.setTargetLevel(dto.targetLevel() != null ? dto.targetLevel().toString() : null);
-        entity.setPrimaryGoal(dto.primaryGoal());
-        entity.setFocusSkill(dto.focusSkill());
-        entity.setStatus(dto.status() != null ? EnumClass.PathStatus.valueOf(dto.status().name()) : null);
-        entity.setDuration(dto.duration() != null ? new BigDecimal(dto.duration()) : null);
-        entity.setLastUpdatedAt(LocalDateTime.now());
-        return learningPathMapper.toDto(learningPathRepository.save(entity));
+    @Transactional
+    public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto) {
+        User user = userRepository.findById(dto.userId()).orElseThrow();
+        if (dto.courseIds() == null || dto.courseIds().isEmpty()) {
+            throw new IllegalArgumentException("Phải chọn ít nhất một khóa học cho lộ trình.");
+        }
+
+        LearningPath entity = learningPathMapper.toEntity(dto, user);
+        entity.setStatus(EnumClass.PathStatus.PENDING);
+        LearningPath saved = learningPathRepository.save(entity);
+
+        saveCourseLearningPaths(saved, dto.courseIds());
+
+        List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(saved.getId()).stream()
+                .map(courseLearningPathMapper::toDto)
+                .toList();
+
+        return learningPathMapper.toResponseDto(saved, courseDtos);
+    }
+
+    @Transactional
+    public LearningPathResponseDto updateLearningPath(LearningPathRequestDto dto) {
+        LearningPath path = learningPathRepository.findById(dto.id()).orElseThrow();
+
+        path.setTitle(dto.title());
+        path.setDescription(dto.description());
+        path.setTargetLevel(dto.targetLevel() != null ? dto.targetLevel().toString() : null);
+        path.setPrimaryGoal(dto.primaryGoal());
+        path.setFocusSkill(dto.focusSkill());
+        path.setDuration(dto.duration() != null ? new BigDecimal(dto.duration()) : null);
+        path.setLastUpdatedAt(LocalDateTime.now());
+        learningPathRepository.save(path);
+
+        if (dto.courseIds() != null) {
+            courseLearningPathRepository.deleteAll(courseLearningPathRepository.findByLearningPathId(path.getId()));
+            saveCourseLearningPaths(path, dto.courseIds());
+        }
+
+        List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(path.getId()).stream()
+                .map(courseLearningPathMapper::toDto)
+                .toList();
+
+        return learningPathMapper.toResponseDto(path, courseDtos);
     }
 
     public void deleteLearningPath(Long id) {
+        courseLearningPathRepository.deleteAll(courseLearningPathRepository.findByLearningPathId(id));
         learningPathRepository.deleteById(id);
     }
 
     public List<LearningPathResponseDto> getLearningPathsByUser(Long userId) {
-        return learningPathRepository.findByUserId(userId).stream()
-                .map(learningPathMapper::toDto)
+        List<LearningPath> paths = learningPathRepository.findByUserId(userId);
+
+        return paths.stream()
+                .map(path -> {
+                    List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(path.getId())
+                            .stream().map(courseLearningPathMapper::toDto).toList();
+                    return learningPathMapper.toResponseDto(path, courseDtos);
+                })
                 .toList();
     }
 
     public void addCourseToLearningPath(CourseOrderDto dto) {
         Course course = courseRepository.findById(dto.courseId()).orElseThrow();
         LearningPath path = learningPathRepository.findById(dto.learningPathId()).orElseThrow();
+
+        boolean exists = courseLearningPathRepository
+                .findByLearningPathId(path.getId()).stream()
+                .anyMatch(clp -> clp.getCourse().getId().equals(dto.courseId()));
+
+        if (exists) {
+            throw new IllegalArgumentException("Khóa học đã tồn tại trong lộ trình.");
+        }
+
         CourseLearningPath entity = courseLearningPathMapper.toEntity(dto, course, path);
         courseLearningPathRepository.save(entity);
     }
@@ -73,23 +119,56 @@ public class LearningPathService {
     }
 
     @Transactional
-    public UnitProgressDto markUnitPassed(String unitId, Long userId) {
-        Unit unit = unitRepository.findById(unitId).orElseThrow();
-        User user = userRepository.findById(userId).orElseThrow();
-        UnitProgress progress = UnitProgress.builder()
-                .id(new UnitProgressKey(unitId, userId))
-                .unit(unit)
-                .user(user)
-                .passed(true)
-                .passedAt(LocalDateTime.now())
-                .build();
-        return unitProgressMapper.toDto(unitProgressRepository.save(progress));
+    public void setActiveLearningPath(Long userId, Long learningPathId) {
+        learningPathRepository.updateStatusByUserIdAndStatus(
+                userId, EnumClass.PathStatus.STUDYING, EnumClass.PathStatus.PENDING
+        );
+        LearningPath path = learningPathRepository.findById(learningPathId).orElseThrow();
+        path.setStatus(EnumClass.PathStatus.STUDYING);
+        path.setLastUpdatedAt(LocalDateTime.now());
+        learningPathRepository.save(path);
     }
-    /*
-    public boolean isChapterPassed(Long chapterId, Long userId) {
-        List<Unit> allUnits = unitRepository.findByChapterId(chapterId);
-        List<UnitProgress> passedUnits = unitProgressRepository.findByUserIdAndUnit_ChapterId(userId, chapterId);
-        return allUnits.size() > 0 && allUnits.size() == passedUnits.size();
+
+    public LearningPathResponseDto getActiveLearningPath(Long userId) {
+        LearningPath path = learningPathRepository
+                .findByUserIdAndStatus(userId, EnumClass.PathStatus.STUDYING)
+                .orElseThrow();
+
+        List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(path.getId()).stream()
+                .map(courseLearningPathMapper::toDto)
+                .toList();
+
+        return learningPathMapper.toResponseDto(path, courseDtos);
     }
-     */
+
+    @Transactional
+    public void reorderCoursesInPath(Long pathId, List<String> courseIds) {
+        List<CourseLearningPath> currentCourses = courseLearningPathRepository.findByLearningPathId(pathId);
+        Map<String, CourseLearningPath> courseMap = new HashMap<>();
+        for (CourseLearningPath clp : currentCourses) {
+            courseMap.put(clp.getCourse().getId(), clp);
+        }
+
+        for (int i = 0; i < courseIds.size(); i++) {
+            String courseId = courseIds.get(i);
+            CourseLearningPath clp = courseMap.get(courseId);
+            if (clp != null) {
+                clp.setCourseOrderNumber(i);
+                courseLearningPathRepository.save(clp);
+            }
+        }
+    }
+
+    private void saveCourseLearningPaths(LearningPath path, List<String> courseIds) {
+        List<CourseLearningPath> courseLinks = IntStream.range(0, courseIds.size())
+                .mapToObj(i -> {
+                    String courseId = courseIds.get(i);
+                    Course course = courseRepository.findById(courseId)
+                            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khóa học: " + courseId));
+                    return new CourseLearningPath(
+                            new CourseLearningPathKey(courseId, path.getId()), course, path, i);
+                })
+                .toList();
+        courseLearningPathRepository.saveAll(courseLinks);
+    }
 }

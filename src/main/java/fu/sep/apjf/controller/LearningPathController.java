@@ -31,8 +31,10 @@ public class LearningPathController {
     public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> update(
             @PathVariable Long id,
             @RequestBody LearningPathRequestDto dto) {
+        dto = new LearningPathRequestDto(id, dto.title(), dto.description(), dto.targetLevel(),
+                dto.primaryGoal(), dto.focusSkill(), dto.duration(), dto.userId(), dto.courseIds());
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Cập nhật lộ trình học thành công", learningPathService.updateLearningPath(id, dto))
+                ApiResponseDto.ok("Cập nhật lộ trình học thành công", learningPathService.updateLearningPath(dto))
         );
     }
 
@@ -82,5 +84,22 @@ public class LearningPathController {
             @RequestParam Long learningPathId) {
         learningPathService.removeCourseFromLearningPath(courseId, learningPathId);
         return ResponseEntity.ok(ApiResponseDto.ok("Xóa khóa học khỏi lộ trình thành công", null));
+    }
+
+    // Lấy lộ trình theo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Chi tiết lộ trình học", learningPathService.getLearningPathById(id))
+        );
+    }
+
+    // Sắp xếp lại thứ tự khóa học trong lộ trình
+    @PutMapping("/{id}/reorder")
+    public ResponseEntity<ApiResponseDto<Void>> reorderCourses(
+            @PathVariable Long id,
+            @RequestBody List<String> courseIds) {
+        learningPathService.reorderCoursesInPath(id, courseIds);
+        return ResponseEntity.ok(ApiResponseDto.ok("Đã cập nhật thứ tự khóa học trong lộ trình", null));
     }
 }

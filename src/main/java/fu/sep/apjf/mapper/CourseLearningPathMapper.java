@@ -5,7 +5,8 @@ import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.CourseLearningPath;
 import fu.sep.apjf.entity.CourseLearningPathKey;
 import fu.sep.apjf.entity.LearningPath;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CourseLearningPathMapper {
@@ -15,14 +16,11 @@ public interface CourseLearningPathMapper {
     @Mapping(target = "courseOrderNumber", source = "courseOrderNumber")
     CourseOrderDto toDto(CourseLearningPath entity);
 
-    // Entity mapping với composite key
     default CourseLearningPath toEntity(CourseOrderDto dto, Course course, LearningPath path) {
-        if (dto == null || course == null || path == null) {
-            return null;
-        }
+        if (dto == null || course == null || path == null) return null;
 
         return CourseLearningPath.builder()
-                .id(new CourseLearningPathKey(dto.courseId(), dto.learningPathId()))
+                .id(new CourseLearningPathKey(course.getId(), path.getId()))
                 .course(course)
                 .learningPath(path)
                 .courseOrderNumber(dto.courseOrderNumber())

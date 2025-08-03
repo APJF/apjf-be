@@ -10,7 +10,8 @@ public interface UnitProgressRepository extends JpaRepository<UnitProgress, Unit
     List<UnitProgress> findByUserId(Long userId);
     List<UnitProgress> findByUserIdAndUnit_ChapterId(Long userId, String chapterId);
 
-    boolean existsByUnitIdAndUserIdAndIsPassedTrue(String unitId, Long userId);
+    boolean existsByUnitIdAndUserIdAndPassedTrue(String unitId, Long userId);
+
 
     List<UnitProgress> findByUserIdAndUnit_Chapter_CourseId(Long userId, String courseId);
 
