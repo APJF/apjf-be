@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 public record UnitProgressDto(
     String unitId,
     Long userId,
-    boolean isPassed,
+    boolean passed,  // Đổi từ "isPassed" thành "passed" để consistent với entity
     LocalDateTime passedAt
 ) {
 }
+

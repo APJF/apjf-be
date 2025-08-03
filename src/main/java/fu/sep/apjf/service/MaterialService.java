@@ -2,7 +2,6 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.MaterialRequestDto;
 import fu.sep.apjf.dto.response.MaterialResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
-import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Material;
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.exception.ResourceNotFoundException;
@@ -27,36 +26,42 @@ public class MaterialService {
     private final MaterialRepository materialRepository;
     private final UnitRepository unitRepository;
     private final ApprovalRequestService approvalRequestService;
+    private final MaterialMapper materialMapper;
 
     private static final String UNIT_NOT_FOUND_PREFIX = "Không tìm thấy bài học với ID: ";
     private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
 
+    /**
+     * Tìm tất cả tài liệu dạng list
+     */
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findAll() {
         return materialRepository.findAll().stream()
-                .map(MaterialMapper::toResponseDto)
+                .map(materialMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findByUnitId(String unitId) {
-        Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
+        List<Material> materials = materialRepository.findByUnitId(unitId);
 
-        return materialRepository.findByUnit(unit).stream()
-                .map(MaterialMapper::toResponseDto)
+        // Lazy validation: chỉ check unit existence nếu list rỗng để tối ưu queries
+        if (materials.isEmpty() && !unitRepository.existsById(unitId)) {
+            throw new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId);
+        }
+
+        return materials.stream()
+                .map(materialMapper::toDto)
                 .toList();
     }
 
+
     @Transactional(readOnly = true)
     public MaterialResponseDto findById(String id) {
-        return MaterialMapper.toResponseDto(materialRepository.findById(id)
+        return materialMapper.toDto(materialRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id)));
     }
 
-    /**
-     * Tạo tài liệu mới
-     */
     public MaterialResponseDto create(@Valid MaterialRequestDto dto, String unitId, Long staffId) {
         log.info("Nhân viên {} tạo tài liệu mới", staffId);
 
@@ -65,13 +70,8 @@ public class MaterialService {
 
         String materialId = dto.id() != null ? dto.id() : UUID.randomUUID().toString();
 
-        Material material = Material.builder()
-                .id(materialId)
-                .description(dto.description())
-                .fileUrl(dto.fileUrl())
-                .type(dto.type())
-                .unit(unit)
-                .build();
+        Material material = materialMapper.toEntity(dto, unit);
+        material.setId(materialId);
 
         Material savedMaterial = materialRepository.save(material);
 
@@ -84,7 +84,7 @@ public class MaterialService {
         );
 
         log.info("Tạo tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
-        return MaterialMapper.toResponseDto(savedMaterial);
+        return materialMapper.toDto(savedMaterial);
     }
 
     /**
@@ -93,33 +93,32 @@ public class MaterialService {
     public MaterialResponseDto update(String id, @Valid MaterialRequestDto dto, String unitId, Long staffId) {
         log.info("Nhân viên {} cập nhật tài liệu {}", staffId, id);
 
-        Material material = materialRepository.findById(id)
+        Material existingMaterial = materialRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
 
-        // Cập nhật thông tin
-        material.setDescription(dto.description());
-        material.setFileUrl(dto.fileUrl());
-        material.setType(dto.type());
-
-        // Cập nhật unit nếu có thay đổi
-        if (unitId != null && !material.getUnit().getId().equals(unitId)) {
-            Unit newUnit = unitRepository.findById(unitId)
+        // Xác định unit để sử dụng
+        Unit unit = existingMaterial.getUnit(); // Giữ unit hiện tại làm mặc định
+        if (unitId != null && !existingMaterial.getUnit().getId().equals(unitId)) {
+            unit = unitRepository.findById(unitId)
                     .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
-            material.setUnit(newUnit);
         }
 
-        Material updatedMaterial = materialRepository.save(material);
+        // Sử dụng mapper để tạo material mới với thông tin cập nhật
+        Material updatedMaterial = materialMapper.toEntity(dto, unit);
+        updatedMaterial.setId(id); // Giữ nguyên ID
+
+        Material savedMaterial = materialRepository.save(updatedMaterial);
 
         // Auto-create approval request for this updated material
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.MATERIAL,
-                updatedMaterial.getId(),
+                savedMaterial.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", updatedMaterial.getId());
-        return MaterialMapper.toResponseDto(updatedMaterial);
+        log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
+        return materialMapper.toDto(savedMaterial);
     }
 
 }

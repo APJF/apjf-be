@@ -27,30 +27,34 @@ public class UnitService {
     private final UnitRepository unitRepo;
     private final ChapterRepository chapterRepo;
     private final ApprovalRequestService approvalRequestService;
+    private final UnitMapper unitMapper;
 
     @Transactional(readOnly = true)
     public List<UnitResponseDto> list() {
         return unitRepo.findAll()
                 .stream()
-                .map(UnitMapper::toDto)
+                .map(unitMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<UnitResponseDto> findByChapterId(String chapterId) {
-        Chapter chapter = chapterRepo.findById(chapterId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Unit chương với ID: " + chapterId));
+        List<Unit> units = unitRepo.findByChapterId(chapterId);
 
-        return unitRepo.findByChapter(chapter)
-                .stream()
-                .map(UnitMapper::toDto)
+        // Lazy validation: chỉ check chapter existence nếu list rỗng để tối ưu queries
+        if (units.isEmpty() && !chapterRepo.existsById(chapterId)) {
+            throw new EntityNotFoundException("Không tìm thấy chapter với ID: " + chapterId);
+        }
+
+        return units.stream()
+                .map(unitMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public UnitResponseDto getUnitById(String id) {
-        return UnitMapper.toDto(unitRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Unit not found")));
+    public UnitResponseDto findById(String id) {
+        return unitMapper.toDto(unitRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Unit not found with ID: " + id)));
     }
 
     /* ---------- CREATE ---------- */
@@ -63,13 +67,10 @@ public class UnitService {
         if (unitRepo.existsById(dto.id()))
             throw new IllegalArgumentException("Mã đơn vị học tập đã tồn tại");
 
-        Unit unit = Unit.builder()
-                .id(dto.id())
-                .title(dto.title())
-                .description(dto.description())
-                .status(EnumClass.Status.INACTIVE) // Set as DRAFT until approved
-                .chapter(parent)
-                .build();
+        // Sử dụng mapper để tạo Unit entity
+        Unit unit = unitMapper.toEntity(dto);
+        unit.setStatus(EnumClass.Status.INACTIVE); // Set as INACTIVE until approved
+        unit.setChapter(parent);
 
         // Set prerequisite unit if provided
         if (dto.prerequisiteUnitId() != null) {
@@ -80,7 +81,7 @@ public class UnitService {
 
         Unit savedUnit = unitRepo.save(unit);
 
-        // Auto-create approval request for this new unit
+        // Auto-create approval request for the new unit
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.UNIT,
                 savedUnit.getId(),
@@ -89,40 +90,39 @@ public class UnitService {
         );
 
         log.info("Tạo đơn vị học tập {} và yêu cầu phê duyệt thành công", savedUnit.getId());
-        return UnitMapper.toDto(savedUnit);
+        return unitMapper.toDto(savedUnit);
     }
 
     /* ---------- UPDATE ---------- */
     public UnitResponseDto update(String currentId, UnitRequestDto dto, Long staffId) {
         log.info("Nhân viên {} cập nhật đơn vị học tập với mã: {}", staffId, currentId);
 
-        Unit unit = unitRepo.findById(currentId)
+        Unit existingUnit = unitRepo.findById(currentId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập"));
 
-        unit.setTitle(dto.title());
-        unit.setDescription(dto.description());
-        unit.setStatus(EnumClass.Status.INACTIVE); // Reset to DRAFT when updated
+        // Sử dụng mapper để tạo unit với thông tin mới
+        Unit updatedUnit = unitMapper.toEntity(dto);
+        updatedUnit.setId(currentId); // Giữ nguyên ID
+        updatedUnit.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
+        updatedUnit.setChapter(existingUnit.getChapter()); // Giữ nguyên chapter
 
-        // Update prerequisite unit
+        // Set prerequisite unit if provided
         if (dto.prerequisiteUnitId() != null) {
             Unit prerequisite = unitRepo.findById(dto.prerequisiteUnitId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập tiên quyết"));
-            unit.setPrerequisiteUnit(prerequisite);
-        } else {
-            unit.setPrerequisiteUnit(null);
+            updatedUnit.setPrerequisiteUnit(prerequisite);
         }
 
-        Unit updatedUnit = unitRepo.save(unit);
+        Unit savedUnit = unitRepo.save(updatedUnit);
 
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.UNIT,
-                updatedUnit.getId(),
+                savedUnit.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        log.info("Cập nhật đơn vị học tập {} và yêu cầu phê duyệt thành công", updatedUnit.getId());
-        return UnitMapper.toDto(updatedUnit);
+        log.info("Cập nhật đơn vị học tập {} và yêu cầu phê duyệt thành công", savedUnit.getId());
+        return unitMapper.toDto(savedUnit);
     }
-
 }

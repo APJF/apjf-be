@@ -2,69 +2,33 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.ChapterRequestDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
-import fu.sep.apjf.dto.response.ExamSummaryDto;
 import fu.sep.apjf.entity.Chapter;
-import fu.sep.apjf.entity.Course;
+import org.mapstruct.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+@Mapper(componentModel = "spring", uses = {ExamSummaryMapper.class})
+public interface ChapterMapper {
 
-public final class ChapterMapper {
+    // Mặc định không load exams (cho findAll)
+    @Mapping(target = "exams", ignore = true)
+    @Mapping(target = "units", expression = "java(java.util.Collections.emptySet())")
+    @Mapping(target = "courseId", source = "course.id")
+    @Mapping(target = "prerequisiteChapterId", source = "prerequisiteChapter.id")
+    // id, title, description, status tự động map
+    ChapterResponseDto toDto(Chapter chapter);
 
-    private ChapterMapper() {
-        // Private constructor to prevent instantiation
-    }
+    // Load cả exams (cho findById)
+    @Mapping(target = "units", expression = "java(java.util.Collections.emptySet())")
+    @Mapping(target = "courseId", source = "course.id")
+    @Mapping(target = "prerequisiteChapterId", source = "prerequisiteChapter.id")
+    // exams, id, title, description, status tự động map
+    ChapterResponseDto toDtoWithExams(Chapter chapter);
 
-    public static ChapterResponseDto toResponseDto(Chapter chapter) {
-        if (chapter == null) {
-            return null;
-        }
-
-        // Get exams for this chapter
-        Set<ExamSummaryDto> chapterExams = chapter.getExams().stream()
-                .map(ExamSummaryMapper::toDto)
-                .collect(Collectors.toSet());
-
-        return new ChapterResponseDto(
-                chapter.getId(),
-                chapter.getTitle(),
-                chapter.getDescription(),
-                chapter.getStatus(),
-                chapter.getCourse() != null ? chapter.getCourse().getId() : null,
-                chapter.getPrerequisiteChapter() != null ? chapter.getPrerequisiteChapter().getId() : null,
-                chapterExams
-        );
-    }
-
-    public static Chapter toEntity(ChapterRequestDto chapterDto) {
-        if (chapterDto == null) {
-            return null;
-        }
-
-        return Chapter.builder()
-                .id(chapterDto.id())
-                .title(chapterDto.title())
-                .description(chapterDto.description())
-                .status(chapterDto.status())
-                .build();
-    }
-
-    public static Chapter toEntity(ChapterRequestDto chapterDto, Course course) {
-        Chapter chapter = toEntity(chapterDto);
-        if (chapter != null && course != null) {
-            chapter.setCourse(course);
-        }
-        return chapter;
-    }
-
-    public static List<ChapterResponseDto> toResponseDtoList(List<Chapter> chapters) {
-        if (chapters == null) {
-            return Collections.emptyList();
-        }
-        return chapters.stream()
-                .map(ChapterMapper::toResponseDto)
-                .toList();
-    }
+    // Entity mapping (giữ lại cho create/update)
+    @Mapping(target = "course", ignore = true)
+    @Mapping(target = "prerequisiteChapter", ignore = true)
+    @Mapping(target = "units", ignore = true)
+    @Mapping(target = "exams", ignore = true)
+    @Mapping(target = "approvalRequests", ignore = true)
+    // id, title, description, status tự động map
+    Chapter toEntity(ChapterRequestDto chapterDto);
 }

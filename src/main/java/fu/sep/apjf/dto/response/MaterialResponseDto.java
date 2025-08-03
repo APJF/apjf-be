@@ -4,8 +4,9 @@ import fu.sep.apjf.entity.EnumClass;
 
 public record MaterialResponseDto(
         String id,
-        String description,
         String fileUrl,
-        EnumClass.MaterialType type
+        EnumClass.MaterialType type,
+        String script,
+        String translation
 ) {
 }

@@ -2,11 +2,12 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.entity.User;
+import fu.sep.apjf.service.ChapterService;
 import fu.sep.apjf.service.CourseService;
 import fu.sep.apjf.service.ReviewService;
-import fu.sep.apjf.service.MinioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,16 +27,16 @@ public class CourseController {
 
     private final CourseService courseService;
     private final ReviewService reviewService;
-    private final MinioService minioService;
+    private final ChapterService chapterService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> findAll() {
+    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getAll() {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách khoá học", courseService.findAll()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<CourseResponseDto>> findById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
     }
@@ -65,14 +66,17 @@ public class CourseController {
                 ApiResponseDto.ok("Cập nhật khóa học thành công", courseService.update(id, dto, user.getId())));
     }
 
-    @PostMapping("/{id}/image")
+    @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadCourseImage(
-            @PathVariable String id,
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal User user) throws Exception {
+        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", courseService.uploadCourseImage(file)));
+    }
 
-        String objectName = courseService.uploadCourseImage(id, file);
-        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", objectName));
+    @GetMapping("/{courseId}/chapters")
+    public ResponseEntity<ApiResponseDto<List<ChapterResponseDto>>> getCourseChapters(
+            @PathVariable String courseId) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách chapters của course", chapterService.findByCourseId(courseId)));
     }
 
 }

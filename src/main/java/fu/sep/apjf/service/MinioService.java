@@ -39,109 +39,76 @@ public class MinioService {
         }
     }
 
-    public String getAvatarUrl(String objectName) throws Exception {
-        if (objectName == null || objectName.trim().isEmpty()) {
-            return null;
+    // Helper method để tránh duplicate code
+    private void uploadFile(String bucket, String objectName, MultipartFile file) throws Exception {
+        try (InputStream is = file.getInputStream()) {
+            minioClient.putObject(
+                PutObjectArgs.builder()
+                    .bucket(bucket)
+                    .object(objectName)
+                    .stream(is, file.getSize(), -1)
+                    .contentType(file.getContentType())
+                    .build()
+            );
         }
-
-        // Tạo presigned URL có thời hạn 7 ngày
-        return minioClient.getPresignedObjectUrl(
-            GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
-                .bucket(avatarBucket)
-                .object(objectName)
-                .expiry(7, TimeUnit.DAYS)
-                .build()
-        );
     }
 
-    public String getDocumentUrl(String objectName) throws Exception {
-        if (objectName == null || objectName.trim().isEmpty()) {
-            return null;
-        }
-
-        // Nếu objectName đã là URL đầy đủ, trả về luôn
-        if (objectName.startsWith("http://") || objectName.startsWith("https://")) {
-            return objectName;
-        }
-
-        // Tạo presigned URL có thời hạn 24 giờ cho document
-        return minioClient.getPresignedObjectUrl(
-            GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
-                .bucket(documentBucket)
-                .object(objectName)
-                .expiry(24, TimeUnit.HOURS)
-                .build()
-        );
-    }
-
-    public String getCourseImageUrl(String objectName) throws Exception {
-        if (objectName == null || objectName.trim().isEmpty()) {
-            return null;
-        }
-
-        // Nếu objectName đã là URL đầy đủ, trả về luôn
-        if (objectName.startsWith("http://") || objectName.startsWith("https://")) {
-            return objectName;
-        }
-
-        // Tạo presigned URL có thời hạn 7 ngày cho course image
-        return minioClient.getPresignedObjectUrl(
-            GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
-                .bucket(courseImageBucket)
-                .object(objectName)
-                .expiry(7, TimeUnit.DAYS)
-                .build()
-        );
-    }
-
+    // Optimize uploadAvatar method
     public String uploadAvatar(MultipartFile file, String username) throws Exception {
         createBucketIfNotExists(avatarBucket);
         String objectName = username + "_avatar_" + UUID.randomUUID();
-        try (InputStream is = file.getInputStream()) {
-            minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(avatarBucket)
-                    .object(objectName)
-                    .stream(is, file.getSize(), -1)
-                    .contentType(file.getContentType())
-                    .build()
-            );
-        }
+        uploadFile(avatarBucket, objectName, file);
         return objectName;
     }
 
+    // Optimize getAvatarUrl method
+    public String getAvatarUrl(String objectName) throws Exception {
+        return getPresignedUrl(avatarBucket, objectName, 7, TimeUnit.DAYS);
+    }
+
+    // Optimize uploadDocument method
     public String uploadDocument(MultipartFile file, String username) throws Exception {
         createBucketIfNotExists(documentBucket);
         String objectName = username + "_doc_" + UUID.randomUUID() + ".pdf";
-        try (InputStream is = file.getInputStream()) {
-            minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(documentBucket)
-                    .object(objectName)
-                    .stream(is, file.getSize(), -1)
-                    .contentType(file.getContentType())
-                    .build()
-            );
-        }
+        uploadFile(documentBucket, objectName, file);
         return objectName;
     }
 
-    public String uploadCourseImage(MultipartFile file, String courseId) throws Exception {
+    // Optimize getDocumentUrl method
+    public String getDocumentUrl(String objectName) throws Exception {
+        return getPresignedUrl(documentBucket, objectName, 24, TimeUnit.HOURS);
+    }
+
+    public String uploadCourseImage(MultipartFile file) throws Exception {
         createBucketIfNotExists(courseImageBucket);
-        String objectName = "course_" + courseId + "_image_" + UUID.randomUUID();
-        try (InputStream is = file.getInputStream()) {
-            minioClient.putObject(
-                PutObjectArgs.builder()
-                    .bucket(courseImageBucket)
-                    .object(objectName)
-                    .stream(is, file.getSize(), -1)
-                    .contentType(file.getContentType())
-                    .build()
-            );
-        }
+        String objectName = "course_image_" + UUID.randomUUID();
+        uploadFile(courseImageBucket, objectName, file);
         return objectName;
+    }
+
+    // Optimize getCourseImageUrl method
+    public String getCourseImageUrl(String objectName) throws Exception {
+        return getPresignedUrl(courseImageBucket, objectName, 7, TimeUnit.DAYS);
+    }
+
+    // Helper method để tránh duplicate code cho presigned URL
+    private String getPresignedUrl(String bucket, String objectName, int expiry, TimeUnit unit) throws Exception {
+        if (objectName == null || objectName.trim().isEmpty()) {
+            return null;
+        }
+
+        // Nếu objectName đã là URL đầy đủ, trả về luôn
+        if (objectName.startsWith("http://") || objectName.startsWith("https://")) {
+            return objectName;
+        }
+
+        return minioClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket(bucket)
+                .object(objectName)
+                .expiry(expiry, unit)
+                .build()
+        );
     }
 }

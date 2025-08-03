@@ -49,7 +49,7 @@ public class SecurityConfig {
     private static final String[] USER_ALLOWED_ENDPOINTS = {
             "/api/exams/*/start",
             "/api/exam-results/**",
-            "/api/users/profile" ,
+            "/api/users/profile",
             "/api/users/avatar"
     };
 

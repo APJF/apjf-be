@@ -33,6 +33,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+    implementation("org.mapstruct:mapstruct:1.6.3")
     implementation("io.minio:minio:8.5.17") {
         exclude group: "org.apache.commons", module: "commons-lang3"
     }
@@ -47,6 +48,7 @@ dependencies {
     // Development tools
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
 

@@ -10,7 +10,6 @@ public record ApprovalRequestDto(
         Integer id,
         TargetType targetType,
         String targetId,
-        String targetTitle,
         RequestType requestType,
         Decision decision,
         String feedback,

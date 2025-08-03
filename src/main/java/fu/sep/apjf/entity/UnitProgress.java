@@ -27,8 +27,7 @@ public class UnitProgress {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private boolean isPassed;
+    private boolean passed;
 
     private LocalDateTime passedAt;
 }
-

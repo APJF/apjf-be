@@ -12,7 +12,6 @@ import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,12 +27,13 @@ public class CourseService {
     private final UserRepository userRepository;
     private final ApprovalRequestService approvalRequestService;
     private final MinioService minioService;
+    private final CourseMapper courseMapper; // Thêm injection
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
-                .map(CourseMapper::toResponseDto)
+                .map(courseMapper::toDto) // Sử dụng injected mapper
                 .toList();
     }
 
@@ -41,7 +41,7 @@ public class CourseService {
     public CourseResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-        return CourseMapper.toResponseDto(course);
+        return courseMapper.toDtoWithExams(course); // Sử dụng injected mapper
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
@@ -49,7 +49,7 @@ public class CourseService {
             throw new EntityExistsException("ID khóa học đã tồn tại");
         }
 
-        Course course = CourseMapper.toEntity(dto);
+        Course course = courseMapper.toEntity(dto); // Sử dụng mapper thay vì manual
 
         if (!userRepository.existsById(staffId)) {
             throw new EntityNotFoundException("Không tìm thấy nhân viên");
@@ -64,46 +64,39 @@ public class CourseService {
                 staffId
         );
 
-        return CourseMapper.toResponseDto(savedCourse);
+        return courseMapper.toDto(savedCourse);
     }
 
     public CourseResponseDto update(String currentId, CourseRequestDto dto, Long staffId) {
-        Course course = courseRepository.findById(currentId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+        // Kiểm tra course tồn tại
+        if (!courseRepository.existsById(currentId)) {
+            throw new EntityNotFoundException("Không tìm thấy khóa học");
+        }
 
-        // Cập nhật thông tin
-        course.setTitle(dto.title());
-        course.setDescription(dto.description());
-        course.setDuration(dto.duration());
-        course.setLevel(dto.level());
-        course.setStatus(EnumClass.Status.INACTIVE);
+        // Sử dụng mapper để tạo course với thông tin mới
+        Course updatedCourse = courseMapper.toEntity(dto);
+        updatedCourse.setId(currentId); // Giữ nguyên ID
+        updatedCourse.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
 
-        // Cập nhật prerequisite course
+        // Set prerequisite course if provided
         if (dto.prerequisiteCourseId() != null) {
             Course prerequisite = courseRepository.findById(dto.prerequisiteCourseId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học tiên quyết"));
-            course.setPrerequisiteCourse(prerequisite);
-        } else {
-            course.setPrerequisiteCourse(null);
+            updatedCourse.setPrerequisiteCourse(prerequisite);
         }
 
-        Course updatedCourse = courseRepository.save(course);
+        Course savedCourse = courseRepository.save(updatedCourse);
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.COURSE,
-                updatedCourse.getId(),
+                savedCourse.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        return CourseMapper.toResponseDto(updatedCourse);
+        return courseMapper.toDto(savedCourse);
     }
 
-    public String uploadCourseImage(String courseId, MultipartFile file) throws Exception {
-        // Validate course exists
-        if (!courseRepository.existsById(courseId)) {
-            throw new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId);
-        }
-
+    public String uploadCourseImage(MultipartFile file) throws Exception {
         // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
@@ -115,8 +108,7 @@ public class CourseService {
             throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
         }
 
-        // Upload to MinIO
-        return minioService.uploadCourseImage(file, courseId);
+        // Upload to MinIO và trả về object name
+        return minioService.uploadCourseImage(file);
     }
-
 }

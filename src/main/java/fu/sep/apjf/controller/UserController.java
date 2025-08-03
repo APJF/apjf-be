@@ -1,10 +1,9 @@
 package fu.sep.apjf.controller;
 
-import fu.sep.apjf.dto.request.ProfileRequestDto;
+import fu.sep.apjf.dto.request.UserRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.ProfileResponseDto;
+import fu.sep.apjf.dto.response.UserResponseDto;
 import fu.sep.apjf.entity.User;
-import fu.sep.apjf.mapper.UserMapper;
 import fu.sep.apjf.service.MinioService;
 import fu.sep.apjf.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -29,19 +28,15 @@ public class UserController {
     }
 
     @PostMapping("/profile")
-    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@RequestBody ProfileRequestDto dto,
+    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@RequestBody UserRequestDto dto,
                                                                 @AuthenticationPrincipal User user) {
         String message = userService.updateProfile(user.getEmail(), dto);
         return ResponseEntity.ok(ApiResponseDto.ok(message));
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponseDto<ProfileResponseDto>> getCurrentUser(@AuthenticationPrincipal User user) {
-        // Lấy thông tin mới nhất từ database thay vì từ JWT
-        User freshUser = userService.findByEmail(user.getEmail())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
-
-        ProfileResponseDto userProfileDto = UserMapper.toProfileDto(freshUser);
-        return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", userProfileDto));
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> getProfile(@AuthenticationPrincipal User user) {
+        UserResponseDto profile = userService.getProfile(user.getEmail());
+        return ResponseEntity.ok(ApiResponseDto.ok("Thông tin người dùng", profile));
     }
 }

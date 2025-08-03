@@ -2,8 +2,10 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.UnitRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.MaterialResponseDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.User;
+import fu.sep.apjf.service.MaterialService;
 import fu.sep.apjf.service.UnitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.List;
 public class UnitController {
 
     private final UnitService unitService;
+    private final MaterialService materialService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<UnitResponseDto>>> getAll() {
@@ -29,25 +32,22 @@ public class UnitController {
                 ApiResponseDto.ok("Danh sách bài học", unitService.list()));
     }
 
-    @GetMapping("/chapter/{chapterId}")
-    public ResponseEntity<ApiResponseDto<List<UnitResponseDto>>> getAllByChapterId(@PathVariable String chapterId) {
+    @GetMapping("/{unitId}/materials")
+    public ResponseEntity<ApiResponseDto<List<MaterialResponseDto>>> getMaterialsByUnitId(@PathVariable String unitId) {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Danh sách bài học theo chương", unitService.findByChapterId(chapterId)));
+                ApiResponseDto.ok("Danh sách tài liệu của bài học", materialService.findByUnitId(unitId)));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết bài học", unitService.getUnitById(id)));
+                ApiResponseDto.ok("Chi tiết bài học", unitService.findById(id)));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> create(
             @Valid @RequestBody UnitRequestDto dto,
             @AuthenticationPrincipal User user) {
-
-        log.info("Staff {} đang tạo bài học mới: {}", user.getUsername(), dto.id());
-
         UnitResponseDto unitDto = unitService.create(dto, user.getId());
         return ResponseEntity.created(URI.create("/api/units/" + unitDto.id()))
                 .body(ApiResponseDto.ok("Tạo bài học thành công", unitDto));
@@ -58,9 +58,6 @@ public class UnitController {
             @PathVariable String id,
             @Valid @RequestBody UnitRequestDto dto,
             @AuthenticationPrincipal User user) {
-
-        log.info("Staff {} đang cập nhật bài học: {}", user.getUsername(), id);
-
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Cập nhật bài học thành công", unitService.update(id, dto, user.getId())));
     }
