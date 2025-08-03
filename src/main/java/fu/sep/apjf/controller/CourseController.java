@@ -66,12 +66,11 @@ public class CourseController {
                 ApiResponseDto.ok("Cập nhật khóa học thành công", courseService.update(id, dto, user.getId())));
     }
 
-    @PostMapping("/{id}/image")
+    @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadCourseImage(
-            @PathVariable String id,
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal User user) throws Exception {
-        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", courseService.uploadCourseImage(id, file)));
+        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", courseService.uploadCourseImage(file)));
     }
 
     @GetMapping("/{courseId}/chapters")

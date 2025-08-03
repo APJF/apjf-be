@@ -96,12 +96,7 @@ public class CourseService {
         return courseMapper.toDto(savedCourse);
     }
 
-    public String uploadCourseImage(String courseId, MultipartFile file) throws Exception {
-        // Validate course exists
-        if (!courseRepository.existsById(courseId)) {
-            throw new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId);
-        }
-
+    public String uploadCourseImage(MultipartFile file) throws Exception {
         // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
@@ -113,7 +108,7 @@ public class CourseService {
             throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
         }
 
-        // Upload to MinIO
-        return minioService.uploadCourseImage(file, courseId);
+        // Upload to MinIO và trả về object name
+        return minioService.uploadCourseImage(file);
     }
 }

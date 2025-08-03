@@ -62,17 +62,13 @@ public class MaterialController {
 
     @PreAuthorize("hasRole('STAFF')")
     @PostMapping("/upload")
-    public ResponseEntity<ApiResponseDto<String>> uploadPdf(@RequestParam("file") MultipartFile file,
-                                                            @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponseDto<String>> uploadFile(@RequestParam("file") MultipartFile file,
+                                                             @AuthenticationPrincipal User user) {
         try {
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
-                return ResponseEntity.badRequest().body(ApiResponseDto.error("Chỉ chấp nhận file PDF", null));
-            }
             String objectName = minioService.uploadDocument(file, user.getUsername());
-            return ResponseEntity.ok(ApiResponseDto.ok("Upload PDF thành công", objectName));
+            return ResponseEntity.ok(ApiResponseDto.ok("Upload file thành công", objectName));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(ApiResponseDto.error("Lỗi upload PDF: " + e.getMessage(), null));
+            return ResponseEntity.status(500).body(ApiResponseDto.error("Lỗi upload file: " + e.getMessage(), null));
         }
     }
 }
