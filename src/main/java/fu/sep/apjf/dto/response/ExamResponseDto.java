@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record ExamResponseDto(
-        String id,
+        Long id,
         String title,
         String description,
         Double duration,

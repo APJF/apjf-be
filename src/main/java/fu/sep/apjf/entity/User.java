@@ -44,6 +44,16 @@ public class User implements UserDetails {
     @Column(name = "avatar")
     private String avatar;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "level")
+    private EnumClass.Level level;
+
+    @Column(name = "target")
+    private String target;
+
+    @Column(name = "hobby")
+    private String hobby;
+
     @Column(name = "enabled")
     private boolean enabled;
 
@@ -91,9 +101,9 @@ public class User implements UserDetails {
     private transient List<Review> courseReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LearningPath> learningPaths = new ArrayList<>();
+    private transient List<LearningPath> learningPaths = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UnitProgress> unitProgresses = new HashSet<>();
+    private transient Set<UnitProgress> unitProgresses = new HashSet<>();
 
 }

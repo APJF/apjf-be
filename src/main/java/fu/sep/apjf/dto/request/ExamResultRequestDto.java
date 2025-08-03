@@ -1,8 +1,8 @@
 package fu.sep.apjf.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-
-public record ExamResultAnswerRequestDto(
+//student gửi chi tiết 1 câu trong bài thi
+public record ExamResultRequestDto(
         @NotBlank(message = "ID câu hỏi không được để trống")
         String questionId,
 

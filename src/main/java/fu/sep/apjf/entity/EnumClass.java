@@ -32,6 +32,6 @@ public class EnumClass {
     }
 
     public enum PathStatus {
-        FINISHED, STUDYING
+        FINISHED, STUDYING, PENDING
     }
 }
