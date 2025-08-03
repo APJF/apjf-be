@@ -23,7 +23,7 @@ public class PostController {
 
     private final PostService postService;
 
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll() {
         return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list()));
     }
@@ -38,8 +38,7 @@ public class PostController {
             @Valid @RequestBody PostRequestDto dto,
             @AuthenticationPrincipal User user) {
 
-        log.info("User {} tạo bài viết: {}", user.getUsername(), dto.title());
-        PostResponseDto created = postService.create(dto);
+        PostResponseDto created = postService.create(dto,user.getId());
         return ResponseEntity.created(URI.create("/api/posts/" + created.id()))
                 .body(ApiResponseDto.ok("Tạo bài viết thành công", created));
     }
@@ -50,13 +49,11 @@ public class PostController {
             @Valid @RequestBody PostRequestDto dto,
             @AuthenticationPrincipal User user) {
 
-        log.info("User {} cập nhật bài viết {}", user.getUsername(), id);
-        return ResponseEntity.ok(ApiResponseDto.ok("Cập nhật bài viết thành công", postService.update(id, dto)));
+        return ResponseEntity.ok(ApiResponseDto.ok("Cập nhật bài viết thành công", postService.update(id, dto, user.getId())));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<Void>> delete(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        log.info("User {} xóa bài viết {}", user.getUsername(), id);
+    public ResponseEntity<ApiResponseDto<Void>> delete(@PathVariable Long id) {
         postService.delete(id);
         return ResponseEntity.ok(ApiResponseDto.ok("Xóa bài viết thành công", null));
     }

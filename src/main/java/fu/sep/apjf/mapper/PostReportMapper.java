@@ -16,6 +16,7 @@ public final class PostReportMapper {
         return new PostReportResponseDto(
                 String.valueOf(report.getId()),
                 report.getContent(),
+                report.getCreatedAt(),
                 report.getUser() != null ? String.valueOf(report.getUser().getId()) : null,
                 report.getPost() != null ? String.valueOf(report.getPost().getId()) : null
         );

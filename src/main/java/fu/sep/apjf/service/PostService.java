@@ -40,8 +40,8 @@ public class PostService {
         );
     }
 
-    public PostResponseDto create(@Valid PostRequestDto dto) {
-        User user = userRepo.findById(Long.parseLong(dto.userId()))
+    public PostResponseDto create(@Valid PostRequestDto dto,Long userId) {
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
 
         Post post = PostMapper.toEntity(dto, user);
@@ -49,13 +49,12 @@ public class PostService {
         return PostMapper.toDto(saved);
     }
 
-    public PostResponseDto update(Long id, @Valid PostRequestDto dto) {
+    public PostResponseDto update(Long id, @Valid PostRequestDto dto,Long userId) {
         Post post = postRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));
 
-        post.setTitle(dto.title());
         post.setContent(dto.content());
-        post.setUser(userRepo.findById(Long.parseLong(dto.userId()))
+        post.setUser(userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại")));
 
         Post saved = postRepo.save(post);

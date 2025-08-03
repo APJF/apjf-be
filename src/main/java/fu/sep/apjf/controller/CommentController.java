@@ -35,10 +35,8 @@ public class CommentController {
 
     @PostMapping
     public ResponseEntity<ApiResponseDto<CommentResponseDto>> create(
-            @Valid @RequestBody CommentRequestDto dto,
-            @AuthenticationPrincipal User user) {
+            @Valid @RequestBody CommentRequestDto dto) {
 
-        log.info("User {} bình luận vào bài viết {}", user.getUsername(), dto.postId());
         CommentResponseDto created = commentService.create(dto);
         return ResponseEntity.created(URI.create("/api/comments/" + created.id()))
                 .body(ApiResponseDto.ok("Tạo bình luận thành công", created));
@@ -47,10 +45,8 @@ public class CommentController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponseDto<CommentResponseDto>> update(
             @PathVariable Long id,
-            @Valid @RequestBody CommentRequestDto dto,
-            @AuthenticationPrincipal User user) {
+            @Valid @RequestBody CommentRequestDto dto) {
 
-        log.info("User {} cập nhật bình luận {}", user.getUsername(), id);
         return ResponseEntity.ok(ApiResponseDto.ok("Cập nhật bình luận thành công", commentService.update(id, dto)));
     }
 

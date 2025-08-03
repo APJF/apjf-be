@@ -16,7 +16,9 @@ public final class CommentMapper {
         return new CommentResponseDto(
                 String.valueOf(comment.getId()),
                 comment.getContent(),
-                comment.getUser() != null ? String.valueOf(comment.getUser().getId()) : null,
+                comment.getCreatedAt(),
+                comment.getUser() != null ? String.valueOf(comment.getUser().getEmail()) : null,
+                comment.getUser() != null ? String.valueOf(comment.getUser().getAvatar()) : null,
                 comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null
         );
     }

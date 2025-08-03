@@ -48,7 +48,9 @@ public class SecurityConfig {
 
     private static final String[] USER_ALLOWED_ENDPOINTS = {
             "/api/exams/*/start",  // Endpoint bắt đầu làm bài thi cần ROLE_USER
-            "/api/exam-results/**" // Kết quả thi cũng cần ROLE_USER
+            "/api/exam-results/**",
+            "/api/posts/**",
+            "/api/comments/**"
     };
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;

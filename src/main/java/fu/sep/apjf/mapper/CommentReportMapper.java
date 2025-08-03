@@ -16,6 +16,7 @@ public final class CommentReportMapper {
         return new CommentReportResponseDto(
                 String.valueOf(report.getId()),
                 report.getContent(),
+                report.getCreatedAt(),
                 report.getUser() != null ? String.valueOf(report.getUser().getId()) : null,
                 report.getComment() != null ? String.valueOf(report.getComment().getId()) : null
         );
