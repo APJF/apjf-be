@@ -95,31 +95,32 @@ public class ChapterService {
     public ChapterResponseDto update(String currentId, @Valid ChapterRequestDto dto, Long staffId) {
         log.info("Nhân viên {} cập nhật chương học với mã: {}", staffId, currentId);
 
-        Chapter chapter = chapterRepo.findById(currentId)
+        Chapter existingChapter = chapterRepo.findById(currentId)
                 .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND));
 
-        chapter.setTitle(dto.title());
-        chapter.setDescription(dto.description());
-        chapter.setStatus(EnumClass.Status.INACTIVE);
+        // Sử dụng mapper để tạo chapter với thông tin mới
+        Chapter updatedChapter = chapterMapper.toEntity(dto);
+        updatedChapter.setId(currentId); // Giữ nguyên ID
+        updatedChapter.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
+        updatedChapter.setCourse(existingChapter.getCourse()); // Giữ nguyên course
 
+        // Set prerequisite chapter if provided
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
-            chapter.setPrerequisiteChapter(prerequisite);
-        } else {
-            chapter.setPrerequisiteChapter(null);
+            updatedChapter.setPrerequisiteChapter(prerequisite);
         }
 
-        Chapter updatedChapter = chapterRepo.save(chapter);
+        Chapter savedChapter = chapterRepo.save(updatedChapter);
 
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.CHAPTER,
-                updatedChapter.getId(),
+                savedChapter.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        log.info("Cập nhật chương học {} và yêu cầu phê duyệt thành công", updatedChapter.getId());
-        return chapterMapper.toDto(updatedChapter); // Sử dụng injected mapper
+        log.info("Cập nhật chương học {} và yêu cầu phê duyệt thành công", savedChapter.getId());
+        return chapterMapper.toDto(savedChapter);
     }
 }

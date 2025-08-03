@@ -76,5 +76,4 @@ public class AuthController {
         LoginResponseDto payload = userService.refreshToken(request.refreshToken());
         return ResponseEntity.ok(ApiResponseDto.ok("Làm mới token thành công", payload));
     }
-
 }

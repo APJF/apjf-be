@@ -1,21 +1,5 @@
 package fu.sep.apjf.controller;
 
-import java.net.URI;
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import fu.sep.apjf.dto.request.MaterialRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.MaterialResponseDto;
@@ -25,6 +9,14 @@ import fu.sep.apjf.service.MinioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/materials")
@@ -41,12 +33,6 @@ public class MaterialController {
                 ApiResponseDto.ok("Danh sách tài liệu", materialService.findAll()));
     }
 
-    @GetMapping("/unit/{unitId}")
-    public ResponseEntity<ApiResponseDto<List<MaterialResponseDto>>> getAllByUnitId(@PathVariable String unitId) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Danh sách tài liệu theo bài học", materialService.findByUnitId(unitId)));
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<MaterialResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
@@ -57,9 +43,6 @@ public class MaterialController {
     public ResponseEntity<ApiResponseDto<MaterialResponseDto>> create(
             @Valid @RequestBody MaterialRequestDto dto,
             @AuthenticationPrincipal User user) {
-
-        log.info("Staff {} đang tạo tài liệu mới", user.getUsername());
-
         MaterialResponseDto created = materialService.create(dto, null, user.getId());
         return ResponseEntity.created(URI.create("/api/materials/" + created.id()))
                 .body(ApiResponseDto.ok("Tạo tài liệu thành công", created));
@@ -80,7 +63,7 @@ public class MaterialController {
     @PreAuthorize("hasRole('STAFF')")
     @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadPdf(@RequestParam("file") MultipartFile file,
-                                                           @AuthenticationPrincipal User user) {
+                                                            @AuthenticationPrincipal User user) {
         try {
             String contentType = file.getContentType();
             if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {

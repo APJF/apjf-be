@@ -3,12 +3,14 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.LoginRequestDto;
 import fu.sep.apjf.dto.request.RegisterDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
+import fu.sep.apjf.dto.response.UserResponseDto;
 import fu.sep.apjf.entity.Authority;
 import fu.sep.apjf.entity.Token;
 import fu.sep.apjf.entity.Token.TokenType;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.exception.AppException;
 import fu.sep.apjf.exception.UnverifiedAccountException;
+import fu.sep.apjf.mapper.UserMapper;
 import fu.sep.apjf.repository.AuthorityRepository;
 import fu.sep.apjf.repository.TokenRepository;
 import fu.sep.apjf.repository.UserRepository;
@@ -52,41 +54,45 @@ public class UserService {
     private final JwtUtils jwtUtils;
     private final AuthorityRepository authorityRepository;
     private final MinioService minioService;
+    private final UserMapper userMapper;
 
-    // Helper method để tạo LoginResponseDto từ User
+    // Simplified method để tạo LoginResponseDto mới (chỉ token)
     private LoginResponseDto createLoginResponse(User user) {
-        // Lấy role từ user
-        List<String> roles = user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        // Tạo access token và refresh token
         String accessToken = jwtUtils.generateJwtToken(user, false);
         String refreshToken = jwtUtils.generateJwtToken(user, true);
 
-        // Tạo presigned URL cho avatar
-        String avatarUrl = null;
-        try {
-            avatarUrl = minioService.getAvatarUrl(user.getAvatar());
-        } catch (Exception e) {
-            log.error("Failed to generate avatar URL for user {}: {}", user.getEmail(), e.getMessage());
-        }
-
-        // Tạo đối tượng UserInfo với presigned URL
-        LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                avatarUrl,  // Sử dụng presigned URL thay vì object name
-                roles
-        );
-
-        // Trả về đối tượng LoginResponse
         return new LoginResponseDto(
                 accessToken,
                 refreshToken,
-                "Bearer",
-                userInfo
+                "Bearer"
+        );
+    }
+
+    // Method mới để lấy profile của user hiện tại
+    public UserResponseDto getProfile(String email) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
+
+        UserResponseDto userDto = userMapper.toDto(user);
+
+        // Xử lý avatar URL conversion tại đây
+        String avatarUrl = userDto.avatar();
+        if (avatarUrl != null) {
+            try {
+                avatarUrl = minioService.getAvatarUrl(avatarUrl);
+            } catch (Exception e) {
+                log.error("Failed to generate avatar URL for user {}: {}", email, e.getMessage());
+                // Giữ nguyên avatar gốc nếu có lỗi
+            }
+        }
+
+        // Tạo UserResponseDto mới với avatar URL đã convert
+        return new UserResponseDto(
+            userDto.id(),
+            userDto.email(),
+            userDto.username(),
+            avatarUrl,
+            userDto.authorities()
         );
     }
 
@@ -149,7 +155,7 @@ public class UserService {
         user.setUsername("new user");
         user.setAuthorities(new ArrayList<>(List.of(userRole)));
         user.setPassword(passwordEncoder.encode(registerDTO.password()));
-        user.setEmail(registerDTO.email());
+        user.setEmail(registerDTO.email().toLowerCase()); // Lưu email dạng lowercase
         user.setAvatar("https://engineering.usask.ca/images/no_avatar.jpg");
         user.setEmailVerified(false);
         user.setEnabled(false);
@@ -192,7 +198,7 @@ public class UserService {
             userRepository.save(user);
         }
         // Với reset password, chỉ cần xóa token, không cần thay đổi user
-        // Logic reset password đã được xử lý ở method resetPassword
+        // Logic reset password đã được xử lý �� method resetPassword
 
         tokenRepository.delete(token);
     }
@@ -239,7 +245,7 @@ public class UserService {
     }
 
     @Transactional
-    public String updateProfile(String currentEmail, fu.sep.apjf.dto.request.ProfileRequestDto dto) {
+    public String updateProfile(String currentEmail, fu.sep.apjf.dto.request.UserRequestDto dto) {
         User user = userRepository.findByEmailIgnoreCase(currentEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
         boolean needSave = false;

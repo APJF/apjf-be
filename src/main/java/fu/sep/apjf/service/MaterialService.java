@@ -41,9 +41,6 @@ public class MaterialService {
                 .toList();
     }
 
-    /**
-     * Tìm tài liệu theo đơn vị học tập
-     */
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findByUnitId(String unitId) {
         List<Material> materials = materialRepository.findByUnitId(unitId);
@@ -58,34 +55,23 @@ public class MaterialService {
                 .toList();
     }
 
-    /**
-     * Tìm tài liệu theo ID
-     */
+
     @Transactional(readOnly = true)
     public MaterialResponseDto findById(String id) {
         return materialMapper.toDto(materialRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id)));
     }
 
-    /**
-     * Tạo tài liệu mới
-     */
     public MaterialResponseDto create(@Valid MaterialRequestDto dto, String unitId, Long staffId) {
-        log.info("Nh��n viên {} tạo tài liệu mới", staffId);
+        log.info("Nhân viên {} tạo tài liệu mới", staffId);
 
         Unit unit = unitRepository.findById(unitId)
                 .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
 
         String materialId = dto.id() != null ? dto.id() : UUID.randomUUID().toString();
 
-        Material material = Material.builder()
-                .id(materialId)
-                .fileUrl(dto.fileUrl())
-                .type(dto.type())
-                .script(dto.script())
-                .translation(dto.translation())
-                .unit(unit)
-                .build();
+        Material material = materialMapper.toEntity(dto, unit);
+        material.setId(materialId);
 
         Material savedMaterial = materialRepository.save(material);
 
@@ -105,49 +91,34 @@ public class MaterialService {
      * Cập nhật tài liệu
      */
     public MaterialResponseDto update(String id, @Valid MaterialRequestDto dto, String unitId, Long staffId) {
-        log.info("Nhân vi��n {} cập nhật tài liệu {}", staffId, id);
+        log.info("Nhân viên {} cập nhật tài liệu {}", staffId, id);
 
-        Material material = materialRepository.findById(id)
+        Material existingMaterial = materialRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
 
-        // Cập nhật thông tin
-        material.setFileUrl(dto.fileUrl());
-        material.setType(dto.type());
-        material.setScript(dto.script());
-        material.setTranslation(dto.translation());
-
-        // Cập nhật unit nếu có thay đổi
-        if (unitId != null && !material.getUnit().getId().equals(unitId)) {
-            Unit newUnit = unitRepository.findById(unitId)
+        // Xác định unit để sử dụng
+        Unit unit = existingMaterial.getUnit(); // Giữ unit hiện tại làm mặc định
+        if (unitId != null && !existingMaterial.getUnit().getId().equals(unitId)) {
+            unit = unitRepository.findById(unitId)
                     .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
-            material.setUnit(newUnit);
         }
 
-        Material updatedMaterial = materialRepository.save(material);
+        // Sử dụng mapper để tạo material mới với thông tin cập nhật
+        Material updatedMaterial = materialMapper.toEntity(dto, unit);
+        updatedMaterial.setId(id); // Giữ nguyên ID
+
+        Material savedMaterial = materialRepository.save(updatedMaterial);
 
         // Auto-create approval request for this updated material
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.MATERIAL,
-                updatedMaterial.getId(),
+                savedMaterial.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", updatedMaterial.getId());
-        return materialMapper.toDto(updatedMaterial);
+        log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
+        return materialMapper.toDto(savedMaterial);
     }
 
-    /**
-     * Xóa tài liệu
-     */
-    public void delete(String id) {
-        log.info("Xóa tài liệu với ID: {}", id);
-
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
-
-        materialRepository.delete(material);
-
-        log.info("Xóa t��i liệu {} thành công", id);
-    }
 }

@@ -68,34 +68,32 @@ public class CourseService {
     }
 
     public CourseResponseDto update(String currentId, CourseRequestDto dto, Long staffId) {
-        Course course = courseRepository.findById(currentId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+        // Kiểm tra course tồn tại
+        if (!courseRepository.existsById(currentId)) {
+            throw new EntityNotFoundException("Không tìm thấy khóa học");
+        }
 
-        // Cập nhật thông tin
-        course.setTitle(dto.title());
-        course.setDescription(dto.description());
-        course.setDuration(dto.duration());
-        course.setLevel(dto.level());
-        course.setStatus(EnumClass.Status.INACTIVE);
+        // Sử dụng mapper để tạo course với thông tin mới
+        Course updatedCourse = courseMapper.toEntity(dto);
+        updatedCourse.setId(currentId); // Giữ nguyên ID
+        updatedCourse.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
 
-        // Cập nhật prerequisite course
+        // Set prerequisite course if provided
         if (dto.prerequisiteCourseId() != null) {
             Course prerequisite = courseRepository.findById(dto.prerequisiteCourseId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học tiên quyết"));
-            course.setPrerequisiteCourse(prerequisite);
-        } else {
-            course.setPrerequisiteCourse(null);
+            updatedCourse.setPrerequisiteCourse(prerequisite);
         }
 
-        Course updatedCourse = courseRepository.save(course);
+        Course savedCourse = courseRepository.save(updatedCourse);
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.COURSE,
-                updatedCourse.getId(),
+                savedCourse.getId(),
                 ApprovalRequest.RequestType.UPDATE,
                 staffId
         );
 
-        return courseMapper.toDto(updatedCourse); // Sử dụng toDto thay vì toResponseDto
+        return courseMapper.toDto(savedCourse);
     }
 
     public String uploadCourseImage(String courseId, MultipartFile file) throws Exception {
