@@ -6,12 +6,14 @@ import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.CourseService;
 import fu.sep.apjf.service.ReviewService;
+import fu.sep.apjf.service.MinioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -24,15 +26,16 @@ public class CourseController {
 
     private final CourseService courseService;
     private final ReviewService reviewService;
+    private final MinioService minioService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getAll() {
+    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> findAll() {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Danh sách chương", courseService.findAll()));
+                ApiResponseDto.ok("Danh sách khoá học", courseService.findAll()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> findById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
     }
@@ -60,6 +63,16 @@ public class CourseController {
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Cập nhật khóa học thành công", courseService.update(id, dto, user.getId())));
+    }
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<ApiResponseDto<String>> uploadCourseImage(
+            @PathVariable String id,
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User user) throws Exception {
+
+        String objectName = courseService.uploadCourseImage(id, file);
+        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", objectName));
     }
 
 }

@@ -3,12 +3,16 @@
    ============================ */
 
 /* ---------- AUTHORITIES ---------- */
-INSERT INTO authority (authority)
+INSERT INTO authority (name)
 VALUES ('ROLE_USER'),
        ('ROLE_STAFF'),
        ('ROLE_MANAGER'),
        ('ROLE_ADMIN');
 
+INSERT INTO users (username, password, email, pending_email, address, phone, avatar, enabled, email_verified, vip_expiration) VALUES
+('taro_yamada', 'hashed_password_123', 'taro@example.com', NULL, 'Tokyo, Japan', '0901234567', 'https://example.com/avatar1.jpg', true, true, '2025-12-31 23:59:59'),
+('hanako_suzuki', 'hashed_password_456', 'hanako@example.com', 'hanako_pending@example.com', 'Osaka, Japan', '0809876543', NULL, true, false, NULL),
+('john_doe', 'hashed_password_789', 'john@example.com', NULL, NULL, NULL, NULL, false, true, NULL);
 
 /* ---------- TOPIC ---------- */
 INSERT INTO topic (name)
@@ -17,29 +21,29 @@ VALUES ('IT'),
 
 /* ---------- COURSE (Simple version for testing) ---------- */
 INSERT INTO course (id, title, description, duration, level, status)
-VALUES ('course-01', 'Tieng Nhat N5', 'Khoa hoc co ban', 40.5, 'N5', 'PUBLISHED');
+VALUES ('course-01', 'Tieng Nhat N5', 'Khoa hoc co ban', 40.5, 'N5', 'ACTIVE');
 
 /* Add second course after first one works */
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id)
-VALUES ('course-02', 'Tieng Nhat N4', 'Khoa hoc nang cao', 60.0, 'N3', 'PUBLISHED', 'course-01');
+VALUES ('course-02', 'Tieng Nhat N4', 'Khoa hoc nang cao', 60.0, 'N4', 'ACTIVE', 'course-01');
 
 /* ---------- CHAPTER ---------- */
 INSERT INTO chapter (id, title, description, status, course_id)
-VALUES ('chapter-01', 'Hiragana', 'Hoc Hiragana co ban', 'PUBLISHED', 'course-01'),
-       ('chapter-02', 'Katakana', 'Hoc Katakana co ban', 'PUBLISHED', 'course-01'),
-       ('chapter-03', 'Ngu phap N4', 'Hoc ngu phap N4', 'PUBLISHED', 'course-02'),
-       ('chapter-04', 'Hoi thoai', 'Luyen hoi thoai', 'PUBLISHED', 'course-02');
+VALUES ('chapter-01', 'Hiragana', 'Hoc Hiragana co ban', 'ACTIVE', 'course-01'),
+       ('chapter-02', 'Katakana', 'Hoc Katakana co ban', 'ACTIVE', 'course-01'),
+       ('chapter-03', 'Ngu phap N4', 'Hoc ngu phap N4', 'ACTIVE', 'course-02'),
+       ('chapter-04', 'Hoi thoai', 'Luyen hoi thoai', 'ACTIVE', 'course-02');
 
 /* ---------- UNIT ---------- */
 INSERT INTO unit (id, title, description, status, chapter_id)
-VALUES ('unit-01', 'Tu vung Hiragana', 'Hoc tu vung co ban', 'PUBLISHED', 'chapter-01'),
-       ('unit-02', 'Luyen doc Hiragana', 'Bai tap doc', 'PUBLISHED', 'chapter-01'),
-       ('unit-03', 'Tu vung Katakana', 'Hoc tu vung Katakana', 'PUBLISHED', 'chapter-02'),
-       ('unit-04', 'Luyen viet Katakana', 'Bai tap viet', 'PUBLISHED', 'chapter-02'),
-       ('unit-05', 'Te-form', 'Hoc te-form', 'PUBLISHED', 'chapter-03'),
-       ('unit-06', 'Kha nang', 'Dien dat kha nang', 'PUBLISHED', 'chapter-03'),
-       ('unit-07', 'Hoi thoai cua hang', 'Luyen tap mua sam', 'PUBLISHED', 'chapter-04'),
-       ('unit-08', 'Hoi thoai nha hang', 'Luyen tap di an', 'PUBLISHED', 'chapter-04');
+VALUES ('unit-01', 'Tu vung Hiragana', 'Hoc tu vung co ban', 'ACTIVE', 'chapter-01'),
+       ('unit-02', 'Luyen doc Hiragana', 'Bai tap doc', 'ACTIVE', 'chapter-01'),
+       ('unit-03', 'Tu vung Katakana', 'Hoc tu vung Katakana', 'ACTIVE', 'chapter-02'),
+       ('unit-04', 'Luyen viet Katakana', 'Bai tap viet', 'ACTIVE', 'chapter-02'),
+       ('unit-05', 'Te-form', 'Hoc te-form', 'ACTIVE', 'chapter-03'),
+       ('unit-06', 'Kha nang', 'Dien dat kha nang', 'ACTIVE', 'chapter-03'),
+       ('unit-07', 'Hoi thoai cua hang', 'Luyen tap mua sam', 'ACTIVE', 'chapter-04'),
+       ('unit-08', 'Hoi thoai nha hang', 'Luyen tap di an', 'ACTIVE', 'chapter-04');
 
 /* ---------- MATERIAL ---------- */
 INSERT INTO material (id, description, file_url, type, unit_id)
@@ -51,7 +55,10 @@ VALUES ('material-01', 'Video Hiragana', '/videos/hiragana.mp4', 'GRAMMAR', 'uni
 /* ---------- COURSE_TOPIC ---------- */
 INSERT INTO course_topic (course_id, topic_id)
 VALUES ('course-01', 1),
-       ('course-02', 1);
+       ('course-02', 1),
+       ('course-02', 2);
+
+
 
 /* ---------- APPROVAL_REQUEST ---------- */
 INSERT INTO approval_request (course_id, chapter_id, unit_id, material_id, target_type, created_by, created_at,
@@ -69,7 +76,7 @@ VALUES
     ('course-02', NULL, NULL, NULL, 'COURSE', 2, NOW() - INTERVAL '7 days', 'CREATE', 'APPROVED',
      'Khóa học chất lượng cao, nội dung phù hợp với learner path', 3, NOW() - INTERVAL '5 days'),
     (NULL, 'chapter-02', NULL, NULL, 'CHAPTER', 1, NOW() - INTERVAL '10 days', 'CREATE', 'APPROVED',
-     'Chương được thiết kế tốt với bài tập phong phú', 4, NOW() - INTERVAL '8 days'),
+     'Chương được thiết kế tốt với bài tập phong phú', 3, NOW() - INTERVAL '8 days'),
 
     -- REJECTED requests (đã bị Manager từ chối)
     (NULL, NULL, NULL, 'material-01', 'MATERIAL', 3, NOW() - INTERVAL '15 days', 'UPDATE', 'REJECTED',
@@ -88,7 +95,7 @@ VALUES ('q1', 'Hiragana あ được đọc như thế nào?', 'a', 'MULTIPLE_CH
        ('q5', 'Điền từ thích hợp: Watashi __ gakusei desu', 'wa', 'WRITING', 'VOCAB', 'Sử dụng trợ từ wa', null, NOW());
 
 /* Question Options */
-INSERT INTO question_option (id, content, is_correct, question_id)
+INSERT INTO option (id, content, is_correct, question_id)
 VALUES ('opt1', 'a', true, 'q1'),
        ('opt2', 'i', false, 'q1'),
        ('opt3', 'u', false, 'q1'),

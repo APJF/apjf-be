@@ -1,19 +1,5 @@
 package fu.sep.apjf.service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import fu.sep.apjf.dto.request.LoginRequestDto;
 import fu.sep.apjf.dto.request.RegisterDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
@@ -29,10 +15,24 @@ import fu.sep.apjf.repository.UserRepository;
 import fu.sep.apjf.utils.EmailUtils;
 import fu.sep.apjf.utils.JwtUtils;
 import fu.sep.apjf.utils.OtpUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +42,7 @@ public class UserService {
 
     private static final Duration OTP_TTL = Duration.ofMinutes(10);
     private static final Duration OTP_THROTTLE = Duration.ofMinutes(1);
+    private static final String ROLE_USER = "ROLE_USER";
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     @Lazy
@@ -50,7 +51,44 @@ public class UserService {
     private final EmailUtils emailUtils;
     private final JwtUtils jwtUtils;
     private final AuthorityRepository authorityRepository;
-    private static final String ROLE_USER = "ROLE_USER";
+    private final MinioService minioService;
+
+    // Helper method để tạo LoginResponseDto từ User
+    private LoginResponseDto createLoginResponse(User user) {
+        // Lấy role từ user
+        List<String> roles = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        // Tạo access token và refresh token
+        String accessToken = jwtUtils.generateJwtToken(user, false);
+        String refreshToken = jwtUtils.generateJwtToken(user, true);
+
+        // Tạo presigned URL cho avatar
+        String avatarUrl = null;
+        try {
+            avatarUrl = minioService.getAvatarUrl(user.getAvatar());
+        } catch (Exception e) {
+            log.error("Failed to generate avatar URL for user {}: {}", user.getEmail(), e.getMessage());
+        }
+
+        // Tạo đối tượng UserInfo với presigned URL
+        LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                avatarUrl,  // Sử dụng presigned URL thay vì object name
+                roles
+        );
+
+        // Trả về đối tượng LoginResponse
+        return new LoginResponseDto(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                userInfo
+        );
+    }
 
     @Transactional
     public LoginResponseDto login(LoginRequestDto loginDTO) {
@@ -68,73 +106,33 @@ public class UserService {
             throw new UnverifiedAccountException("Tài khoản chưa được xác thực.", user.getEmail());
         }
 
-        // 4. Lấy role & sinh cả access token và refresh token
-        List<String> roles = user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        String accessToken = jwtUtils.generateTokenFromUsername(user);
-        String refreshToken = jwtUtils.generateRefreshToken(user);
-
-        // 5. Tạo đối tượng UserInfo
-        LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                user.getAvatar(),
-                roles
-        );
-
-        // 6. Trả về đối tượng LoginResponse với cả access token và refresh token
-        return new LoginResponseDto(
-                accessToken,
-                refreshToken,
-                "Bearer",
-                userInfo
-        );
+        // 4. Tạo và trả về LoginResponseDto
+        return createLoginResponse(user);
     }
 
     @Transactional
     public LoginResponseDto refreshToken(String refreshToken) {
-        // 1. Validate refresh token
-        if (!jwtUtils.validateRefreshToken(refreshToken)) {
-            throw new BadCredentialsException("Refresh token không hợp lệ hoặc đã hết hạn");
+        // 1. Validate refresh token và lấy claims
+        Claims claims = jwtUtils.validateJwtToken(refreshToken);
+
+        // 2. Kiểm tra loại token
+        String tokenType = claims.get("tokenType", String.class);
+        if (!"refresh".equals(tokenType)) {
+            throw new BadCredentialsException("Token không phải là refresh token");
         }
 
-        // 2. Lấy thông tin user từ refresh token
-        String email = jwtUtils.getEmailFromJwtToken(refreshToken);
+        // 3. Lấy thông tin user từ refresh token
+        String email = claims.getSubject();
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new BadCredentialsException("Người dùng không tồn tại"));
 
-        // 3. Kiểm tra tài khoản vẫn còn active
+        // 4. Kiểm tra tài khoản vẫn còn active
         if (!user.isEnabled()) {
             throw new BadCredentialsException("Tài khoản đã bị vô hiệu hóa");
         }
 
-        // 4. Tạo cặp token mới
-        List<String> roles = user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
-
-        String newAccessToken = jwtUtils.generateTokenFromUsername(user);
-        String newRefreshToken = jwtUtils.generateRefreshToken(user);
-
-        // 5. Tạo response
-        LoginResponseDto.UserInfo userInfo = new LoginResponseDto.UserInfo(
-                user.getId(),
-                user.getEmail(),
-                user.getUsername(),
-                user.getAvatar(),
-                roles
-
-        );
-
-        return new LoginResponseDto(
-                newAccessToken,     // access_token mới
-                newRefreshToken,    // refresh_token mới
-                "Bearer",           // token_type
-                userInfo            // user object
-        );
+        // 5. Tạo và trả về LoginResponseDto
+        return createLoginResponse(user);
     }
 
     @Transactional
@@ -144,7 +142,7 @@ public class UserService {
         }
 
         // Tìm ROLE_USER và xử lý nếu không tìm thấy
-        Authority userRole = authorityRepository.findByAuthority(ROLE_USER)
+        Authority userRole = authorityRepository.findByName(ROLE_USER)
                 .orElseThrow(() -> new AppException("Không tìm thấy ROLE_USER trong hệ thống."));
 
         User user = new User();
@@ -158,7 +156,8 @@ public class UserService {
 
         userRepository.save(user);
 
-        createAndSendToken(user, TokenType.REGISTRATION);
+        // Gọi sendOtp với TokenType thay vì String
+        sendOtp(user.getEmail(), TokenType.REGISTRATION);
     }
 
     @Transactional
@@ -196,29 +195,6 @@ public class UserService {
         // Logic reset password đã được xử lý ở method resetPassword
 
         tokenRepository.delete(token);
-    }
-
-    @Transactional
-    public void regenerateOtp(String email) {
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new AppException("User không tồn tại."));
-        Token token = tokenRepository
-                .findTopByUserAndTypeOrderByRequestedTimeDesc(user, TokenType.REGISTRATION)
-                .orElseThrow(() -> new AppException("Chưa có OTP trước đó."));
-
-        if (Duration.between(token.getRequestedTime(), LocalDateTime.now()).compareTo(OTP_THROTTLE) < 0) {
-            throw new AppException("Vui lòng chờ ít nhất 1 phút trước khi yêu cầu gửi lại OTP.");
-        }
-
-        tokenRepository.delete(token);
-        createAndSendToken(user, TokenType.REGISTRATION);
-    }
-
-    @Transactional
-    public void forgotPassword(String email) {
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new AppException("User không tồn tại."));
-        createAndSendToken(user, TokenType.RESET_PASSWORD);
     }
 
     @Transactional
@@ -273,7 +249,8 @@ public class UserService {
                 throw new IllegalArgumentException("Email đã tồn tại.");
             }
             user.setPendingEmail(dto.email());
-            createAndSendToken(user, TokenType.REGISTRATION);
+            // Gọi sendOtp với TokenType thay vì String
+            sendOtp(user.getEmail(), TokenType.REGISTRATION);
             needSave = true;
         }
         // Đổi username
@@ -300,20 +277,74 @@ public class UserService {
         return "Cập nhật thông tin thành công.";
     }
 
-    private void createAndSendToken(User user, TokenType type) {
-        tokenRepository.deleteAllByUserAndType(user, type);
+    /**
+     * Phương thức tạo và gửi OTP với nhiều mục đích khác nhau
+     *
+     * @param email Email của người dùng
+     * @param tokenType Loại OTP (TokenType.REGISTRATION, TokenType.RESET_PASSWORD)
+     * @return Thông báo kết quả
+     */
+    @Transactional
+    public String sendOtp(String email, TokenType tokenType) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new AppException("Email không tồn tại."));
+
+        String message;
+
+        switch (tokenType) {
+            case REGISTRATION:
+                // Kiểm tra xem có OTP cũ không
+                Token lastToken = tokenRepository
+                        .findTopByUserAndTypeOrderByRequestedTimeDesc(user, tokenType)
+                        .orElse(null);
+
+                if (lastToken != null) {
+                    // Kiểm tra throttle nếu có OTP cũ
+                    if (Duration.between(lastToken.getRequestedTime(), LocalDateTime.now()).compareTo(OTP_THROTTLE) < 0) {
+                        throw new AppException("Vui lòng chờ ít nhất 1 phút trước khi yêu cầu gửi lại OTP.");
+                    }
+                    // Xóa token cũ
+                    tokenRepository.delete(lastToken);
+                }
+
+                // Kiểm tra trạng thái tài khoản cho verification
+                if (user.isEnabled()) {
+                    message = "OTP đã được gửi lại thành công.";
+                } else {
+                    message = "Đã gửi mã OTP xác thực tài khoản vào email của bạn.";
+                }
+                break;
+
+            case RESET_PASSWORD:
+                message = "Đã gửi email xác thực đặt lại mật khẩu.";
+                break;
+
+            default:
+                throw new IllegalArgumentException("Loại token không được hỗ trợ: " + tokenType);
+        }
+
+        // Xóa các token cũ của loại này
+        tokenRepository.deleteAllByUserAndType(user, tokenType);
+
+        // Tạo token mới
         LocalDateTime now = LocalDateTime.now();
         String otp = otpUtils.generateOTP();
         Token token = Token.builder()
                 .user(user)
                 .tokenValue(otp)
-                .type(type)
+                .type(tokenType)
                 .requestedTime(now)
                 .expirationTime(now.plus(OTP_TTL))
                 .build();
+
         tokenRepository.save(token);
-        emailUtils.sendEmailAsync(user.getEmail(), otp, type);
+
+        // Gửi email sử dụng EmailUtils.sendEmailType
+        emailUtils.sendEmailType(user.getEmail(), otp, tokenType);
+
+        return message;
     }
+
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmailIgnoreCase(email);
@@ -322,7 +353,7 @@ public class UserService {
 
     public User save(User user) {
         if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
-            Authority defaultRole = authorityRepository.findByAuthority(ROLE_USER)
+            Authority defaultRole = authorityRepository.findByName(ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy role mặc định ROLE_USER"));
             user.setAuthorities(List.of(defaultRole));
         }
@@ -332,7 +363,7 @@ public class UserService {
     @Transactional
     public User createOAuth2User(String email, String name, String avatar) {
         // Lookup default role
-        Authority userRole = authorityRepository.findByAuthority(ROLE_USER)
+        Authority userRole = authorityRepository.findByName(ROLE_USER)
                 .orElseThrow(() -> new AppException("Default role not found: ROLE_USER"));
 
         // Build new User
@@ -348,18 +379,5 @@ public class UserService {
 
         // Persist and return
         return userRepository.save(newUser);
-    }
-
-    @Transactional
-    public void sendVerificationOtp(String email) {
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new AppException("Email không tồn tại."));
-
-        if (user.isEnabled()) {
-            throw new AppException("Tài khoản đã được xác thực.");
-        }
-
-        // Tạo và gửi OTP mới
-        createAndSendToken(user, TokenType.REGISTRATION);
     }
 }

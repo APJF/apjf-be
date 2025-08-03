@@ -1,7 +1,7 @@
 package fu.sep.apjf.dto.response;
 
 public record ExamResultDetailDto(
-        String id,
+        Long id,
         String userAnswer,
         Boolean isCorrect,
         String questionId,

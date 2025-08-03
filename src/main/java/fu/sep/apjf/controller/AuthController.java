@@ -1,32 +1,16 @@
 package fu.sep.apjf.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import fu.sep.apjf.dto.request.ChangePasswordDto;
-import fu.sep.apjf.dto.request.LoginRequestDto;
-import fu.sep.apjf.dto.request.ProfileRequestDto;
-import fu.sep.apjf.dto.request.RefreshTokenRequest;
-import fu.sep.apjf.dto.request.RegisterDto;
-import fu.sep.apjf.dto.request.ResetPasswordDto;
+import fu.sep.apjf.dto.request.*;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
-import fu.sep.apjf.dto.response.ProfileResponseDto;
-import fu.sep.apjf.entity.User;
-import fu.sep.apjf.mapper.UserMapper;
-import fu.sep.apjf.service.MinioService;
+import fu.sep.apjf.entity.Token.TokenType;
 import fu.sep.apjf.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -35,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthController {
 
     private final UserService userService;
-    private final MinioService minioService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponseDto<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequest) {
@@ -60,22 +43,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponseDto.ok("Xác thực tài khoản thành công.", null));
     }
 
-    @PostMapping("/otp")
-    public ResponseEntity<ApiResponseDto<Object>> regenerateOtp(@RequestParam String email) {
-        userService.regenerateOtp(email);
-        return ResponseEntity.ok(ApiResponseDto.ok("OTP đã được gửi lại thành công.", null));
-    }
-
-    @PostMapping("/send-verification-otp")
-    public ResponseEntity<ApiResponseDto<Object>> sendVerificationOtp(@RequestParam String email) {
-        userService.sendVerificationOtp(email);
-        return ResponseEntity.ok(ApiResponseDto.ok("Đã gửi mã OTP xác thực tài khoản vào email của bạn.", null));
-    }
-
-    @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponseDto<Object>> forgotPassword(@RequestParam String email) {
-        userService.forgotPassword(email);
-        return ResponseEntity.ok(ApiResponseDto.ok("Đã gửi email xác thực đặt lại mật khẩu.", null));
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponseDto<Object>> sendOtp(
+            @RequestParam String email,
+            @RequestParam String type) {
+        String message = userService.sendOtp(email, TokenType.valueOf(type.toUpperCase()));
+        return ResponseEntity.ok(ApiResponseDto.ok(message, null));
     }
 
     @PostMapping("/reset-password")

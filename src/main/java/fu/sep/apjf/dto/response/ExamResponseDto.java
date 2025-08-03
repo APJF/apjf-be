@@ -12,12 +12,10 @@ public record ExamResponseDto(
         Double duration,
         EnumClass.ExamScopeType examScopeType,
         LocalDateTime createdAt,
-        List<QuestionResponseDto> questions,
-        int totalQuestions,
         String courseId,
         String chapterId,
         String unitId,
+        List<QuestionResponseDto> questions, // Có thể null nếu chỉ cần ID
         List<String> questionIds,
-        int questionCount
-) {
-}
+        int totalQuestions
+) {}

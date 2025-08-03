@@ -24,6 +24,8 @@ import java.util.List;
 @Slf4j
 public class ChapterService {
 
+    public static final String CHAPTER_NOT_FOUND = "Không tìm thấy chương học";
+
     private final ChapterRepository chapterRepo;
     private final CourseRepository courseRepo;
     private final ApprovalRequestService approvalRequestService;
@@ -48,7 +50,7 @@ public class ChapterService {
     @Transactional(readOnly = true)
     public ChapterResponseDto findById(String id) {
         return ChapterMapper.toResponseDto(chapterRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học")));
+                .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND)));
     }
 
     public ChapterResponseDto create(@Valid ChapterRequestDto dto, Long staffId) {
@@ -91,7 +93,7 @@ public class ChapterService {
         log.info("Nhân viên {} cập nhật chương học với mã: {}", staffId, currentId);
 
         Chapter chapter = chapterRepo.findById(currentId)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học"));
+                .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND));
 
         chapter.setTitle(dto.title());
         chapter.setDescription(dto.description());
@@ -116,16 +118,5 @@ public class ChapterService {
 
         log.info("Cập nhật chương học {} và yêu cầu phê duyệt thành công", updatedChapter.getId());
         return ChapterMapper.toResponseDto(updatedChapter);
-    }
-
-    public void delete(String id) {
-        log.info("Xóa chương học với mã: {}", id);
-
-        Chapter chapter = chapterRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học"));
-
-        chapterRepo.delete(chapter);
-
-        log.info("Xóa chương học {} thành công", id);
     }
 }

@@ -47,8 +47,10 @@ public class SecurityConfig {
     };
 
     private static final String[] USER_ALLOWED_ENDPOINTS = {
-            "/api/exams/*/start",  // Endpoint bắt đầu làm bài thi cần ROLE_USER
-            "/api/exam-results/**" // Kết quả thi cũng cần ROLE_USER
+            "/api/exams/*/start",
+            "/api/exam-results/**",
+            "/api/users/profile" ,
+            "/api/users/avatar"
     };
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
@@ -65,7 +67,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthEntryPointJwt unauthorizedHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthEntryPointJwt unauthorizedHandler, JwtUtils jwtUtils) throws Exception {
         return http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
@@ -90,7 +92,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler))
-                .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authenticationJwtTokenFilter(jwtUtils), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -108,8 +110,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
+    public AuthTokenFilter authenticationJwtTokenFilter(JwtUtils jwtUtils) {
+        return new AuthTokenFilter(jwtUtils);
     }
 
     @Bean

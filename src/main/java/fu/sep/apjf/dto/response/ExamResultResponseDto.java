@@ -6,16 +6,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record ExamResultResponseDto(
-        String id,
+        Long id,
         LocalDateTime startedAt,
         LocalDateTime submittedAt,
         Float score,
         EnumClass.ExamStatus status,
-        String userId,
-        String examId,
+        Long userId,
+        String examId,  // Exam ID vẫn là String
         String examTitle,
         List<ExamResultDetailDto> answers,
         int totalQuestions,
         int correctAnswers
-) {
-}
+) {}

@@ -17,7 +17,6 @@ public record ChapterRequestDto(
         EnumClass.Status status,
         @NotBlank(message = "ID khóa học không được để trống")
         String courseId,
-        String prerequisiteChapterId,
-        Set<ExamSummaryRequestDto> exams
+        String prerequisiteChapterId
 ) {
 }

@@ -14,6 +14,9 @@ public record ApiResponseDto<T>(
     public static <T> ApiResponseDto<T> ok(String msg, T data) {
         return new ApiResponseDto<>(true, msg, data, Instant.now().toEpochMilli());
     }
+    public static <T> ApiResponseDto<T> ok(String msg) {
+        return new ApiResponseDto<>(true, msg, null,Instant.now().toEpochMilli());
+    }
 
     public static ApiResponseDto<Object> error(String msg) {
         return new ApiResponseDto<>(false, msg, null, Instant.now().toEpochMilli());

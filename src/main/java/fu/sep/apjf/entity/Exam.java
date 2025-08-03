@@ -32,26 +32,18 @@ public class Exam {
     @Column(name = "exam_scope_type")
     private EnumClass.ExamScopeType examScopeType;
 
-    /* Course relationship */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
     private Course course;
 
-    /* Chapter relationship */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chapter_id")
     private Chapter chapter;
 
-    /* Unit relationship */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_id")
     private Unit unit;
 
-    /* ==== Quan hệ ==== */
-
-    /**
-     * N‑N với Question
-     */
     @ManyToMany
     @JoinTable(
             name = "exam_question",
@@ -61,10 +53,6 @@ public class Exam {
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
 
- 
-    /**
-     * 1‑N với ExamResult
-     */
     @OneToMany(mappedBy = "exam")
     @Builder.Default
     private List<ExamResult> results = new ArrayList<>();

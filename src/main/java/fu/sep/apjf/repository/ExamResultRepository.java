@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ExamResultRepository extends JpaRepository<ExamResult, String> {
+public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
     List<ExamResult> findByUser(User user);
 
     List<ExamResult> findByExam(Exam exam);
