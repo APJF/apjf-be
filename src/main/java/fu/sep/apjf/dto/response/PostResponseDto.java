@@ -9,8 +9,5 @@ public record PostResponseDto(
         Instant createdAt,
         String email,
         String avatar,
-        List<CommentResponseDto> comments,
-
-        int likeCount,               // 👈 Tổng số lượt like
-        boolean likedByCurrentUser   // 👈 Cờ kiểm tra người hiện tại đã like chưa
+        List<CommentResponseDto> comments
 ) {}

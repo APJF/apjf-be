@@ -1,7 +1,6 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.entity.Post;
-import fu.sep.apjf.entity.PostLike;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.repository.PostLikeRepository;
 import fu.sep.apjf.repository.PostRepository;

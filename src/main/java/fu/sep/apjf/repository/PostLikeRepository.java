@@ -1,6 +1,5 @@
 package fu.sep.apjf.repository;
 
-import fu.sep.apjf.entity.PostLike;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
