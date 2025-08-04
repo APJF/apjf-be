@@ -12,6 +12,7 @@ import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class CourseService {
 
     private final CourseRepository courseRepository;
@@ -33,7 +35,7 @@ public class CourseService {
     public List<CourseResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
-                .map(courseMapper::toDto) // Sử dụng injected mapper
+                .map(this::toDtoWithPresignedUrl)
                 .toList();
     }
 
@@ -41,7 +43,7 @@ public class CourseService {
     public CourseResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-        return courseMapper.toDtoWithExams(course); // Sử dụng injected mapper
+        return toDtoWithPresignedUrlWithExams(course);
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
@@ -110,5 +112,46 @@ public class CourseService {
 
         // Upload to MinIO và trả về object name
         return minioService.uploadCourseImage(file);
+    }
+
+    // Helper method để map Course entity sang DTO với presigned URL (không có exams)
+    private CourseResponseDto toDtoWithPresignedUrl(Course course) {
+        CourseResponseDto dto = courseMapper.toDto(course);
+        return convertImageToPresignedUrl(dto);
+    }
+
+    // Helper method để map Course entity sang DTO với presigned URL (có exams)
+    private CourseResponseDto toDtoWithPresignedUrlWithExams(Course course) {
+        CourseResponseDto dto = courseMapper.toDtoWithExams(course);
+        return convertImageToPresignedUrl(dto);
+    }
+
+    // Helper method để chuyển đổi image object name thành presigned URL
+    private CourseResponseDto convertImageToPresignedUrl(CourseResponseDto dto) {
+        String imageUrl = dto.image();
+        if (imageUrl != null && !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+            try {
+                imageUrl = minioService.getCourseImageUrl(imageUrl);
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for course image {}: {}", dto.image(), e.getMessage());
+                // Giữ nguyên object name nếu có lỗi
+            }
+        }
+
+        // Tạo CourseResponseDto mới với image URL đã convert
+        return new CourseResponseDto(
+                dto.id(),
+                dto.title(),
+                dto.description(),
+                dto.duration(),
+                dto.level(),
+                imageUrl,
+                dto.requirement(),
+                dto.status(),
+                dto.prerequisiteCourseId(),
+                dto.topics(),
+                dto.exams(),
+                dto.averageRating()
+        );
     }
 }
