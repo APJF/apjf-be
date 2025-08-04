@@ -50,7 +50,9 @@ public class SecurityConfig {
             "/api/exams/*/start",
             "/api/exam-results/**",
             "/api/users/profile",
-            "/api/users/avatar"
+            "/api/users/avatar",
+            "/api/posts/**",
+            "/api/comments/**"
     };
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
