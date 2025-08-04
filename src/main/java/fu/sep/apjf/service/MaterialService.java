@@ -38,7 +38,10 @@ public class MaterialService {
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findAll() {
         return materialRepository.findAll().stream()
-                .map(this::toDtoWithPresignedUrl)
+                .map(material -> {
+                    MaterialResponseDto dto = materialMapper.toDto(material);
+                    return convertFileUrl(dto);
+                })
                 .toList();
     }
 
@@ -52,7 +55,10 @@ public class MaterialService {
         }
 
         return materials.stream()
-                .map(this::toDtoWithPresignedUrl)
+                .map(material -> {
+                    MaterialResponseDto dto = materialMapper.toDto(material);
+                    return convertFileUrl(dto);
+                })
                 .toList();
     }
 
@@ -60,15 +66,15 @@ public class MaterialService {
     public MaterialResponseDto findById(String id) {
         Material material = materialRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
-        return toDtoWithPresignedUrl(material);
+        MaterialResponseDto dto = materialMapper.toDto(material);
+        return convertFileUrl(dto);
     }
 
-    // Helper method để map Material entity sang DTO với presigned URL
-    private MaterialResponseDto toDtoWithPresignedUrl(Material material) {
-        MaterialResponseDto dto = materialMapper.toDto(material);
-
+    // Helper method để convert file URL
+    private MaterialResponseDto convertFileUrl(MaterialResponseDto dto) {
         String fileUrl = dto.fileUrl();
-        if (fileUrl != null && !fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
+        if (fileUrl != null && !fileUrl.trim().isEmpty() &&
+            !fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
             try {
                 fileUrl = minioService.getDocumentUrl(fileUrl);
             } catch (Exception e) {

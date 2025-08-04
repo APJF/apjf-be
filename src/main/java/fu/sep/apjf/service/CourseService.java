@@ -35,7 +35,10 @@ public class CourseService {
     public List<CourseResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
-                .map(this::toDtoWithPresignedUrl)
+                .map(course -> {
+                    CourseResponseDto dto = courseMapper.toDto(course);
+                    return convertImageUrl(dto);
+                })
                 .toList();
     }
 
@@ -43,7 +46,8 @@ public class CourseService {
     public CourseResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-        return toDtoWithPresignedUrlWithExams(course);
+        CourseResponseDto dto = courseMapper.toDtoWithExams(course);
+        return convertImageUrl(dto);
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
@@ -114,22 +118,11 @@ public class CourseService {
         return minioService.uploadCourseImage(file);
     }
 
-    // Helper method để map Course entity sang DTO với presigned URL (không có exams)
-    private CourseResponseDto toDtoWithPresignedUrl(Course course) {
-        CourseResponseDto dto = courseMapper.toDto(course);
-        return convertImageToPresignedUrl(dto);
-    }
-
-    // Helper method để map Course entity sang DTO với presigned URL (có exams)
-    private CourseResponseDto toDtoWithPresignedUrlWithExams(Course course) {
-        CourseResponseDto dto = courseMapper.toDtoWithExams(course);
-        return convertImageToPresignedUrl(dto);
-    }
-
     // Helper method để chuyển đổi image object name thành presigned URL
-    private CourseResponseDto convertImageToPresignedUrl(CourseResponseDto dto) {
+    private CourseResponseDto convertImageUrl(CourseResponseDto dto) {
         String imageUrl = dto.image();
-        if (imageUrl != null && !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
+            !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
             try {
                 imageUrl = minioService.getCourseImageUrl(imageUrl);
             } catch (Exception e) {
@@ -138,7 +131,6 @@ public class CourseService {
             }
         }
 
-        // Tạo CourseResponseDto mới với image URL đã convert
         return new CourseResponseDto(
                 dto.id(),
                 dto.title(),

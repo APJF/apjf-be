@@ -16,13 +16,8 @@ public interface CommentMapper {
     @Mapping(target = "postId", expression = "java(comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null)")
     CommentResponseDto toDto(Comment comment);
 
-    @Mapping(target = "id", expression = "java(comment.getId() != null ? String.valueOf(comment.getId()) : null)")
-    @Mapping(target = "userId", expression = "java(comment.getUser() != null ? String.valueOf(comment.getUser().getId()) : null)")
-    @Mapping(target = "postId", expression = "java(comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null)")
-    CommentRequestDto toRequestDto(Comment comment);
-
-    @Mapping(target = "id", expression = "java(dto.id() != null ? Long.parseLong(dto.id()) : null)")
-    @Mapping(target = "user", source = "user")
-    @Mapping(target = "post", source = "post")
+    @Mapping(target = "user", expression = "java(user)")
+    @Mapping(target = "post", expression = "java(post)")
+    @Mapping(target = "createdAt", ignore = true)
     Comment toEntity(CommentRequestDto dto, @Context User user, @Context Post post);
 }

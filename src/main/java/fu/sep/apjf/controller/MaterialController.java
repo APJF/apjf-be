@@ -63,12 +63,8 @@ public class MaterialController {
     @PreAuthorize("hasRole('STAFF')")
     @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadFile(@RequestParam("file") MultipartFile file,
-                                                             @AuthenticationPrincipal User user) {
-        try {
-            String objectName = minioService.uploadDocument(file, user.getUsername());
-            return ResponseEntity.ok(ApiResponseDto.ok("Upload file thành công", objectName));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(ApiResponseDto.error("Lỗi upload file: " + e.getMessage(), null));
-        }
+                                                             @AuthenticationPrincipal User user) throws Exception {
+        String objectName = minioService.uploadDocument(file, user.getUsername());
+        return ResponseEntity.ok(ApiResponseDto.ok("Upload file thành công", objectName));
     }
 }

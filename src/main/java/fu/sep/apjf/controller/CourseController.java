@@ -8,6 +8,7 @@ import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
 import fu.sep.apjf.service.CourseService;
 import fu.sep.apjf.service.ReviewService;
+import fu.sep.apjf.service.MinioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ public class CourseController {
     private final CourseService courseService;
     private final ReviewService reviewService;
     private final ChapterService chapterService;
+    private final MinioService minioService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getAll() {
@@ -68,9 +70,9 @@ public class CourseController {
 
     @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadCourseImage(
-            @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal User user) throws Exception {
-        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", courseService.uploadCourseImage(file)));
+            @RequestParam("file") MultipartFile file) throws Exception {
+        String objectName = minioService.uploadCourseImage(file);
+        return ResponseEntity.ok(ApiResponseDto.ok("Upload ảnh khóa học thành công", objectName));
     }
 
     @GetMapping("/{courseId}/chapters")

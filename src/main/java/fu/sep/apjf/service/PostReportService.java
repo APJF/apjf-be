@@ -27,34 +27,35 @@ public class PostReportService {
     private final PostReportRepository postReportRepo;
     private final PostRepository postRepo;
     private final UserRepository userRepo;
+    private final PostReportMapper postReportMapper;
 
     @Transactional(readOnly = true)
     public List<PostReportResponseDto> list() {
         return postReportRepo.findAll()
                 .stream()
-                .map(PostReportMapper::toDto)
+                .map(postReportMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PostReportResponseDto get(Long id) {
-        return PostReportMapper.toDto(
+        return postReportMapper.toDto(
                 postReportRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Post report không tồn tại"))
         );
     }
 
     public PostReportResponseDto create(@Valid PostReportRequestDto dto) {
-        User user = userRepo.findById(Long.parseLong(dto.userId()))
+        User user = userRepo.findById(dto.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
-        Post post = postRepo.findById(Long.parseLong(dto.postId()))
+        Post post = postRepo.findById(dto.postId())
                 .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));
 
         if (postReportRepo.existsByUserIdAndPostId(user.getId(), post.getId()))
             throw new IllegalArgumentException("Bạn đã báo cáo post này rồi");
 
-        PostReport report = PostReportMapper.toEntity(dto, user, post);
+        PostReport report = postReportMapper.toEntity(dto, user, post);
         PostReport saved = postReportRepo.save(report);
-        return PostReportMapper.toDto(saved);
+        return postReportMapper.toDto(saved);
     }
 
     public void delete(Long id) {
@@ -63,4 +64,3 @@ public class PostReportService {
         postReportRepo.delete(report);
     }
 }
-
