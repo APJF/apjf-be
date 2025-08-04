@@ -27,6 +27,7 @@ public class MaterialService {
     private final UnitRepository unitRepository;
     private final ApprovalRequestService approvalRequestService;
     private final MaterialMapper materialMapper;
+    private final MinioService minioService; // Thêm MinioService injection
 
     private static final String UNIT_NOT_FOUND_PREFIX = "Không tìm thấy bài học với ID: ";
     private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
@@ -37,7 +38,7 @@ public class MaterialService {
     @Transactional(readOnly = true)
     public List<MaterialResponseDto> findAll() {
         return materialRepository.findAll().stream()
-                .map(materialMapper::toDto)
+                .map(this::toDtoWithPresignedUrl)
                 .toList();
     }
 
@@ -51,15 +52,38 @@ public class MaterialService {
         }
 
         return materials.stream()
-                .map(materialMapper::toDto)
+                .map(this::toDtoWithPresignedUrl)
                 .toList();
     }
 
-
     @Transactional(readOnly = true)
     public MaterialResponseDto findById(String id) {
-        return materialMapper.toDto(materialRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id)));
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
+        return toDtoWithPresignedUrl(material);
+    }
+
+    // Helper method để map Material entity sang DTO với presigned URL
+    private MaterialResponseDto toDtoWithPresignedUrl(Material material) {
+        MaterialResponseDto dto = materialMapper.toDto(material);
+
+        String fileUrl = dto.fileUrl();
+        if (fileUrl != null && !fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
+            try {
+                fileUrl = minioService.getDocumentUrl(fileUrl);
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for document {}: {}", fileUrl, e.getMessage());
+                // Giữ nguyên object name nếu có lỗi
+            }
+        }
+
+        return new MaterialResponseDto(
+            dto.id(),
+            fileUrl,
+            dto.type(),
+            dto.script(),
+            dto.translation()
+        );
     }
 
     public MaterialResponseDto create(@Valid MaterialRequestDto dto, String unitId, Long staffId) {
