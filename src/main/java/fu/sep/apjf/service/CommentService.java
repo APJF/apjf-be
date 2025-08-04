@@ -3,10 +3,12 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.CommentRequestDto;
 import fu.sep.apjf.dto.response.CommentResponseDto;
 import fu.sep.apjf.entity.Comment;
+import fu.sep.apjf.entity.Notification;
 import fu.sep.apjf.entity.Post;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.CommentMapper;
 import fu.sep.apjf.repository.CommentRepository;
+import fu.sep.apjf.repository.NotificationRepository;
 import fu.sep.apjf.repository.PostRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,6 +30,7 @@ public class CommentService {
     private final CommentRepository commentRepo;
     private final PostRepository postRepo;
     private final UserRepository userRepo;
+    private final NotificationRepository notificationRepo;
     private final CommentMapper commentMapper;
 
     @Transactional(readOnly = true)
@@ -52,6 +56,19 @@ public class CommentService {
 
         Comment comment = commentMapper.toEntity(dto, user, post);
         Comment saved = commentRepo.save(comment);
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            Notification notification = Notification.builder()
+                    .content(user.getUsername() + " đã bình luận bài viết của bạn: " + comment.getContent())
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .sender(user)
+                    .recipient(post.getUser()) // Chủ post là người nhận
+                    .post(post)
+                    .build();
+
+            notificationRepo.save(notification);
+        }
         return commentMapper.toDto(saved);
     }
 
