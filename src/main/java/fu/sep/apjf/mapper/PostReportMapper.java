@@ -5,42 +5,23 @@ import fu.sep.apjf.dto.response.PostReportResponseDto;
 import fu.sep.apjf.entity.Post;
 import fu.sep.apjf.entity.PostReport;
 import fu.sep.apjf.entity.User;
+import org.mapstruct.*;
 
-public final class PostReportMapper {
+@Mapper(componentModel = "spring")
+public interface PostReportMapper {
 
-    private PostReportMapper() {}
+    @Mapping(target = "id", expression = "java(String.valueOf(report.getId()))")
+    @Mapping(target = "userId", expression = "java(report.getUser() != null ? String.valueOf(report.getUser().getId()) : null)")
+    @Mapping(target = "postId", expression = "java(report.getPost() != null ? String.valueOf(report.getPost().getId()) : null)")
+    PostReportResponseDto toDto(PostReport report);
 
-    public static PostReportResponseDto toDto(PostReport report) {
-        if (report == null) return null;
+    @Mapping(target = "id", expression = "java(report.getId() != null ? String.valueOf(report.getId()) : null)")
+    @Mapping(target = "userId", expression = "java(report.getUser() != null ? String.valueOf(report.getUser().getId()) : null)")
+    @Mapping(target = "postId", expression = "java(report.getPost() != null ? String.valueOf(report.getPost().getId()) : null)")
+    PostReportRequestDto toRequestDto(PostReport report);
 
-        return new PostReportResponseDto(
-                String.valueOf(report.getId()),
-                report.getContent(),
-                report.getCreatedAt(),
-                report.getUser() != null ? String.valueOf(report.getUser().getId()) : null,
-                report.getPost() != null ? String.valueOf(report.getPost().getId()) : null
-        );
-    }
-
-    public static PostReportRequestDto toRequestDto(PostReport report) {
-        if (report == null) return null;
-
-        return new PostReportRequestDto(
-                String.valueOf(report.getId()),
-                report.getContent(),
-                report.getUser() != null ? String.valueOf(report.getUser().getId()) : null,
-                report.getPost() != null ? String.valueOf(report.getPost().getId()) : null
-        );
-    }
-
-    public static PostReport toEntity(PostReportRequestDto dto, User user, Post post) {
-        if (dto == null) return null;
-
-        PostReport report = new PostReport();
-        report.setId(dto.id() != null ? Long.parseLong(dto.id()) : null);
-        report.setContent(dto.content());
-        report.setUser(user);
-        report.setPost(post);
-        return report;
-    }
+    @Mapping(target = "id", expression = "java(dto.id() != null ? Long.parseLong(dto.id()) : null)")
+    @Mapping(target = "user", source = "user")
+    @Mapping(target = "post", source = "post")
+    PostReport toEntity(PostReportRequestDto dto, @Context User user, @Context Post post);
 }

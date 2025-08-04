@@ -7,63 +7,67 @@ import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.PostMapper;
 import fu.sep.apjf.repository.PostRepository;
 import fu.sep.apjf.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
-@Slf4j
 public class PostService {
 
-    private final PostRepository postRepo;
-    private final UserRepository userRepo;
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final PostMapper postMapper;
 
-    @Transactional(readOnly = true)
-    public List<PostResponseDto> list() {
-        return postRepo.findAll()
-                .stream()
-                .map(PostMapper::toDto)
-                .toList();
+    // ✅ Create new post
+    public PostResponseDto createPost(PostRequestDto dto, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Post post = postMapper.toEntity(dto);
+        post.setUser(user);
+        postRepository.save(post);
+
+        return postMapper.toDto(post, userId);
     }
 
-    @Transactional(readOnly = true)
-    public PostResponseDto get(Long id) {
-        return PostMapper.toDto(
-                postRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"))
-        );
+    // ✅ Get post by ID
+    public PostResponseDto getPost(Long postId, Long currentUserId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        return postMapper.toDto(post, currentUserId);
     }
 
-    public PostResponseDto create(@Valid PostRequestDto dto,Long userId) {
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
-
-        Post post = PostMapper.toEntity(dto, user);
-        Post saved = postRepo.save(post);
-        return PostMapper.toDto(saved);
+    // ✅ Get all posts
+    public List<PostResponseDto> getAllPosts(Long currentUserId) {
+        return postRepository.findAll().stream()
+                .map(post -> postMapper.toDto(post, currentUserId))
+                .collect(Collectors.toList());
     }
 
-    public PostResponseDto update(Long id, @Valid PostRequestDto dto,Long userId) {
-        Post post = postRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));
+    // ✅ Update post content
+    public PostResponseDto updatePost(Long postId, PostRequestDto dto, Long currentUserId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        post.setContent(dto.content());
-        post.setUser(userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User không tồn tại")));
+        if (dto.content() != null) {
+            post.setContent(dto.content());
+        }
 
-        Post saved = postRepo.save(post);
-        return PostMapper.toDto(saved);
+        postRepository.save(post);
+        return postMapper.toDto(post, currentUserId);
     }
 
-    public void delete(Long id) {
-        Post post = postRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));
-        postRepo.delete(post);
+    // ✅ Delete post
+    public void deletePost(Long postId, Long currentUserId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // Optionally check ownership here
+        postRepository.delete(post);
     }
 }

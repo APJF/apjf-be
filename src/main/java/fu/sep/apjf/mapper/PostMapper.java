@@ -1,51 +1,28 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.PostRequestDto;
-import fu.sep.apjf.dto.response.CommentResponseDto;
 import fu.sep.apjf.dto.response.PostResponseDto;
 import fu.sep.apjf.entity.Post;
-import fu.sep.apjf.entity.User;
+import org.mapstruct.*;
+import org.mapstruct.factory.Mappers;
 
-import java.util.List;
-import java.util.stream.Collectors;
+@Mapper(componentModel = "spring", uses = {CommentMapper.class})
+public interface PostMapper {
 
-public final class PostMapper {
+    PostMapper INSTANCE = Mappers.getMapper(PostMapper.class);
 
-    private PostMapper() {}
+    @Mapping(target = "id", expression = "java(String.valueOf(post.getId()))")
+    @Mapping(target = "email", source = "post.user.email")
+    @Mapping(target = "avatar", source = "post.user.avatar")
+    @Mapping(target = "comments", source = "post.comments")
+    @Mapping(target = "likeCount", expression = "java(post.getPostLikes() != null ? post.getPostLikes().size() : 0)")
+    @Mapping(target = "liked", expression = "java(post.getPostLikes().stream().anyMatch(like -> Objects.equals(like.getUser().getId(), currentUserId)))")
+    PostResponseDto toDto(Post post, @Context Long currentUserId);
 
-    public static PostResponseDto toDto(Post post) {
-        if (post == null) return null;
-
-        List<CommentResponseDto> commentDtos = post.getComments().stream()
-                .map(CommentMapper::toDto)
-                .collect(Collectors.toList());
-
-        return new PostResponseDto(
-                String.valueOf(post.getId()),
-                post.getContent(),
-                post.getCreatedAt(),
-                post.getUser().getEmail(),
-                post.getUser().getAvatar(),
-                commentDtos
-        );
-    }
-
-    public static PostRequestDto toRequestDto(Post post) {
-        if (post == null) return null;
-
-        return new PostRequestDto(
-                String.valueOf(post.getId()),
-                post.getContent()
-        );
-    }
-
-    public static Post toEntity(PostRequestDto dto, User user) {
-        if (dto == null) return null;
-
-        Post post = new Post();
-        post.setId(dto.id() != null ? Long.parseLong(dto.id()) : null);
-        post.setContent(dto.content());
-        post.setUser(user);
-        return post;
-    }
+    @Mapping(target = "id", expression = "java(dto.id() != null ? Long.parseLong(dto.id()) : null)")
+    @Mapping(target = "user", ignore = true) // cần set bằng tay
+    @Mapping(target = "comments", ignore = true)
+    @Mapping(target = "postLikes", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    Post toEntity(PostRequestDto dto);
 }

@@ -5,43 +5,24 @@ import fu.sep.apjf.dto.response.CommentResponseDto;
 import fu.sep.apjf.entity.Comment;
 import fu.sep.apjf.entity.Post;
 import fu.sep.apjf.entity.User;
+import org.mapstruct.*;
 
-public final class CommentMapper {
+@Mapper(componentModel = "spring")
+public interface CommentMapper {
 
-    private CommentMapper() {}
+    @Mapping(target = "id", expression = "java(String.valueOf(comment.getId()))")
+    @Mapping(target = "email", expression = "java(comment.getUser() != null ? comment.getUser().getEmail() : null)")
+    @Mapping(target = "avatar", expression = "java(comment.getUser() != null ? comment.getUser().getAvatar() : null)")
+    @Mapping(target = "postId", expression = "java(comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null)")
+    CommentResponseDto toDto(Comment comment);
 
-    public static CommentResponseDto toDto(Comment comment) {
-        if (comment == null) return null;
+    @Mapping(target = "id", expression = "java(comment.getId() != null ? String.valueOf(comment.getId()) : null)")
+    @Mapping(target = "userId", expression = "java(comment.getUser() != null ? String.valueOf(comment.getUser().getId()) : null)")
+    @Mapping(target = "postId", expression = "java(comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null)")
+    CommentRequestDto toRequestDto(Comment comment);
 
-        return new CommentResponseDto(
-                String.valueOf(comment.getId()),
-                comment.getContent(),
-                comment.getCreatedAt(),
-                comment.getUser() != null ? String.valueOf(comment.getUser().getEmail()) : null,
-                comment.getUser() != null ? String.valueOf(comment.getUser().getAvatar()) : null,
-                comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null
-        );
-    }
-
-    public static CommentRequestDto toRequestDto(Comment comment) {
-        if (comment == null) return null;
-
-        return new CommentRequestDto(
-                String.valueOf(comment.getId()),
-                comment.getContent(),
-                comment.getUser() != null ? String.valueOf(comment.getUser().getId()) : null,
-                comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null
-        );
-    }
-
-    public static Comment toEntity(CommentRequestDto dto, User user, Post post) {
-        if (dto == null) return null;
-
-        Comment comment = new Comment();
-        comment.setId(dto.id() != null ? Long.parseLong(dto.id()) : null);
-        comment.setContent(dto.content());
-        comment.setUser(user);
-        comment.setPost(post);
-        return comment;
-    }
+    @Mapping(target = "id", expression = "java(dto.id() != null ? Long.parseLong(dto.id()) : null)")
+    @Mapping(target = "user", source = "user")
+    @Mapping(target = "post", source = "post")
+    Comment toEntity(CommentRequestDto dto, @Context User user, @Context Post post);
 }
