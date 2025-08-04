@@ -44,15 +44,6 @@ public class User implements UserDetails {
     @Column(name = "avatar")
     private String avatar;
 
-    @Column(name = "enabled")
-    private boolean enabled;
-
-    @Column(name = "email_verified")
-    private boolean emailVerified = true;
-
-    @Column(name = "vip_expiration")
-    private LocalDateTime vipExpiration;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "level")
     private EnumClass.Level level;
@@ -62,6 +53,15 @@ public class User implements UserDetails {
 
     @Column(name = "hobby")
     private String hobby;
+
+    @Column(name = "enabled")
+    private boolean enabled;
+
+    @Column(name = "email_verified")
+    private boolean emailVerified = true;
+
+    @Column(name = "vip_expiration")
+    private LocalDateTime vipExpiration;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_authority",
@@ -91,10 +91,10 @@ public class User implements UserDetails {
     private transient List<Review> courseReviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LearningPath> learningPaths = new ArrayList<>();
+    private transient List<LearningPath> learningPaths = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UnitProgress> unitProgresses = new HashSet<>();
+    private transient Set<UnitProgress> unitProgresses = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();

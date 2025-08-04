@@ -28,7 +28,7 @@ public class LearningPath {
     private String focusSkill;
 
     @Enumerated(EnumType.STRING)
-    private EnumClass.PathStatus status; // PASSED, STUDYING
+    private EnumClass.PathStatus status;
 
     private BigDecimal duration;
 

@@ -11,6 +11,10 @@ public class EnumClass {
         INACTIVE     // ngưng sử dụng
     }
 
+    public enum ExamType {
+        MULTIPLE_CHOICE, WRITING
+    }
+
     public enum QuestionType {
         MULTIPLE_CHOICE, TRUE_FALSE, WRITING
     }
@@ -32,6 +36,11 @@ public class EnumClass {
     }
 
     public enum PathStatus {
-        FINISHED, STUDYING
+        FINISHED, STUDYING, PENDING
     }
+
+    public enum GradingMethod {
+        MANUAL, AI
+    }
+
 }

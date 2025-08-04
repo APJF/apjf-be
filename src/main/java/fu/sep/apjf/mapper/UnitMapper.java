@@ -5,7 +5,7 @@ import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.Unit;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = {ExamSummaryMapper.class})
+@Mapper(componentModel = "spring", uses = {ExamOverviewMapper.class})
 public interface UnitMapper {
 
     // Mặc định không load exams (cho findAll)

@@ -32,6 +32,13 @@ public class Exam {
     @Column(name = "exam_scope_type")
     private EnumClass.ExamScopeType examScopeType;
 
+    @Enumerated(EnumType.STRING)
+    private EnumClass.ExamType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "grading_method")
+    private EnumClass.GradingMethod gradingMethod;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id")
     private Course course;

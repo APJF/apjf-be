@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = {ExamSummaryMapper.class})
+@Mapper(componentModel = "spring", uses = {ExamOverviewMapper.class})
 public interface CourseMapper {
 
     // Mặc định không load exams (cho findAll)

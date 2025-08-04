@@ -17,7 +17,7 @@ public record CourseResponseDto(
         EnumClass.Status status,
         String prerequisiteCourseId,
         Set<TopicDto> topics,
-        Set<ExamSummaryDto> exams,
+        Set<ExamOverviewResponseDto> exams,
         Double averageRating
 ) {
 }

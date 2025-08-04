@@ -15,6 +15,6 @@ public record ChapterResponseDto(
         String courseId,
         String prerequisiteChapterId,
         Set<UnitResponseDto> units,
-        Set<ExamSummaryDto> exams
+        Set<ExamOverviewResponseDto> exams
 ) {
 }

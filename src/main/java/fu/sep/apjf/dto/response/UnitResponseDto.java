@@ -11,6 +11,6 @@ public record UnitResponseDto(
         EnumClass.Status status,
         String chapterId,
         String prerequisiteUnitId,
-        Set<ExamSummaryDto> exams
+        Set<ExamOverviewResponseDto> exams
 ) {
 }

@@ -28,8 +28,6 @@ public class ExamResult {
 
     private Float score;
 
-    private String advice;
-
     @Enumerated(EnumType.STRING)
     private EnumClass.ExamStatus status;
 
