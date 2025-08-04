@@ -22,8 +22,23 @@ public class PostService {
     private final UserRepository userRepository;
     private final PostMapper postMapper;
 
+    // ✅ Get all posts
+    public List<PostResponseDto> list(Long currentUserId) {
+        return postRepository.findAll().stream()
+                .map(post -> postMapper.toDto(post, currentUserId))
+                .collect(Collectors.toList());
+    }
+
+    // ✅ Get post by ID
+    public PostResponseDto get(Long postId, Long currentUserId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        return postMapper.toDto(post, currentUserId);
+    }
+
     // ✅ Create new post
-    public PostResponseDto createPost(PostRequestDto dto, Long userId) {
+    public PostResponseDto create(PostRequestDto dto, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -34,23 +49,8 @@ public class PostService {
         return postMapper.toDto(post, userId);
     }
 
-    // ✅ Get post by ID
-    public PostResponseDto getPost(Long postId, Long currentUserId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-
-        return postMapper.toDto(post, currentUserId);
-    }
-
-    // ✅ Get all posts
-    public List<PostResponseDto> getAllPosts(Long currentUserId) {
-        return postRepository.findAll().stream()
-                .map(post -> postMapper.toDto(post, currentUserId))
-                .collect(Collectors.toList());
-    }
-
     // ✅ Update post content
-    public PostResponseDto updatePost(Long postId, PostRequestDto dto, Long currentUserId) {
+    public PostResponseDto update(Long postId, PostRequestDto dto, Long currentUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -63,11 +63,10 @@ public class PostService {
     }
 
     // ✅ Delete post
-    public void deletePost(Long postId, Long currentUserId) {
+    public void delete(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        // Optionally check ownership here
         postRepository.delete(post);
     }
 }

@@ -25,10 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.multipart.MultipartFile;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,7 +55,6 @@ public class UserService {
     private final MinioService minioService;
     private final UserMapper userMapper;
 
-    // Simplified method để tạo LoginResponseDto mới (chỉ token)
     private LoginResponseDto createLoginResponse(User user) {
         String accessToken = jwtUtils.generateJwtToken(user, false);
         String refreshToken = jwtUtils.generateJwtToken(user, true);
@@ -68,25 +66,25 @@ public class UserService {
         );
     }
 
-    // Method mới để lấy profile của user hiện tại
+    // Method để lấy profile với presigned avatar URL
     public UserResponseDto getProfile(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
         UserResponseDto userDto = userMapper.toDto(user);
 
-        // Xử lý avatar URL conversion tại đây
+        // Convert avatar object name thành presigned URL
         String avatarUrl = userDto.avatar();
-        if (avatarUrl != null) {
+        if (avatarUrl != null && !avatarUrl.trim().isEmpty() &&
+            !avatarUrl.startsWith("http://") && !avatarUrl.startsWith("https://")) {
             try {
                 avatarUrl = minioService.getAvatarUrl(avatarUrl);
             } catch (Exception e) {
-                log.error("Failed to generate avatar URL for user {}: {}", email, e.getMessage());
-                // Giữ nguyên avatar gốc nếu có lỗi
+                log.error("Failed to generate avatar presigned URL for user {}: {}", email, e.getMessage());
+                // Giữ nguyên object name nếu có lỗi
             }
         }
 
-        // Tạo UserResponseDto mới với avatar URL đã convert
         return new UserResponseDto(
             userDto.id(),
             userDto.email(),
@@ -96,7 +94,21 @@ public class UserService {
         );
     }
 
-    @Transactional
+    // Method mới để upload avatar với validation
+    public String uploadAvatar(MultipartFile file, String email) throws Exception {
+        // Upload file qua MinioService (đã có validation bên trong)
+        String objectName = minioService.uploadAvatar(file, email);
+
+        // Cập nhật avatar trong database
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
+        user.setAvatar(objectName);
+        userRepository.save(user);
+
+        return objectName;
+    }
+
+    // Method mới để login
     public LoginResponseDto login(LoginRequestDto loginDTO) {
         // 1. Kiểm tra email có tồn tại không
         User user = userRepository.findByEmailIgnoreCase(loginDTO.email())
@@ -286,7 +298,7 @@ public class UserService {
     /**
      * Phương thức tạo và gửi OTP với nhiều mục đích khác nhau
      *
-     * @param email Email của người dùng
+     * @param email     Email của người dùng
      * @param tokenType Loại OTP (TokenType.REGISTRATION, TokenType.RESET_PASSWORD)
      * @return Thông báo kết quả
      */

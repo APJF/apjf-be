@@ -27,34 +27,35 @@ public class CommentReportService {
     private final CommentReportRepository commentReportRepo;
     private final CommentRepository commentRepo;
     private final UserRepository userRepo;
+    private final CommentReportMapper commentReportMapper;
 
     @Transactional(readOnly = true)
     public List<CommentReportResponseDto> list() {
         return commentReportRepo.findAll()
                 .stream()
-                .map(CommentReportMapper::toDto)
+                .map(commentReportMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public CommentReportResponseDto get(Long id) {
-        return CommentReportMapper.toDto(
+        return commentReportMapper.toDto(
                 commentReportRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Comment report không tồn tại"))
         );
     }
 
     public CommentReportResponseDto create(@Valid CommentReportRequestDto dto) {
-        User user = userRepo.findById(Long.parseLong(dto.userId()))
+        User user = userRepo.findById(dto.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
-        Comment comment = commentRepo.findById(Long.parseLong(dto.commentId()))
+        Comment comment = commentRepo.findById(dto.commentId())
                 .orElseThrow(() -> new EntityNotFoundException("Comment không tồn tại"));
 
         if (commentReportRepo.existsByUserIdAndCommentId(user.getId(), comment.getId()))
             throw new IllegalArgumentException("Bạn đã báo cáo comment này rồi");
 
-        CommentReport report = CommentReportMapper.toEntity(dto, user, comment);
+        CommentReport report = commentReportMapper.toEntity(dto, user, comment);
         CommentReport saved = commentReportRepo.save(report);
-        return CommentReportMapper.toDto(saved);
+        return commentReportMapper.toDto(saved);
     }
 
     public void delete(Long id) {
@@ -63,4 +64,3 @@ public class CommentReportService {
         commentReportRepo.delete(report);
     }
 }
-

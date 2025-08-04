@@ -55,6 +55,17 @@ public class MinioService {
 
     // Optimize uploadAvatar method
     public String uploadAvatar(MultipartFile file, String username) throws Exception {
+        // Validate file type - chỉ cho phép ảnh
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, etc.)");
+        }
+
+        // Validate file size (5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
+        }
+
         createBucketIfNotExists(avatarBucket);
         String objectName = username + "_avatar_" + UUID.randomUUID();
         uploadFile(avatarBucket, objectName, file);
@@ -66,10 +77,19 @@ public class MinioService {
         return getPresignedUrl(avatarBucket, objectName, 7, TimeUnit.DAYS);
     }
 
-    // Optimize uploadDocument method
+    // Optimize uploadDocument method - cho phép mọi file type
     public String uploadDocument(MultipartFile file, String username) throws Exception {
+        // Validate file size (50MB cho documents)
+        if (file.getSize() > 50 * 1024 * 1024) {
+            throw new IllegalArgumentException("Kích thước file không được vượt quá 50MB");
+        }
+
         createBucketIfNotExists(documentBucket);
-        String objectName = username + "_doc_" + UUID.randomUUID() + ".pdf";
+        String originalFilename = file.getOriginalFilename();
+        String extension = originalFilename != null && originalFilename.contains(".")
+            ? originalFilename.substring(originalFilename.lastIndexOf("."))
+            : "";
+        String objectName = username + "_doc_" + UUID.randomUUID() + extension;
         uploadFile(documentBucket, objectName, file);
         return objectName;
     }
@@ -80,6 +100,17 @@ public class MinioService {
     }
 
     public String uploadCourseImage(MultipartFile file) throws Exception {
+        // Validate file type - chỉ cho phép ảnh
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, etc.)");
+        }
+
+        // Validate file size (5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
+        }
+
         createBucketIfNotExists(courseImageBucket);
         String objectName = "course_image_" + UUID.randomUUID();
         uploadFile(courseImageBucket, objectName, file);

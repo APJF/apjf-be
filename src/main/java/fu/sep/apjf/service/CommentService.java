@@ -27,31 +27,32 @@ public class CommentService {
     private final CommentRepository commentRepo;
     private final PostRepository postRepo;
     private final UserRepository userRepo;
+    private final CommentMapper commentMapper;
 
     @Transactional(readOnly = true)
     public List<CommentResponseDto> list() {
         return commentRepo.findAll()
                 .stream()
-                .map(CommentMapper::toDto)
+                .map(commentMapper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public CommentResponseDto get(Long id) {
-        return CommentMapper.toDto(
+        return commentMapper.toDto(
                 commentRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Comment không tồn tại"))
         );
     }
 
     public CommentResponseDto create(@Valid CommentRequestDto dto) {
-        User user = userRepo.findById(Long.parseLong(dto.userId()))
+        User user = userRepo.findById(dto.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
-        Post post = postRepo.findById(Long.parseLong(dto.postId()))
+        Post post = postRepo.findById(dto.postId())
                 .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));
 
-        Comment comment = CommentMapper.toEntity(dto, user, post);
+        Comment comment = commentMapper.toEntity(dto, user, post);
         Comment saved = commentRepo.save(comment);
-        return CommentMapper.toDto(saved);
+        return commentMapper.toDto(saved);
     }
 
     public CommentResponseDto update(Long id, @Valid CommentRequestDto dto) {
@@ -59,13 +60,13 @@ public class CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment không tồn tại"));
 
         comment.setContent(dto.content());
-        comment.setUser(userRepo.findById(Long.parseLong(dto.userId()))
+        comment.setUser(userRepo.findById(dto.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại")));
-        comment.setPost(postRepo.findById(Long.parseLong(dto.postId()))
+        comment.setPost(postRepo.findById(dto.postId())
                 .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại")));
 
         Comment updated = commentRepo.save(comment);
-        return CommentMapper.toDto(updated);
+        return commentMapper.toDto(updated);
     }
 
     public void delete(Long id) {
@@ -74,4 +75,3 @@ public class CommentService {
         commentRepo.delete(comment);
     }
 }
-
