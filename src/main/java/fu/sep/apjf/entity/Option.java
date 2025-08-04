@@ -22,14 +22,10 @@ public class Option {
     @Column(name = "is_correct")
     private Boolean isCorrect;
 
-    /* ==== Quan hệ ==== */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private Question question;
 
-    /**
-     * 1‑N ngược với ExamResultDetail (khi học sinh chọn)
-     */
     @OneToMany(mappedBy = "selectedOption")
     @Builder.Default
     private List<ExamResultDetail> selectedByAnswers = new ArrayList<>();

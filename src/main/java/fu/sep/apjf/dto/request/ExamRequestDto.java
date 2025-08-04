@@ -1,24 +1,27 @@
 package fu.sep.apjf.dto.request;
 
 import fu.sep.apjf.entity.EnumClass;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-//tao hoac cap nhat bai thi
 public record ExamRequestDto(
-        @NotBlank(message = "ID bài kiểm tra không được để trống")
         String id,
-        @NotBlank(message = "Tên bài kiểm tra không được để trống")
         String title,
         String description,
-        @NotNull(message = "Thời gian kiểm tra không được để trống")
         Double duration,
-        @NotNull(message = "Dạng bài kiểm tra không được để trống")
+        EnumClass.ExamType type,
         EnumClass.ExamScopeType examScopeType,
+        EnumClass.GradingMethod gradingMethod,
         String courseId,
         String chapterId,
         String unitId,
-        List<String>questionIds
-) {}
+        List<String> questionIds
+) {
+        public static ExamRequestDto of(String id, String title, String description, Double duration,
+                                        EnumClass.ExamType type, EnumClass.ExamScopeType scope,
+                                        EnumClass.GradingMethod gradingMethod,
+                                        String courseId, String chapterId, String unitId, List<String> questionIds) {
+                return new ExamRequestDto(id, title, description, duration, type, scope, gradingMethod,
+                        courseId, chapterId, unitId, questionIds);
+        }
+}

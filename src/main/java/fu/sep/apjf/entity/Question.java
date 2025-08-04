@@ -22,13 +22,9 @@ public class Question {
 
     private String content;
 
-    @Column(name = "correct_answer")
-    private String correctAnswer;  // với dạng tự luận; nếu chỉ MCQ thì bỏ
-
     @Column(name = "scope")
     @Enumerated(EnumType.STRING)
     private EnumClass.QuestionScope scope;
-
 
     @Enumerated(EnumType.STRING)
     private EnumClass.QuestionType type;
@@ -42,32 +38,18 @@ public class Question {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    /* ==== Quan hệ ==== */
-
-    /**
-     * N‑N với Exam qua bảng trung gian exam_questions
-     */
     @ManyToMany(mappedBy = "questions")
     @Builder.Default
     private List<Exam> exams = new ArrayList<>();
 
-    /**
-     * 1‑N với QuestionOption
-     */
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Option> options = new ArrayList<>();
 
-    /**
-     * 1‑N với ExamResultDetail
-     */
     @OneToMany(mappedBy = "question")
     @Builder.Default
     private List<ExamResultDetail> examResultDetails = new ArrayList<>();
 
-    /**
-     * N‑N với Unit
-     */
     @ManyToMany
     @JoinTable(
         name = "question_unit",

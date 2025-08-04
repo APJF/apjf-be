@@ -83,7 +83,6 @@ public class QuestionService {
         Question question = Question.builder()
                 .id(UUID.randomUUID().toString())
                 .content(questionDto.content())
-                .correctAnswer(questionDto.correctAnswer())
                 .type(questionDto.type())
                 .scope(questionDto.scope())
                 .build();
@@ -111,7 +110,6 @@ public class QuestionService {
                 .orElseThrow(() -> new RuntimeException("Question not found: " + id));
 
         question.setContent(questionDto.content());
-        question.setCorrectAnswer(questionDto.correctAnswer());
         question.setType(questionDto.type());
         question.setScope(questionDto.scope());
 

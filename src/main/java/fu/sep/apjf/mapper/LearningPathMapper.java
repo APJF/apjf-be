@@ -21,7 +21,7 @@ public interface LearningPathMapper {
     @Mapping(target = "targetLevel", source = "targetLevel", qualifiedByName = "stringToLevel")
     @Mapping(target = "duration", source = "duration", qualifiedByName = "bigDecimalToInteger")
     @Mapping(target = "status", source = "status")
-    @Mapping(target = "courses", ignore = true) // tạm ignore vì chưa gán ở đây
+    @Mapping(target = "courses", ignore = true)
     LearningPathResponseDto toDto(LearningPath learningPath);
 
     // Map từ request DTO sang entity khi tạo mới
@@ -63,8 +63,6 @@ public interface LearningPathMapper {
         );
     }
 
-
-    // Helpers
     @Named("stringToLevel")
     default EnumClass.Level stringToLevel(String targetLevel) {
         if (targetLevel == null) return null;

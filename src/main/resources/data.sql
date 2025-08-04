@@ -23,23 +23,23 @@ VALUES ('IT'),
 
 /* ---------- COURSE (Simple version for testing) ---------- */
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD113', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 1', 150, 'N5', 'ACTIVE', null, null);
+('JPD113', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 1', 150, 'N5', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD123', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 2', 150, 'N5', 'ACTIVE', null, null);
+('JPD123', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 2', 150, 'N5', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD126', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 3', 300, 'N5', 'ACTIVE', null, null);
+('JPD126', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 3', 300, 'N5', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD216', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 1', 300, 'N4', 'ACTIVE', null, null);
+('JPD216', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 1', 300, 'N4', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD226', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 2', 300, 'N4', 'ACTIVE', null, null);
+('JPD226', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 2', 300, 'N4', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD316', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 1', 300, 'N3', 'ACTIVE', null, null);
+('JPD316', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 1', 300, 'N3', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD326', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 2', 300, 'N3', 'ACTIVE', null, null);
+('JPD326', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 2', 300, 'N3', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD336', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 3', 300, 'N3', 'ACTIVE', null, null);
+('JPD336', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 3', 300, 'N3', 'ACTIVE', null, null, null);
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD346', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 4', 300, 'N3', 'ACTIVE', null, null);
+('JPD346', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 4', 300, 'N3', 'ACTIVE', null, null, null);
 
 /* ---------- CHAPTER ---------- */
 INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
