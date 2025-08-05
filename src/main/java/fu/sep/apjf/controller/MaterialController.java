@@ -43,7 +43,7 @@ public class MaterialController {
     public ResponseEntity<ApiResponseDto<MaterialResponseDto>> create(
             @Valid @RequestBody MaterialRequestDto dto,
             @AuthenticationPrincipal User user) {
-        MaterialResponseDto created = materialService.create(dto, null, user.getId());
+        MaterialResponseDto created = materialService.create(dto,  user.getId());
         return ResponseEntity.created(URI.create("/api/materials/" + created.id()))
                 .body(ApiResponseDto.ok("Tạo tài liệu thành công", created));
     }
