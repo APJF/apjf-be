@@ -1,4 +1,5 @@
 package fu.sep.apjf.service;
+
 import fu.sep.apjf.dto.request.MaterialRequestDto;
 import fu.sep.apjf.dto.response.MaterialResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,14 +23,13 @@ import java.util.UUID;
 @Slf4j
 public class MaterialService {
 
+    private static final String UNIT_NOT_FOUND_PREFIX = "Không tìm thấy bài học với ID: ";
+    private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
     private final MaterialRepository materialRepository;
     private final UnitRepository unitRepository;
     private final ApprovalRequestService approvalRequestService;
     private final MaterialMapper materialMapper;
     private final MinioService minioService; // Thêm MinioService injection
-
-    private static final String UNIT_NOT_FOUND_PREFIX = "Không tìm thấy bài học với ID: ";
-    private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
 
     /**
      * Tìm tất cả tài liệu dạng list
@@ -74,7 +73,7 @@ public class MaterialService {
     private MaterialResponseDto convertFileUrl(MaterialResponseDto dto) {
         String fileUrl = dto.fileUrl();
         if (fileUrl != null && !fileUrl.trim().isEmpty() &&
-            !fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
+                !fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
             try {
                 fileUrl = minioService.getDocumentUrl(fileUrl);
             } catch (Exception e) {
@@ -84,21 +83,21 @@ public class MaterialService {
         }
 
         return new MaterialResponseDto(
-            dto.id(),
-            fileUrl,
-            dto.type(),
-            dto.script(),
-            dto.translation()
+                dto.id(),
+                fileUrl,
+                dto.type(),
+                dto.script(),
+                dto.translation()
         );
     }
 
-    public MaterialResponseDto create(@Valid MaterialRequestDto dto, String unitId, Long staffId) {
+    public MaterialResponseDto create(@Valid MaterialRequestDto dto, Long staffId) {
         log.info("Nhân viên {} tạo tài liệu mới", staffId);
 
-        Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + unitId));
+        Unit unit = unitRepository.findById(dto.unitId())
+                .orElseThrow(() -> new ResourceNotFoundException(UNIT_NOT_FOUND_PREFIX + dto.unitId()));
 
-        String materialId = dto.id() != null ? dto.id() : UUID.randomUUID().toString();
+        String materialId = dto.id();
 
         Material material = materialMapper.toEntity(dto, unit);
         material.setId(materialId);
@@ -149,6 +148,13 @@ public class MaterialService {
 
         log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
         return materialMapper.toDto(savedMaterial);
+    }
+
+    @Transactional
+    public void delete(String id) {
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
+        materialRepository.delete(material);
     }
 
 }

@@ -22,12 +22,14 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,6 +57,9 @@ public class UserService {
     private final MinioService minioService;
     private final UserMapper userMapper;
 
+    @Value("${app.jwt.jwtExpirationMs:3600000}")
+    private long jwtExpirationMs;
+
     private LoginResponseDto createLoginResponse(User user) {
         String accessToken = jwtUtils.generateJwtToken(user, false);
         String refreshToken = jwtUtils.generateJwtToken(user, true);
@@ -62,7 +67,8 @@ public class UserService {
         return new LoginResponseDto(
                 accessToken,
                 refreshToken,
-                "Bearer"
+                "Bearer",
+                jwtExpirationMs
         );
     }
 
@@ -76,7 +82,7 @@ public class UserService {
         // Convert avatar object name thành presigned URL
         String avatarUrl = userDto.avatar();
         if (avatarUrl != null && !avatarUrl.trim().isEmpty() &&
-            !avatarUrl.startsWith("http://") && !avatarUrl.startsWith("https://")) {
+                !avatarUrl.startsWith("http://") && !avatarUrl.startsWith("https://")) {
             try {
                 avatarUrl = minioService.getAvatarUrl(avatarUrl);
             } catch (Exception e) {
@@ -86,11 +92,11 @@ public class UserService {
         }
 
         return new UserResponseDto(
-            userDto.id(),
-            userDto.email(),
-            userDto.username(),
-            avatarUrl,
-            userDto.authorities()
+                userDto.id(),
+                userDto.email(),
+                userDto.username(),
+                avatarUrl,
+                userDto.authorities()
         );
     }
 

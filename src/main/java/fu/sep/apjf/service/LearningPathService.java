@@ -37,8 +37,8 @@ public class LearningPathService {
     }
 
     @Transactional
-    public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto) {
-        User user = userRepository.findById(dto.userId()).orElseThrow();
+    public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
         if (dto.courseIds() == null || dto.courseIds().isEmpty()) {
             throw new IllegalArgumentException("Phải chọn ít nhất một khóa học cho lộ trình.");
         }
@@ -57,8 +57,8 @@ public class LearningPathService {
     }
 
     @Transactional
-    public LearningPathResponseDto updateLearningPath(LearningPathRequestDto dto) {
-        LearningPath path = learningPathRepository.findById(dto.id()).orElseThrow();
+    public LearningPathResponseDto updateLearningPath(Long id, LearningPathRequestDto dto, Long userId) {
+        LearningPath path = learningPathRepository.findById(id).orElseThrow();
 
         path.setTitle(dto.title());
         path.setDescription(dto.description());
@@ -98,19 +98,25 @@ public class LearningPathService {
                 .toList();
     }
 
-    public void addCourseToLearningPath(CourseOrderDto dto) {
+    public void addCourseToLearningPath(Long learningPathId, CourseOrderDto dto) {
         Course course = courseRepository.findById(dto.courseId()).orElseThrow();
-        LearningPath path = learningPathRepository.findById(dto.learningPathId()).orElseThrow();
+        LearningPath path = learningPathRepository.findById(learningPathId).orElseThrow();
 
         boolean exists = courseLearningPathRepository
-                .findByLearningPathId(path.getId()).stream()
+                .findByLearningPathId(learningPathId).stream()
                 .anyMatch(clp -> clp.getCourse().getId().equals(dto.courseId()));
 
         if (exists) {
             throw new IllegalArgumentException("Khóa học đã tồn tại trong lộ trình.");
         }
 
-        CourseLearningPath entity = courseLearningPathMapper.toEntity(dto, course, path);
+        // Tạo CourseLearningPath với learningPathId từ parameter, không từ DTO
+        CourseLearningPath entity = new CourseLearningPath(
+            new CourseLearningPathKey(dto.courseId(), learningPathId),
+            course,
+            path,
+            dto.courseOrderNumber()
+        );
         courseLearningPathRepository.save(entity);
     }
 
@@ -129,17 +135,6 @@ public class LearningPathService {
         learningPathRepository.save(path);
     }
 
-    public LearningPathResponseDto getActiveLearningPath(Long userId) {
-        LearningPath path = learningPathRepository
-                .findByUserIdAndStatus(userId, EnumClass.PathStatus.STUDYING)
-                .orElseThrow();
-
-        List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(path.getId()).stream()
-                .map(courseLearningPathMapper::toDto)
-                .toList();
-
-        return learningPathMapper.toResponseDto(path, courseDtos);
-    }
 
     @Transactional
     public void reorderCoursesInPath(Long pathId, List<String> courseIds) {
