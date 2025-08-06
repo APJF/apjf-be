@@ -67,4 +67,13 @@ public class MaterialController {
         String objectName = minioService.uploadDocument(file, user.getUsername());
         return ResponseEntity.ok(ApiResponseDto.ok("Upload file thành công", objectName));
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<ApiResponseDto<String>> delete(
+            @PathVariable String id,
+            @AuthenticationPrincipal User user) {
+        materialService.delete(id);
+        return ResponseEntity.ok(ApiResponseDto.ok("Xóa tài liệu thành công", null));
+    }
 }
