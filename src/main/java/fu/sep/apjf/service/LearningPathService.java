@@ -119,7 +119,7 @@ public class LearningPathService {
     }
 
     @Transactional
-    public void setActiveLearningPath(Long userId, Long learningPathId) {
+    public void setStudyingLearningPath(Long userId, Long learningPathId) {
         learningPathRepository.updateStatusByUserIdAndStatus(
                 userId, EnumClass.PathStatus.STUDYING, EnumClass.PathStatus.PENDING
         );

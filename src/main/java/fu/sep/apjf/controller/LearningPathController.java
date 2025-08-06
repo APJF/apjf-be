@@ -62,11 +62,11 @@ public class LearningPathController {
     }
 
     // Đặt lộ trình học là đang theo dõi (STUDYING)
-    @PutMapping("/{learningPathId}/active")
-    public ResponseEntity<ApiResponseDto<Void>> setActive(
+    @PutMapping("/{learningPathId}/studying")
+    public ResponseEntity<ApiResponseDto<Void>> setStudying(
             @PathVariable Long learningPathId,
             @RequestParam Long userId) {
-        learningPathService.setActiveLearningPath(userId, learningPathId);
+        learningPathService.setStudyingLearningPath(userId, learningPathId);
         return ResponseEntity.ok(ApiResponseDto.ok("Đã chọn lộ trình học để theo dõi", null));
     }
 

@@ -1,5 +1,6 @@
 package fu.sep.apjf.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -62,5 +63,6 @@ public class Exam {
 
     @OneToMany(mappedBy = "exam")
     @Builder.Default
+    @JsonIgnore
     private List<ExamResult> results = new ArrayList<>();
 }

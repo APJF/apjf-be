@@ -6,7 +6,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -50,12 +52,13 @@ public class Question {
     @Builder.Default
     private List<ExamResultDetail> examResultDetails = new ArrayList<>();
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
-        name = "question_unit",
-        joinColumns = @JoinColumn(name = "question_id"),
-        inverseJoinColumns = @JoinColumn(name = "unit_id")
+            name = "question_unit",
+            joinColumns = @JoinColumn(name = "question_id"),
+            inverseJoinColumns = @JoinColumn(name = "unit_id")
     )
-    @Builder.Default
-    private List<Unit> units = new ArrayList<>();
+    private Set<Unit> units = new HashSet<>();
+
 }

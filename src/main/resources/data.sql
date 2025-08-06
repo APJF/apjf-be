@@ -2,6 +2,7 @@
    SEED DATA – CMS Service Test Data
    ============================ */
 
+
 /* ---------- AUTHORITIES ---------- */
 ALTER TABLE exam_result ADD COLUMN advice JSONB;
 

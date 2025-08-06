@@ -24,7 +24,7 @@ public class EnumClass {
     }
 
     public enum ExamStatus {
-        PASSED, FAILED, IN_PROGRESS
+        PASSED, FAILED, IN_PROGRESS, SUBMITTED
     }
 
     public enum QuestionScope {
