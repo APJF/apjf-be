@@ -4,9 +4,12 @@ import fu.sep.apjf.dto.request.LearningPathRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
 import fu.sep.apjf.dto.response.LearningPathResponseDto;
+import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.LearningPathService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,88 +21,76 @@ public class LearningPathController {
 
     private final LearningPathService learningPathService;
 
-    // Tạo lộ trình học
-    @PostMapping
-    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> create(@RequestBody LearningPathRequestDto dto) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Tạo lộ trình học thành công", learningPathService.createLearningPath(dto))
-        );
+    @GetMapping
+    public ResponseEntity<ApiResponseDto<List<LearningPathResponseDto>>> getUserLearningPaths(
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(ApiResponseDto.ok(
+            "Danh sách lộ trình học",
+            learningPathService.getLearningPathsByUser(user.getId())
+        ));
     }
 
-    // Cập nhật lộ trình học
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> update(
-            @PathVariable Long id,
-            @RequestBody LearningPathRequestDto dto) {
-        dto = new LearningPathRequestDto(id, dto.title(), dto.description(), dto.targetLevel(),
-                dto.primaryGoal(), dto.focusSkill(), dto.duration(), dto.userId(), dto.courseIds());
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Cập nhật lộ trình học thành công", learningPathService.updateLearningPath(dto))
-        );
-    }
-
-    // Xóa lộ trình học
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<Void>> delete(@PathVariable Long id) {
-        learningPathService.deleteLearningPath(id);
-        return ResponseEntity.ok(ApiResponseDto.ok("Xóa lộ trình học thành công", null));
-    }
-
-    // Lấy tất cả lộ trình của 1 người dùng
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponseDto<List<LearningPathResponseDto>>> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Danh sách lộ trình học của người dùng", learningPathService.getLearningPathsByUser(userId))
-        );
-    }
-
-    // Lấy lộ trình đang được theo dõi (status = STUDYING)
-    @GetMapping("/user/{userId}/active")
-    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> getActive(@PathVariable Long userId) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Lộ trình học hiện tại đang theo dõi", learningPathService.getActiveLearningPath(userId))
-        );
-    }
-
-    // Đặt lộ trình học là đang theo dõi (STUDYING)
-    @PutMapping("/{learningPathId}/active")
-    public ResponseEntity<ApiResponseDto<Void>> setActive(
-            @PathVariable Long learningPathId,
-            @RequestParam Long userId) {
-        learningPathService.setActiveLearningPath(userId, learningPathId);
-        return ResponseEntity.ok(ApiResponseDto.ok("Đã chọn lộ trình học để theo dõi", null));
-    }
-
-    // Thêm khóa học vào lộ trình
-    @PostMapping("/course")
-    public ResponseEntity<ApiResponseDto<Void>> addCourse(@RequestBody CourseOrderDto dto) {
-        learningPathService.addCourseToLearningPath(dto);
-        return ResponseEntity.ok(ApiResponseDto.ok("Thêm khóa học vào lộ trình thành công", null));
-    }
-
-    // Xóa khóa học khỏi lộ trình
-    @DeleteMapping("/course")
-    public ResponseEntity<ApiResponseDto<Void>> removeCourse(
-            @RequestParam String courseId,
-            @RequestParam Long learningPathId) {
-        learningPathService.removeCourseFromLearningPath(courseId, learningPathId);
-        return ResponseEntity.ok(ApiResponseDto.ok("Xóa khóa học khỏi lộ trình thành công", null));
-    }
-
-    // Lấy lộ trình theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết lộ trình học", learningPathService.getLearningPathById(id))
-        );
+    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> getLearningPathById(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponseDto.ok(
+            "Chi tiết lộ trình học",
+            learningPathService.getLearningPathById(id)
+        ));
     }
 
-    // Sắp xếp lại thứ tự khóa học trong lộ trình
+    @PostMapping
+    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> createLearningPath(
+            @Valid @RequestBody LearningPathRequestDto dto,
+            @AuthenticationPrincipal User user) {
+        LearningPathResponseDto created = learningPathService.createLearningPath(dto, user.getId());
+        return ResponseEntity.ok(ApiResponseDto.ok("Tạo lộ trình học thành công", created));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> updateLearningPath(
+            @PathVariable Long id,
+            @Valid @RequestBody LearningPathRequestDto dto,
+            @AuthenticationPrincipal User user) {
+        LearningPathResponseDto updated = learningPathService.updateLearningPath(id, dto, user.getId());
+        return ResponseEntity.ok(ApiResponseDto.ok("Cập nhật lộ trình học thành công", updated));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponseDto<String>> deleteLearningPath(@PathVariable Long id) {
+        learningPathService.deleteLearningPath(id);
+        return ResponseEntity.ok(ApiResponseDto.ok("Xóa lộ trình học thành công"));
+    }
+
+    @PutMapping("/{id}/active")
+    public ResponseEntity<ApiResponseDto<String>> setActiveLearningPath(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        learningPathService.setActiveLearningPath(user.getId(), id);
+        return ResponseEntity.ok(ApiResponseDto.ok("Đặt lộ trình học hoạt động thành công"));
+    }
+
     @PutMapping("/{id}/reorder")
-    public ResponseEntity<ApiResponseDto<Void>> reorderCourses(
+    public ResponseEntity<ApiResponseDto<String>> reorderCourses(
             @PathVariable Long id,
             @RequestBody List<String> courseIds) {
         learningPathService.reorderCoursesInPath(id, courseIds);
-        return ResponseEntity.ok(ApiResponseDto.ok("Đã cập nhật thứ tự khóa học trong lộ trình", null));
+        return ResponseEntity.ok(ApiResponseDto.ok("Sắp xếp lại khóa học thành công"));
+    }
+
+    @PostMapping("/{id}/courses")
+    public ResponseEntity<ApiResponseDto<String>> addCourse(
+            @PathVariable Long id,
+            @Valid @RequestBody CourseOrderDto dto) {
+        learningPathService.addCourseToLearningPath(id, dto);
+        return ResponseEntity.ok(ApiResponseDto.ok("Thêm khóa học vào lộ trình thành công"));
+    }
+
+    @DeleteMapping("/{id}/courses/{courseId}")
+    public ResponseEntity<ApiResponseDto<String>> removeCourse(
+            @PathVariable Long id,
+            @PathVariable String courseId) {
+        learningPathService.removeCourseFromLearningPath(courseId, id);
+        return ResponseEntity.ok(ApiResponseDto.ok("Xóa khóa học khỏi lộ trình học thành công"));
     }
 }

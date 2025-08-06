@@ -150,4 +150,11 @@ public class MaterialService {
         return materialMapper.toDto(savedMaterial);
     }
 
+    @Transactional
+    public void delete(String id) {
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MATERIAL_NOT_FOUND_PREFIX + id));
+        materialRepository.delete(material);
+    }
+
 }
