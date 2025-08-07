@@ -75,23 +75,28 @@ public class CourseService {
 
     public CourseResponseDto update(String currentId, CourseRequestDto dto, Long staffId) {
         // Kiểm tra course tồn tại
-        if (!courseRepository.existsById(currentId)) {
-            throw new EntityNotFoundException("Không tìm thấy khóa học");
-        }
+        Course existingCourse = courseRepository.findById(currentId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
 
-        // Sử dụng mapper để tạo course với thông tin mới
-        Course updatedCourse = courseMapper.toEntity(dto);
-        updatedCourse.setId(currentId); // Giữ nguyên ID
-        updatedCourse.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
+        // Cập nhật các trường của Course hiện có thay vì tạo mới
+        existingCourse.setTitle(dto.title());
+        existingCourse.setDescription(dto.description());
+        existingCourse.setDuration(dto.duration());
+        existingCourse.setLevel(dto.level());
+        existingCourse.setImage(dto.image());
+        existingCourse.setRequirement(dto.requirement());
+        existingCourse.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
 
-        // Set prerequisite course if provided
+        // Cập nhật prerequisite course
         if (dto.prerequisiteCourseId() != null) {
             Course prerequisite = courseRepository.findById(dto.prerequisiteCourseId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học tiên quyết"));
-            updatedCourse.setPrerequisiteCourse(prerequisite);
+            existingCourse.setPrerequisiteCourse(prerequisite);
+        } else {
+            existingCourse.setPrerequisiteCourse(null);
         }
 
-        Course savedCourse = courseRepository.save(updatedCourse);
+        Course savedCourse = courseRepository.save(existingCourse);
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.COURSE,
                 savedCourse.getId(),

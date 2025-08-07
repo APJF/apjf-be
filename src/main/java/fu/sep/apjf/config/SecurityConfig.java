@@ -56,6 +56,7 @@ public class SecurityConfig {
             "/api/exam-results/**",
             "/api/users/profile",
             "/api/users/avatar",
+            "/api/learning-paths/**",
             "/api/posts/**",
             "/api/comments/**"
     };

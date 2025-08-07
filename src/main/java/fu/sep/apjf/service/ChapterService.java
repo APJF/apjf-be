@@ -98,20 +98,28 @@ public class ChapterService {
         Chapter existingChapter = chapterRepo.findById(currentId)
                 .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND));
 
-        // Sử dụng mapper để tạo chapter với thông tin mới
-        Chapter updatedChapter = chapterMapper.toEntity(dto);
-        updatedChapter.setId(currentId); // Giữ nguyên ID
-        updatedChapter.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
-        updatedChapter.setCourse(existingChapter.getCourse()); // Giữ nguyên course
+        // Cập nhật các trường của Chapter hiện có thay vì tạo mới
+        existingChapter.setTitle(dto.title());
+        existingChapter.setDescription(dto.description());
+        existingChapter.setStatus(EnumClass.Status.INACTIVE); // Reset to INACTIVE when updated
 
-        // Set prerequisite chapter if provided
+        // Cập nhật course nếu khác
+        if (!existingChapter.getCourse().getId().equals(dto.courseId())) {
+            Course newCourse = courseRepo.findById(dto.courseId())
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+            existingChapter.setCourse(newCourse);
+        }
+
+        // Cập nhật prerequisite chapter
         if (dto.prerequisiteChapterId() != null) {
             Chapter prerequisite = chapterRepo.findById(dto.prerequisiteChapterId())
                     .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học tiên quyết"));
-            updatedChapter.setPrerequisiteChapter(prerequisite);
+            existingChapter.setPrerequisiteChapter(prerequisite);
+        } else {
+            existingChapter.setPrerequisiteChapter(null);
         }
 
-        Chapter savedChapter = chapterRepo.save(updatedChapter);
+        Chapter savedChapter = chapterRepo.save(existingChapter);
 
         approvalRequestService.autoCreateApprovalRequest(
                 ApprovalRequest.TargetType.CHAPTER,
