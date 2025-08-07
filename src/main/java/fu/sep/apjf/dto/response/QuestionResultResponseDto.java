@@ -7,6 +7,7 @@ public record QuestionResultResponseDto(
         String questionId,
         String questionContent,
         String explanation,
-        String selectedOptionId,
+        String selectedOptionId, // dùng cho MC
+        String userAnswer,       // dùng cho Writing
         boolean isCorrect
 ) {}

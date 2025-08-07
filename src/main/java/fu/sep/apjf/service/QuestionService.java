@@ -2,123 +2,65 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.QuestionRequestDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
-import fu.sep.apjf.entity.EnumClass;
-import fu.sep.apjf.entity.Option;
 import fu.sep.apjf.entity.Question;
+import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.mapper.QuestionMapper;
-import fu.sep.apjf.repository.OptionRepository;
 import fu.sep.apjf.repository.QuestionRepository;
-import jakarta.persistence.criteria.Predicate;
+import fu.sep.apjf.repository.UnitRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class QuestionService {
 
     private final QuestionRepository questionRepository;
-    private final OptionRepository optionRepository;
+    private final UnitRepository unitRepository;
     private final QuestionMapper questionMapper;
 
-    public Page<QuestionResponseDto> getAllQuestions(
-            int page, int size, String sort, String direction,
-            String keyword, EnumClass.QuestionType type,
-            EnumClass.QuestionScope scope) {
-
-        // Tạo đối tượng Pageable cho phân trang và sắp xếp
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc")
-                ? Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
-
-        // Tạo Specification để lọc dữ liệu
-        Specification<Question> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            // Lọc theo từ khóa (tìm trong nội dung và giải thích)
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                String keywordPattern = "%" + keyword.trim().toLowerCase() + "%";
-                Predicate contentPredicate = cb.like(cb.lower(root.get("content")), keywordPattern);
-                Predicate explanationPredicate = cb.like(cb.lower(root.get("explanation")), keywordPattern);
-                predicates.add(cb.or(contentPredicate, explanationPredicate));
-            }
-
-            // Lọc theo loại câu hỏi
-            if (type != null) {
-                predicates.add(cb.equal(root.get("type"), type));
-            }
-
-            // Lọc theo phạm vi câu hỏi
-            if (scope != null) {
-                predicates.add(cb.equal(root.get("scope"), scope));
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        // Thực hiện truy vấn với Specification và Pageable
-        Page<Question> questionsPage = questionRepository.findAll(spec, pageable);
-
-        // Chuyển đổi kết quả sang DTO
-        return questionsPage.map(questionMapper::toDto);
+    public QuestionResponseDto createQuestion(QuestionRequestDto dto) {
+        Set<Unit> units = dto.unitIds() == null ? Set.of() :
+                dto.unitIds().stream()
+                        .map(id -> unitRepository.findById(id).orElseThrow())
+                        .collect(Collectors.toSet());
+        Question question = questionMapper.toEntity(dto);
+        question.setUnits(units);
+        return questionMapper.toDto(questionRepository.save(question));
     }
 
-    public QuestionResponseDto findById(String id) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found: " + id));
-        return questionMapper.toDto(question);
-    }
-
-    public QuestionResponseDto createQuestion(QuestionRequestDto questionDto) {
-        Question question = Question.builder()
-                .id(UUID.randomUUID().toString())
-                .content(questionDto.content())
-                .type(questionDto.type())
-                .scope(questionDto.scope())
-                .build();
-
-        Question savedQuestion = questionRepository.save(question);
-
-        // Tạo options nếu có
-        if (questionDto.options() != null && !questionDto.options().isEmpty()) {
-            questionDto.options().forEach(optionDto -> {
-                Option option = Option.builder()
-                        .id(UUID.randomUUID().toString())
-                        .content(optionDto.content())
-                        .isCorrect(optionDto.isCorrect())
-                        .question(savedQuestion)
-                        .build();
-                optionRepository.save(option);
-            });
-        }
-
-        return questionMapper.toDto(savedQuestion);
-    }
-
-    public QuestionResponseDto updateQuestion(String id, QuestionRequestDto questionDto) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Question not found: " + id));
-
-        question.setContent(questionDto.content());
-        question.setType(questionDto.type());
-        question.setScope(questionDto.scope());
-
-        Question updatedQuestion = questionRepository.save(question);
-        return questionMapper.toDto(updatedQuestion);
+    public QuestionResponseDto updateQuestion(String id, QuestionRequestDto dto) {
+        Question question = questionRepository.findById(id).orElseThrow();
+        question.setContent(dto.content());
+        question.setExplanation(dto.explanation());
+        question.setType(dto.type());
+        Set<Unit> updatedUnits = dto.unitIds() == null ? Set.of() :
+                dto.unitIds().stream()
+                        .map(unitId -> unitRepository.findById(unitId).orElseThrow())
+                        .collect(Collectors.toSet());
+        question.setUnits(updatedUnits);
+        return questionMapper.toDto(questionRepository.save(question));
     }
 
     public void deleteQuestion(String id) {
         questionRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<QuestionResponseDto> getAllQuestions() {
+        return questionRepository.findAll().stream()
+                .map(questionMapper::toDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public QuestionResponseDto getQuestionById(String id) {
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+        return questionMapper.toDto(question);
+    }
 }

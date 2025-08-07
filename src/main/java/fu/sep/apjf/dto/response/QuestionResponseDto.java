@@ -12,5 +12,6 @@ public record QuestionResponseDto(
         String explanation,
         String fileUrl,
         LocalDateTime createdAt,
-        List<OptionResponseDto> options
+        List<OptionResponseDto> options,
+        List<String> unitIds
 ) {}

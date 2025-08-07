@@ -1,25 +1,24 @@
 package fu.sep.apjf.repository;
 
 import fu.sep.apjf.entity.Question;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
-public interface QuestionRepository extends JpaRepository<Question, String>, JpaSpecificationExecutor<Question> {
-    @NotNull
-    @EntityGraph(attributePaths = {"options"})
-    @Override
-    List<Question> findAll();
+public interface QuestionRepository extends JpaRepository<Question, String> {
 
-    @NotNull
-    @EntityGraph(attributePaths = {"options"})
-    @Override
-    Optional<Question> findById(@NotNull String id);
+    List<Question> findByUnits_Id(String unitId);
 
+    @Query("SELECT DISTINCT q FROM Question q LEFT JOIN FETCH q.options LEFT JOIN FETCH q.units JOIN q.exams e WHERE e.id = :examId")
+    List<Question> findByExamId(@Param("examId") String examId);
+
+    @Query("SELECT DISTINCT q FROM Question q LEFT JOIN FETCH q.options LEFT JOIN FETCH q.units")
+    List<Question> findAllWithOptionsAndUnits();
+
+    @Query("SELECT q FROM Question q LEFT JOIN FETCH q.options LEFT JOIN FETCH q.units WHERE q.id = :id")
+    Question findByIdWithOptionsAndUnits(@Param("id") String id);
 }

@@ -6,4 +6,3 @@ public record LoginResponseDto(
     String token_type,
     long expires_in
 ) {}
-

@@ -45,6 +45,10 @@ public class SecurityConfig {
             "/api/materials/**",
             "/api/exams/**",
             "/api/learning-paths/**",
+            "/api/questions/**",
+            "/api/student/exams/**",
+            "/api/options/**",
+            "/api/student/history/**",
     };
 
     private static final String[] USER_ALLOWED_ENDPOINTS = {
@@ -52,6 +56,7 @@ public class SecurityConfig {
             "/api/exam-results/**",
             "/api/users/profile",
             "/api/users/avatar",
+            "/api/learning-paths/**",
             "/api/posts/**",
             "/api/comments/**"
     };

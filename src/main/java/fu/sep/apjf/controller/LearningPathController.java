@@ -66,7 +66,7 @@ public class LearningPathController {
     public ResponseEntity<ApiResponseDto<String>> setActiveLearningPath(
             @PathVariable Long id,
             @AuthenticationPrincipal User user) {
-        learningPathService.setActiveLearningPath(user.getId(), id);
+        learningPathService.setStudyingLearningPath(user.getId(), id);
         return ResponseEntity.ok(ApiResponseDto.ok("Đặt lộ trình học hoạt động thành công"));
     }
 

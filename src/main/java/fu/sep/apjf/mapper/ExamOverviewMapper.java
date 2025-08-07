@@ -16,4 +16,3 @@ public interface ExamOverviewMapper {
     @Mapping(target = "type", source = "type")
     ExamOverviewResponseDto toDto(Exam exam);
 }
-
