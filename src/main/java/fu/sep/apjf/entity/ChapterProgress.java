@@ -1,26 +1,27 @@
 package fu.sep.apjf.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "unit_progress")
+@Table(name = "chapter_progress")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UnitProgress {
+public class ChapterProgress {
 
     @EmbeddedId
     @Builder.Default
-    private UnitProgressKey id = new UnitProgressKey();
+    private ChapterProgressKey id = new ChapterProgressKey();
 
     @ManyToOne
-    @MapsId("unitId")
-    @JoinColumn(name = "unit_id")
-    private Unit unit;
+    @MapsId("chapterId")
+    @JoinColumn(name = "chapter_id")
+    private Chapter chapter;
 
     @ManyToOne
     @MapsId("userId")

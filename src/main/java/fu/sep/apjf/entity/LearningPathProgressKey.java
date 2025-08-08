@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UnitProgressKey implements Serializable {
-    private String unitId;
+public class LearningPathProgressKey implements Serializable {
+    private Long learningPathId;
     private Long userId;
 }
