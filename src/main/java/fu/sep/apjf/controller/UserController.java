@@ -12,6 +12,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -27,8 +29,8 @@ public class UserController {
         return ResponseEntity.ok(ApiResponseDto.ok("Upload avatar thành công", objectName));
     }
 
-    @PostMapping("/profile")
-    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@RequestBody UserRequestDto dto,
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@Valid @RequestBody UserRequestDto dto,
                                                                 @AuthenticationPrincipal User user) {
         String message = userService.updateProfile(user.getEmail(), dto);
         return ResponseEntity.ok(ApiResponseDto.ok(message));

@@ -6,6 +6,7 @@ public record UserResponseDto(
     Long id,
     String email,
     String username,
+    String phone,
     String avatar,
     List<String> authorities
 ) {}

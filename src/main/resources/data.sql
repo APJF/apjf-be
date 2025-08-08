@@ -4,7 +4,8 @@
 
 
 /* ---------- AUTHORITIES ---------- */
-ALTER TABLE exam_result ADD COLUMN advice JSONB;
+ALTER TABLE exam_result
+    ADD COLUMN advice JSONB;
 
 INSERT INTO authority (name)
 VALUES ('ROLE_USER'),
@@ -12,10 +13,13 @@ VALUES ('ROLE_USER'),
        ('ROLE_MANAGER'),
        ('ROLE_ADMIN');
 
-INSERT INTO users (username, password, email, pending_email, address, phone, avatar, enabled, email_verified, vip_expiration) VALUES
-('taro_yamada', 'hashed_password_123', 'taro@example.com', NULL, 'Tokyo, Japan', '0901234567', 'https://example.com/avatar1.jpg', true, true, '2025-12-31 23:59:59'),
-('hanako_suzuki', 'hashed_password_456', 'hanako@example.com', 'hanako_pending@example.com', 'Osaka, Japan', '0809876543', NULL, true, false, NULL),
-('john_doe', 'hashed_password_789', 'john@example.com', NULL, NULL, NULL, NULL, false, true, NULL);
+INSERT INTO users (username, password, email, pending_email, address, phone, avatar, enabled, email_verified,
+                   vip_expiration)
+VALUES ('taro_yamada', 'hashed_password_123', 'taro@example.com', NULL, 'Tokyo, Japan', '0901234567',
+        'https://example.com/avatar1.jpg', true, true, '2025-12-31 23:59:59'),
+       ('hanako_suzuki', 'hashed_password_456', 'hanako@example.com', 'hanako_pending@example.com', 'Osaka, Japan',
+        '0809876543', NULL, true, false, NULL),
+       ('john_doe', 'hashed_password_789', 'john@example.com', NULL, NULL, NULL, NULL, false, true, NULL);
 
 /* ---------- TOPIC ---------- */
 INSERT INTO topic (name)
@@ -23,83 +27,89 @@ VALUES ('IT'),
        ('Ăn uống');
 
 /* ---------- COURSE (Simple version for testing) ---------- */
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD113', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 1', 150, 'N5', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD123', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 2', 150, 'N5', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD126', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 3', 300, 'N5', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD216', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 1', 300, 'N4', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD226', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 2', 300, 'N4', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD316', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 1', 300, 'N3', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD326', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 2', 300, 'N3', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD336', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 3', 300, 'N3', 'ACTIVE', null, null, null);
-INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
-('JPD346', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 4', 300, 'N3', 'ACTIVE', null, null, null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD113', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 1', 150, 'N5', 'ACTIVE', null, null, null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD123', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 2', 150, 'N5', 'ACTIVE', null, null, null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD126', 'Tieng Nhat N5', 'Elementary Japanese - Tiếng Nhật sơ cấp 3', 300, 'N5', 'ACTIVE', null, null, null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD216', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 1', 300, 'N4', 'ACTIVE', null,
+        null, null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD226', 'Tieng Nhat N4', 'Pre-Intermediate Japanese - Tiếng Nhật sơ trung cấp 2', 300, 'N4', 'ACTIVE', null,
+        null, null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD316', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 1', 300, 'N3', 'ACTIVE', null, null,
+        null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD326', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 2', 300, 'N3', 'ACTIVE', null, null,
+        null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD336', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 3', 300, 'N3', 'ACTIVE', null, null,
+        null);
+INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement)
+VALUES ('JPD346', 'Tieng Nhat N3', 'Intermediate Japanese - Tiếng Nhật trung cấp 4', 300, 'N3', 'ACTIVE', null, null,
+        null);
 
 /* ---------- CHAPTER ---------- */
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH01', 'はじめまして', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD113', NULL);
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)VALUES
-('DN1-CH02', '買い物ー食事', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD113', 'DN1-CH01');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH03', 'スケジュール', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD113', 'DN1-CH02');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH04', '私の国ー町', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH03');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH05', '休みの日', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH04');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH06', '一緒に！', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH05');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH07', '友達の家で', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH06');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH08', '大切な人', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH07');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH09', '好きなこと', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH010', 'バスツアー', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH11', '私の生活', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH12', '病気ーけが', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH13', '私のおすすめ', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH14', '国の習慣', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
-INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id) VALUES
-('DN1-CH15', 'テレビー雑誌から', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH01', 'はじめまして', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD113', NULL);
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH02', '買い物ー食事', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD113', 'DN1-CH01');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH03', 'スケジュール', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD113', 'DN1-CH02');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH04', '私の国ー町', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH03');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH05', '休みの日', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH04');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH06', '一緒に！', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH05');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH07', '友達の家で', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD123', 'DN1-CH06');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH08', '大切な人', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH07');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH09', '好きなこと', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH010', 'バスツアー', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH11', '私の生活', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH12', '病気ーけが', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH13', '私のおすすめ', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH14', '国の習慣', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
+INSERT INTO chapter (id, title, description, status, course_id, prerequisite_chapter_id)
+VALUES ('DN1-CH15', 'テレビー雑誌から', 'Hoc Hiragana co ban', 'ACTIVE', 'JPD126', 'DN1-CH08');
 
 /* ---------- UNIT ---------- */
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH01-U01', '私の名前・ 国・ 仕事', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH01', NULL);
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH01-U02', '私の誕生日', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH01', 'DN1-CH01-U01');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH01-U03', '私の趣味', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH01', 'DN1-CH01-U02');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH02-U01', 'どこですか', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH02', 'DN1-CH01-U03');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH02-U02', 'いくらですか', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH02', 'DN1-CH02-U01');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH02-U03', 'レストラン', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH02', 'DN1-CH02-U02');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH03-U01', '何時までですか', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH02-U03');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH03-U02', '私のスケジュール', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH03-U01');
-INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id) VALUES
-('DN1-CH03-U03', 'どんな毎日？', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH03-U02');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH01-U01', '私の名前・ 国・ 仕事', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH01', NULL);
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH01-U02', '私の誕生日', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH01', 'DN1-CH01-U01');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH01-U03', '私の趣味', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH01', 'DN1-CH01-U02');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH02-U01', 'どこですか', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH02', 'DN1-CH01-U03');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH02-U02', 'いくらですか', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH02', 'DN1-CH02-U01');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH02-U03', 'レストラン', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH02', 'DN1-CH02-U02');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH03-U01', '何時までですか', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH02-U03');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH03-U02', '私のスケジュール', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH03-U01');
+INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_id)
+VALUES ('DN1-CH03-U03', 'どんな毎日？', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH03-U02');
 
 /* ---------- MATERIAL ---------- */
-INSERT INTO material (id, description, file_url, type, unit_id)
-VALUES ('material-01', 'Video Hiragana', '/videos/hiragana.mp4', 'GRAMMAR', 'unit-01'),
-       ('material-02', 'PDF Hiragana', '/docs/hiragana.pdf', 'VOCAB', 'unit-01'),
-       ('material-03', 'Audio Katakana', '/audios/katakana.mp3', 'LISTENING', 'unit-03'),
-       ('material-04', 'Quiz Te-form', '/quizzes/te-form.html', 'GRAMMAR', 'unit-05');
+INSERT INTO material (id, file_url, type, unit_id)
+VALUES ('material-01', '/videos/hiragana.mp4', 'GRAMMAR', 'unit-01'),
+       ('material-02', '/docs/hiragana.pdf', 'VOCAB', 'unit-01'),
+       ('material-03', '/audios/katakana.mp3', 'LISTENING', 'unit-03'),
+       ('material-04', '/quizzes/te-form.html', 'GRAMMAR', 'unit-05');
 
 /* ---------- COURSE_TOPIC ---------- */
 INSERT INTO course_topic (course_id, topic_id)

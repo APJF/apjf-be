@@ -95,6 +95,7 @@ public class UserService {
                 userDto.id(),
                 userDto.email(),
                 userDto.username(),
+                userDto.phone(),
                 avatarUrl,
                 userDto.authorities()
         );
