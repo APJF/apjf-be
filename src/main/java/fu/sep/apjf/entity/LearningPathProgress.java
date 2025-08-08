@@ -26,9 +26,6 @@ public class LearningPathProgress {
     @MapsId("userId")
     private User user;
 
-    @OneToMany(mappedBy = "learningPathProgress", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CourseProgress> courseProgresses = new HashSet<>();
-
     private boolean completed;
 
     private LocalDateTime completedAt;

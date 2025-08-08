@@ -20,12 +20,12 @@ public class CourseProgress {
 
     @ManyToOne
     @MapsId("courseId")
-    @JoinColumn(name = "course_id")
+    @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
     @ManyToOne
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private boolean completed;

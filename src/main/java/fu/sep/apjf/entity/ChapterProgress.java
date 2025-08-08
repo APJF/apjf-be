@@ -20,12 +20,12 @@ public class ChapterProgress {
 
     @ManyToOne
     @MapsId("chapterId")
-    @JoinColumn(name = "chapter_id")
+    @JoinColumn(name = "chapter_id", nullable = false)
     private Chapter chapter;
 
     @ManyToOne
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private boolean completed;

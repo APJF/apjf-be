@@ -1,4 +1,5 @@
 package fu.sep.apjf.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,12 +20,12 @@ public class UnitProgress {
 
     @ManyToOne
     @MapsId("unitId")
-    @JoinColumn(name = "unit_id")
+    @JoinColumn(name = "unit_id", nullable = false)
     private Unit unit;
 
     @ManyToOne
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     private boolean completed;
