@@ -7,6 +7,7 @@ spring:
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
     hikari:
+      auto-commit: false
       maximum-pool-size: 3
       minimum-idle: 1
       connection-timeout: 30000
@@ -81,3 +82,17 @@ integration:
       avatar: avatar
       document: document
       course-image: course-image
+
+logging:
+  level:
+    org.hibernate: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
+    org.springframework.jdbc: DEBUG
+    com.zaxxer.hikari: DEBUG
+    root: INFO
+    fu.sep.apjf: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
