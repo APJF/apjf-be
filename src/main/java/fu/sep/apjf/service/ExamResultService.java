@@ -4,12 +4,13 @@ import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.request.QuestionResultRequestDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.entity.*;
-import fu.sep.apjf.mapper.ExamResultDetailMapper;
+import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.ExamResultMapper;
 import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,13 +24,36 @@ public class ExamResultService {
     private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
     private final ExamResultMapper examResultMapper;
-    private final ExamResultDetailMapper detailMapper;
     private final UserRepository userRepository;
+
+    public ExamResultResponseDto startExam(Long userId, String examId) {
+        Exam exam = examRepository.findByIdWithQuestions(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        ExamResult result = ExamResult.builder()
+                .exam(exam)
+                .user(user)
+                .startedAt(LocalDateTime.now())
+                .status(EnumClass.ExamStatus.IN_PROGRESS)
+                .build();
+        List<ExamResultDetail> details = exam.getQuestions().stream()
+                .map(q -> {
+                    ExamResultDetail d = new ExamResultDetail();
+                    d.setExamResult(result);
+                    d.setQuestion(q);
+                    return d;
+                })
+                .toList();
+        result.setDetails(details);
+        examResultRepository.save(result);
+        examResultDetailRepository.saveAll(details);
+        return examResultMapper.toDto(result);
+    }
 
     public ExamResultResponseDto submitExam(Long userId, ExamResultRequestDto dto) {
         Exam exam = examRepository.findById(dto.examId()).orElseThrow();
 
-        // Chỉ xử lý Multiple Choice
         if (exam.getType() != EnumClass.ExamType.MULTIPLE_CHOICE) {
             throw new UnsupportedOperationException("Only multiple choice exams are supported in this version.");
         }
@@ -93,7 +117,7 @@ public class ExamResultService {
 
 
     public ExamResultResponseDto getExamResult(Long resultId) {
-        ExamResult result = examResultRepository.findById(resultId).orElseThrow();
+        ExamResult result = examResultRepository.findByIdWithDetails(resultId).orElseThrow();
         return examResultMapper.toDto(result);
     }
 }
