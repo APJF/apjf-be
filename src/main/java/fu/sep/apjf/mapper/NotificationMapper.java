@@ -14,7 +14,6 @@ public interface NotificationMapper {
     @Mapping(source = "sender.id", target = "senderId")
     @Mapping(source = "sender.username", target = "senderUsername")
     @Mapping(source = "post.id", target = "postId")
-    @Mapping(source = "post.title", target = "postTitle")
     NotificationResponseDto toDto(Notification notification);
 
     // Mapping NotificationRequestDto -> Notification

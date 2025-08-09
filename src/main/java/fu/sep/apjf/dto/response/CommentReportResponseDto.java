@@ -3,11 +3,11 @@ package fu.sep.apjf.dto.response;
 import java.time.Instant;
 
 public record CommentReportResponseDto(
-        String id,
+        Long id,
         String content,
         Instant createdAt,
-        String userId,
-        String commentId
+        Long userId,
+        Long commentId
 ) {}
 
 

@@ -10,10 +10,10 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
 
-    @Mapping(target = "id", expression = "java(String.valueOf(comment.getId()))")
+    @Mapping(target = "id", expression = "java(comment.getUser() != null ? comment.getUser().getId() : null)")
     @Mapping(target = "email", expression = "java(comment.getUser() != null ? comment.getUser().getEmail() : null)")
     @Mapping(target = "avatar", expression = "java(comment.getUser() != null ? comment.getUser().getAvatar() : null)")
-    @Mapping(target = "postId", expression = "java(comment.getPost() != null ? String.valueOf(comment.getPost().getId()) : null)")
+    @Mapping(target = "postId", expression = "java(comment.getPost() != null ? comment.getPost().getId() : null)")
     CommentResponseDto toDto(Comment comment);
 
     @Mapping(target = "user", expression = "java(user)")
