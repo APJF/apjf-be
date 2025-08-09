@@ -101,20 +101,6 @@ public class UserService {
         );
     }
 
-    // Method mới để upload avatar với validation
-    public String uploadAvatar(MultipartFile file, String email) throws Exception {
-        // Upload file qua MinioService (đã có validation bên trong)
-        String objectName = minioService.uploadAvatar(file, email);
-
-        // Cập nhật avatar trong database
-        User user = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
-        user.setAvatar(objectName);
-        userRepository.save(user);
-
-        return objectName;
-    }
-
     // Method mới để login
     public LoginResponseDto login(LoginRequestDto loginDTO) {
         // 1. Kiểm tra email có tồn tại không
@@ -126,12 +112,20 @@ public class UserService {
             throw new BadCredentialsException("Mật khẩu không chính xác");
         }
 
-        // 3. Kiểm tra tài khoản đã được kích hoạt chưa
+        // 3. Kiểm tra tài khoản có bị ban không
         if (!user.isEnabled()) {
-            throw new UnverifiedAccountException("Tài khoản chưa được xác thực.", user.getEmail());
+            log.warn("User {} attempted to login with banned account", user.getEmail());
+            throw new BadCredentialsException("con lợn này, mày đã bị ban =)))");
         }
 
-        // 4. Tạo và trả về LoginResponseDto
+        // 4. Kiểm tra email đã được xác thực chưa
+        if (!user.isEmailVerified()) {
+            log.info("User {} attempted to login with unverified email", user.getEmail());
+            throw new UnverifiedAccountException("Email chưa được xác thực.", user.getEmail());
+        }
+
+        // 5. Tạo và trả về LoginResponseDto
+        log.info("User {} logged in successfully", user.getEmail());
         return createLoginResponse(user);
     }
 
@@ -151,12 +145,19 @@ public class UserService {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new BadCredentialsException("Người dùng không tồn tại"));
 
-        // 4. Kiểm tra tài khoản vẫn còn active
+        // 4. Kiểm tra tài khoản có bị ban không
         if (!user.isEnabled()) {
-            throw new BadCredentialsException("Tài khoản đã bị vô hiệu hóa");
+            log.warn("User {} attempted to refresh token with banned account", user.getEmail());
+            throw new BadCredentialsException("Tài khoản đã bị khóa");
         }
 
-        // 5. Tạo và trả về LoginResponseDto
+        // 5. Kiểm tra email đã được xác thực chưa
+        if (!user.isEmailVerified()) {
+            log.info("User {} attempted to refresh token with unverified email", user.getEmail());
+            throw new BadCredentialsException("Email chưa được xác thực");
+        }
+
+        // 6. Tạo và trả về LoginResponseDto
         return createLoginResponse(user);
     }
 
@@ -176,8 +177,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(registerDTO.password()));
         user.setEmail(registerDTO.email().toLowerCase()); // Lưu email dạng lowercase
         user.setAvatar("https://engineering.usask.ca/images/no_avatar.jpg");
-        user.setEmailVerified(false);
-        user.setEnabled(false);
+        user.setEmailVerified(false); // Chưa xác thực email
+        user.setEnabled(true); // Tài khoản được kích hoạt, chưa bị ban
 
         userRepository.save(user);
 
@@ -213,11 +214,11 @@ public class UserService {
                 user.setPendingEmail(null);
             }
             user.setEmailVerified(true);
-            user.setEnabled(true);
+            // Không cần set enabled = true nữa vì đã được set trong register
             userRepository.save(user);
         }
         // Với reset password, chỉ cần xóa token, không cần thay đổi user
-        // Logic reset password đã được xử lý �� method resetPassword
+        // Logic reset password đã được xử lý ở method resetPassword
 
         tokenRepository.delete(token);
     }

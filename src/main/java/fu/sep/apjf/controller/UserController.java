@@ -6,13 +6,12 @@ import fu.sep.apjf.dto.response.UserResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.MinioService;
 import fu.sep.apjf.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")

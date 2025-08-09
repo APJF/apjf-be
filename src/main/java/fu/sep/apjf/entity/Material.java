@@ -52,6 +52,10 @@ public class Material {
     @Column()
     private String translation;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EnumClass.Status status;
+
     /* ------- owner Unit ------- */
     @ManyToOne
     @JoinColumn(name = "unit_id", nullable = false)
