@@ -3,7 +3,6 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
-import fu.sep.apjf.dto.response.ExamResponseDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ExamResultService;
@@ -26,9 +25,12 @@ public class ExamStudentController {
         return ResponseEntity.ok(ApiResponseDto.ok("Thông tin tổng quan bài thi", examService.getOverview(examId)));
     }
 
-    @GetMapping("/{examId}")
-    public ResponseEntity<ApiResponseDto<ExamResponseDto>> getExamDetail(@PathVariable String examId) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài thi", examService.getExamDetail(examId)));
+    @PostMapping("/{examId}/start")
+    public ResponseEntity<ApiResponseDto<ExamResultResponseDto>> startExam(
+            @AuthenticationPrincipal User user,
+            @PathVariable String examId) {
+        return ResponseEntity.ok(ApiResponseDto.ok(
+                "Bắt đầu bài thi", examResultService.startExam(user.getId(), examId)));
     }
 
     @PostMapping("/submit")

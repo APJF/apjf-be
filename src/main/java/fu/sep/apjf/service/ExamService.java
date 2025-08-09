@@ -23,7 +23,6 @@ import java.util.List;
 public class ExamService {
 
     private static final String NOT_FOUND_EXAM_MSG = "Không tìm thấy exam";
-    private static final String NOT_FOUND_QUESTION_MSG = "Không tìm thấy câu hỏi";
 
     private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
@@ -50,22 +49,6 @@ public class ExamService {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_EXAM_MSG));
         examRepository.delete(exam);
-    }
-
-    public void addQuestion(String examId, String questionId) {
-        Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_EXAM_MSG));
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_QUESTION_MSG));
-        exam.getQuestions().add(question);
-        examRepository.save(exam);
-    }
-
-    public void removeQuestion(String examId, String questionId) {
-        Exam exam = examRepository.findById(examId)
-                .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_EXAM_MSG));
-        exam.getQuestions().removeIf(q -> q.getId().equals(questionId));
-        examRepository.save(exam);
     }
 
     public void addQuestions(String examId, List<String> questionIds) {
@@ -110,7 +93,6 @@ public class ExamService {
             case CHAPTER -> (dto.chapterId() == null || dto.chapterId().isBlank()) ? "chapterId" : null;
             case UNIT -> (dto.unitId() == null || dto.unitId().isBlank()) ? "unitId" : null;
         };
-
         if (missingField != null) {
             throw new IllegalArgumentException(missingField + " is required for " + dto.examScopeType() + " scope");
         }
