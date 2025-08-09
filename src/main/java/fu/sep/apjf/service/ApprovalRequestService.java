@@ -204,14 +204,7 @@ public class ApprovalRequestService {
                     log.info("Cập nhật status của Unit {} thành ACTIVE", unit.getId());
                 }
             }
-            case MATERIAL -> {
-                Material material = approvalRequest.getMaterial();
-                if (material != null) {
-                    material.setStatus(EnumClass.Status.ACTIVE);
-                    materialRepository.save(material);
-                    log.info("Cập nhật status của Material {} thành ACTIVE", material.getId());
-                }
-            }
+
             default -> log.warn("Unknown target type: {}", approvalRequest.getTargetType());
         }
     }
