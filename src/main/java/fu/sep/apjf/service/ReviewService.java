@@ -61,12 +61,9 @@ public class ReviewService {
 
     public List<CourseResponseDto> getReviewsByCourse(String courseId) {
         List<Review> reviews = reviewRepo.findByCourseId(courseId);
-
-        // Lazy validation: chỉ check course existence nếu list rỗng để tối ưu queries
         if (reviews.isEmpty() && !courseRepo.existsById(courseId)) {
             throw new EntityNotFoundException(COURSE_NOT_FOUND);
         }
-
         return reviews.stream()
                 .map(review -> courseMapper.toDto(review.getCourse(), getAverageRating(courseId)))
                 .toList();
@@ -94,7 +91,6 @@ public class ReviewService {
     }
 
     public double getAverageRating(String courseId) {
-        // Sử dụng method mới - hiệu quả hơn
         return reviewRepo.calculateAverageRatingByCourseId(courseId).orElse(0.0);
     }
 

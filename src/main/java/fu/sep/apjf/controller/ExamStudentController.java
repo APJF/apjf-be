@@ -2,6 +2,7 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.entity.User;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/student/exams")
@@ -40,9 +43,14 @@ public class ExamStudentController {
         return ResponseEntity.ok(ApiResponseDto.ok("Nộp bài thành công", examResultService.submitExam(user.getId(), dto)));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponseDto<List<ExamHistoryResponseDto>>> getHistory(
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Lịch sử bài thi", examResultService.getHistoryByUserId(user.getId())));
+    }
+
     @GetMapping("/result/{resultId}")
     public ResponseEntity<ApiResponseDto<ExamResultResponseDto>> getExamResultDetail(@PathVariable Long resultId) {
         return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết kết quả bài thi", examResultService.getExamResult(resultId)));
     }
 }
-

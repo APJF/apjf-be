@@ -16,9 +16,11 @@ public interface ExamResultDetailMapper {
     @Mapping(target = "selectedOption", ignore = true)
     ExamResultDetail toEntity(QuestionResultRequestDto dto);
 
-    @Mapping(target = "questionId", ignore = true)
-    @Mapping(target = "questionContent", ignore = true)
-    @Mapping(target = "explanation", ignore = true)
-    @Mapping(target = "selectedOptionId", ignore = true)
+    @Mapping(source = "question.id", target = "questionId")
+    @Mapping(source = "question.content", target = "questionContent")
+    @Mapping(source = "question.explanation", target = "explanation")
+    @Mapping(source = "selectedOption.id", target = "selectedOptionId")
+    @Mapping(source = "userAnswer", target = "userAnswer")
+    @Mapping(source = "isCorrect", target = "isCorrect")
     QuestionResultResponseDto toDto(ExamResultDetail detail);
 }

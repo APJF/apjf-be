@@ -2,6 +2,7 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.request.QuestionResultRequestDto;
+import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
@@ -115,6 +116,21 @@ public class ExamResultService {
         return examResultMapper.toDto(savedResult);
     }
 
+    public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {
+        return examResultRepository.findByUserIdWithExam(userId)
+                .stream()
+                .filter(r -> r.getStatus() != EnumClass.ExamStatus.IN_PROGRESS) // loại bỏ đang làm dở
+                .map(r -> new ExamHistoryResponseDto(
+                        String.valueOf(r.getId()),
+                        r.getExam().getId(),
+                        r.getExam().getTitle(),
+                        r.getScore(),
+                        r.getStatus(),
+                        r.getExam().getType(),
+                        r.getSubmittedAt()
+                ))
+                .toList();
+    }
 
     public ExamResultResponseDto getExamResult(Long resultId) {
         ExamResult result = examResultRepository.findByIdWithDetails(resultId).orElseThrow();

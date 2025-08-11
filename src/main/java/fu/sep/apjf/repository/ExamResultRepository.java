@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
     @Query("""
-SELECT er
+SELECT DISTINCT er
 FROM ExamResult er
 JOIN FETCH er.exam e
 LEFT JOIN FETCH er.details d
