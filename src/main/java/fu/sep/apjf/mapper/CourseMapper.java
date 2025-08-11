@@ -3,6 +3,7 @@ package fu.sep.apjf.mapper;
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseListResponseDto;
 import fu.sep.apjf.entity.Course;
 import org.mapstruct.*;
 
@@ -40,6 +41,16 @@ public interface CourseMapper {
     @Mapping(target = "courseLearningPaths", ignore = true)
     Course toEntity(CourseRequestDto courseDto);
 
+    // Method tối ưu cho findAll - không load exams, topics chỉ có name
+    @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
+    @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopicNames")
+    CourseListResponseDto toListDto(Course course, Float averageRating);
+
+    // Method cho findById - load đầy đủ thông tin bao gồm exams
+    @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
+    @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
+    CourseResponseDto toDetailDto(Course course, Float averageRating);
+
     // Custom mapping methods
     @Named("mapTopics")
     default Set<TopicDto> mapTopics(Set<fu.sep.apjf.entity.Topic> topics) {
@@ -50,4 +61,15 @@ public interface CourseMapper {
                 .map(topic -> new TopicDto(topic.getId(), topic.getName()))
                 .collect(Collectors.toSet());
     }
+
+    @Named("mapTopicNames")
+    default Set<String> mapTopicNames(Set<fu.sep.apjf.entity.Topic> topics) {
+        if (topics == null || topics.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return topics.stream()
+                .map(fu.sep.apjf.entity.Topic::getName)
+                .collect(Collectors.toSet());
+    }
 }
+

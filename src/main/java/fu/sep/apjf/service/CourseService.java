@@ -2,6 +2,7 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseListResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
@@ -34,14 +35,13 @@ public class CourseService {
     private final CourseMapper courseMapper;
 
     @Transactional(readOnly = true)
-    public List<CourseResponseDto> findAll() {
+    public List<CourseListResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
                 .map(course -> {
                     Float averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
                             .orElse(null);
-                    CourseResponseDto dto = courseMapper.toDto(course, averageRating);
-                    return convertImageUrl(dto);
+                    return courseMapper.toListDto(course, averageRating);
                 })
                 .toList();
     }
@@ -54,8 +54,7 @@ public class CourseService {
         Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
                 .orElse(null);
 
-        CourseResponseDto dto = courseMapper.toDto(course, averageRating);
-        return convertImageUrl(dto);
+        return courseMapper.toDetailDto(course, averageRating);
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
@@ -129,34 +128,5 @@ public class CourseService {
 
         // Upload to MinIO và trả về object name
         return minioService.uploadCourseImage(file);
-    }
-
-    // Helper method để chuyển đổi image object name thành presigned URL
-    private CourseResponseDto convertImageUrl(CourseResponseDto dto) {
-        String imageUrl = dto.image();
-        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
-            !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-            try {
-                imageUrl = minioService.getCourseImageUrl(imageUrl);
-            } catch (Exception e) {
-                log.warn("Failed to generate presigned URL for course image {}: {}", dto.image(), e.getMessage());
-                // Giữ nguyên object name nếu có lỗi
-            }
-        }
-
-        return new CourseResponseDto(
-                dto.id(),
-                dto.title(),
-                dto.description(),
-                dto.duration(),
-                dto.level(),
-                imageUrl,
-                dto.requirement(),
-                dto.status(),
-                dto.prerequisiteCourseId(),
-                dto.topics(),
-                dto.exams(),
-                dto.averageRating()
-        );
     }
 }

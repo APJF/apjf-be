@@ -4,6 +4,7 @@ import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseListResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
 import fu.sep.apjf.service.CourseService;
@@ -32,7 +33,7 @@ public class CourseController {
     private final MinioService minioService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getAll() {
+    public ResponseEntity<ApiResponseDto<List<CourseListResponseDto>>> getAll() {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách khoá học", courseService.findAll()));
     }
