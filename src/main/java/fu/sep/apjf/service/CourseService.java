@@ -40,6 +40,7 @@ public class CourseService {
         return courses.stream()
                 .map(course -> {
                     Float averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
+                            .map(this::roundToHalfStar)
                             .orElse(null);
                     return courseMapper.toListDto(course, averageRating);
                 })
@@ -52,6 +53,7 @@ public class CourseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
         Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
+                .map(this::roundToHalfStar)
                 .orElse(null);
 
         return courseMapper.toDetailDto(course, averageRating);
@@ -128,5 +130,16 @@ public class CourseService {
 
         // Upload to MinIO và trả về object name
         return minioService.uploadCourseImage(file);
+    }
+
+    /**
+     * Làm tròn rating về các mốc 0.5 (0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
+     */
+    private Float roundToHalfStar(Float rating) {
+        if (rating == null) {
+            return null;
+        }
+        // Nhân 2, làm tròn, rồi chia 2 để có các mốc 0.5
+        return Math.round(rating * 2.0f) / 2.0f;
     }
 }

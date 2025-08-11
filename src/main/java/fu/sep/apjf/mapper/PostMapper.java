@@ -13,14 +13,16 @@ public interface PostMapper {
 
     PostMapper INSTANCE = Mappers.getMapper(PostMapper.class);
 
-    @Mapping(target = "id", source = "post.user.id")
+    @Mapping(target = "id", source = "post.id")
     @Mapping(target = "email", source = "post.user.email")
     @Mapping(target = "avatar", source = "post.user.avatar")
-    @Mapping(target = "comments", source = "post.comments")
-    PostResponseDto toDto(Post post);
+    @Mapping(target = "updatedAt", source = "post.updatedAt")
+    @Mapping(target = "commentsCount", source = "commentsCount")
+    PostResponseDto toDto(Post post, Long commentsCount);
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "comments", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     Post toEntity(PostRequestDto dto);
 }

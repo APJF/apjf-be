@@ -173,4 +173,26 @@ public class MinioService {
 
         return result;
     }
+
+    /**
+     * Batch generate presigned URLs cho avatars
+     */
+    public Map<String, String> getAvatarUrls(List<String> objectNames) {
+        Map<String, String> result = new HashMap<>();
+
+        for (String objectName : objectNames) {
+            if (objectName != null && !objectName.trim().isEmpty()) {
+                try {
+                    String presignedUrl = getAvatarUrl(objectName); // Sử dụng cached method
+                    if (presignedUrl != null) {
+                        result.put(objectName, presignedUrl);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to generate presigned URL for avatar {}: {}", objectName, e.getMessage());
+                }
+            }
+        }
+
+        return result;
+    }
 }

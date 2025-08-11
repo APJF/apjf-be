@@ -37,12 +37,11 @@ public class Material {
     @Column(nullable = false, length = 20)
     private EnumClass.MaterialType type;                       // KANJI, GRAMMAR …
 
-    @Column()
+    @Column(columnDefinition = "TEXT")
     private String script;
 
-    @Column()
+    @Column(columnDefinition = "TEXT")
     private String translation;
-
 
     /* ------- owner Unit ------- */
     @ManyToOne

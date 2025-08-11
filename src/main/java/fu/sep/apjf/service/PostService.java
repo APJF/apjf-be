@@ -5,6 +5,7 @@ import fu.sep.apjf.dto.response.PostResponseDto;
 import fu.sep.apjf.entity.Post;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.PostMapper;
+import fu.sep.apjf.repository.CommentRepository;
 import fu.sep.apjf.repository.PostRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -24,13 +25,17 @@ public class PostService {
 
     private final PostRepository postRepo;
     private final UserRepository userRepo;
-    private final PostMapper postMapper; // Inject bean của PostMapper
+    private final PostMapper postMapper;
+    private final CommentRepository commentRepo; // Thêm CommentRepository
 
     @Transactional(readOnly = true)
     public List<PostResponseDto> list() {
         return postRepo.findAll()
                 .stream()
-                .map(postMapper::toDto)
+                .map(post -> {
+                    Long commentsCount = commentRepo.countByPostId(post.getId());
+                    return postMapper.toDto(post, commentsCount);
+                })
                 .toList();
     }
 
@@ -38,7 +43,8 @@ public class PostService {
     public PostResponseDto get(Long id) {
         Post post = postRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));
-        return postMapper.toDto(post);
+        Long commentsCount = commentRepo.countByPostId(post.getId());
+        return postMapper.toDto(post, commentsCount);
     }
 
     public PostResponseDto create(@Valid PostRequestDto dto, Long userId) {
@@ -48,7 +54,8 @@ public class PostService {
         post.setUser(user);
 
         Post saved = postRepo.save(post);
-        return postMapper.toDto(saved);
+        Long commentsCount = 0L; // Post mới tạo chưa có comment nào
+        return postMapper.toDto(saved, commentsCount);
     }
 
     public PostResponseDto update(Long id, @Valid PostRequestDto dto, Long userId) {
@@ -60,7 +67,8 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại")));
 
         Post saved = postRepo.save(post);
-        return postMapper.toDto(saved);
+        Long commentsCount = commentRepo.countByPostId(saved.getId());
+        return postMapper.toDto(saved, commentsCount);
     }
 
     public void delete(Long id) {

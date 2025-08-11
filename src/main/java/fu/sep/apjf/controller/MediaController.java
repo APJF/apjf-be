@@ -27,7 +27,25 @@ public class MediaController {
         return ResponseEntity.ok(ApiResponseDto.ok("Presigned URLs generated successfully", presignedUrls));
     }
 
-    public record CourseImagePresignRequest(
+    @PostMapping("/presign/avatars")
+    public ResponseEntity<ApiResponseDto<Map<String, String>>> getAvatarUrls(
+            @Valid @RequestBody AvatarPresignRequest request) {
+        Map<String, String> presignedUrls = minioService.getAvatarUrls(request.keys());
+        return ResponseEntity.ok(ApiResponseDto.ok("Avatar presigned URLs generated successfully", presignedUrls));
+    }
+
+    /**
+     * DTO đơn giản cho batch presign course images
+     */
+    public static record CourseImagePresignRequest(
+            @NotEmpty(message = "Keys không được rỗng")
+            List<String> keys
+    ) {}
+
+    /**
+     * DTO đơn giản cho batch presign avatars
+     */
+    public static record AvatarPresignRequest(
             @NotEmpty(message = "Keys không được rỗng")
             List<String> keys
     ) {}

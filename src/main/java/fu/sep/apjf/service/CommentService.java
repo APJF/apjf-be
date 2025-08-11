@@ -48,6 +48,19 @@ public class CommentService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<CommentResponseDto> getCommentsByPostId(Long postId) {
+        // Kiểm tra post có tồn tại không
+        if (!postRepo.existsById(postId)) {
+            throw new EntityNotFoundException("Post không tồn tại");
+        }
+
+        return commentRepo.findByPostId(postId)
+                .stream()
+                .map(commentMapper::toDto)
+                .toList();
+    }
+
     public CommentResponseDto create(@Valid CommentRequestDto dto) {
         User user = userRepo.findById(dto.userId())
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
