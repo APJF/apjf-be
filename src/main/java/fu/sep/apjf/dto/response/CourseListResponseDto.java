@@ -2,11 +2,7 @@ package fu.sep.apjf.dto.response;
 
 import fu.sep.apjf.entity.EnumClass;
 
-import java.util.Set;
 
-/**
- * DTO tối ưu cho danh sách courses - không bao gồm exams để cải thiện performance
- */
 public record CourseListResponseDto(
         String id,
         String title,
@@ -17,7 +13,6 @@ public record CourseListResponseDto(
         String requirement,
         EnumClass.Status status,
         String prerequisiteCourseId,
-        Set<String> topics,
         Float averageRating
 ) {
 }

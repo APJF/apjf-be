@@ -43,7 +43,6 @@ public interface CourseMapper {
 
     // Method tối ưu cho findAll - không load exams, topics chỉ có name
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
-    @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopicNames")
     CourseListResponseDto toListDto(Course course, Float averageRating);
 
     // Method cho findById - load đầy đủ thông tin bao gồm exams
