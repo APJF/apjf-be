@@ -8,6 +8,7 @@ import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseMapper;
 import fu.sep.apjf.repository.CourseRepository;
+import fu.sep.apjf.repository.ReviewRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,16 +28,19 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
     private final ApprovalRequestService approvalRequestService;
     private final MinioService minioService;
-    private final CourseMapper courseMapper; // Thêm injection
+    private final CourseMapper courseMapper;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
                 .map(course -> {
-                    CourseResponseDto dto = courseMapper.toDto(course);
+                    Double averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
+                            .orElse(null);
+                    CourseResponseDto dto = courseMapper.toDto(course, averageRating);
                     return convertImageUrl(dto);
                 })
                 .toList();
@@ -46,7 +50,11 @@ public class CourseService {
     public CourseResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-        CourseResponseDto dto = courseMapper.toDtoWithExams(course);
+
+        Double averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
+                .orElse(null);
+
+        CourseResponseDto dto = courseMapper.toDto(course, averageRating);
         return convertImageUrl(dto);
     }
 
