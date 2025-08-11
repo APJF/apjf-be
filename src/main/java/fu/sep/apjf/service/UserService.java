@@ -28,10 +28,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -202,7 +201,7 @@ public class UserService {
                 .findTopByUserOrderByRequestedTimeDesc(user)
                 .orElseThrow(() -> new AppException("OTP không tồn tại."));
 
-        if (token.getExpirationTime().isBefore(LocalDateTime.now()) || !token.getTokenValue().equals(otp)) {
+        if (token.getExpirationTime().isBefore(Instant.now()) || !token.getTokenValue().equals(otp)) {
             throw new AppException("OTP sai hoặc đã hết hạn.");
         }
 
@@ -233,7 +232,7 @@ public class UserService {
             throw new IllegalArgumentException("OTP không chính xác");
         }
 
-        if (token.getExpirationTime().isBefore(LocalDateTime.now())) {
+        if (token.getExpirationTime().isBefore(Instant.now())) {
             throw new IllegalArgumentException("OTP đã hết hạn");
         }
 
@@ -326,7 +325,7 @@ public class UserService {
 
                 if (lastToken != null) {
                     // Kiểm tra throttle nếu có OTP cũ
-                    if (Duration.between(lastToken.getRequestedTime(), LocalDateTime.now()).compareTo(OTP_THROTTLE) < 0) {
+                    if (Duration.between(lastToken.getRequestedTime(), Instant.now()).compareTo(OTP_THROTTLE) < 0) {
                         throw new AppException("Vui lòng chờ ít nhất 1 phút trước khi yêu cầu gửi lại OTP.");
                     }
                     // Xóa token cũ
@@ -353,7 +352,7 @@ public class UserService {
         tokenRepository.deleteAllByUserAndType(user, tokenType);
 
         // Tạo token mới
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         String otp = otpUtils.generateOTP();
         Token token = Token.builder()
                 .user(user)

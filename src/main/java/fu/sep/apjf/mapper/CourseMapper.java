@@ -18,26 +18,16 @@ public interface CourseMapper {
     @Mapping(target = "topics", source = "topics", qualifiedByName = "mapTopics")
     @Mapping(target = "prerequisiteCourseId", source = "prerequisiteCourse.id")
     @Mapping(target = "averageRating", ignore = true)
-    // id, title, description, duration, level, image, requirement, status tự động map
     CourseResponseDto toDto(Course course);
 
-    // Load cả exams (cho findById)
     @Mapping(target = "prerequisiteCourseId", source = "prerequisiteCourse.id")
     @Mapping(target = "topics", source = "topics", qualifiedByName = "mapTopics")
     @Mapping(target = "averageRating", ignore = true)
-    // exams, id, title, description, etc. tự động map
     CourseResponseDto toDtoWithExams(Course course);
 
-    // Map với averageRating
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
-    // exams, averageRating, và các fields khác tự động map
-    CourseResponseDto toDto(Course course, Double averageRating);
-
-    // Map với averageRating (double primitive)
-    @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
-    @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
-    CourseResponseDto toDto(Course course, double averageRating);
+    CourseResponseDto toDto(Course course, Float averageRating);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "status", constant = "INACTIVE")
@@ -48,7 +38,6 @@ public interface CourseMapper {
     @Mapping(target = "reviews", ignore = true)
     @Mapping(target = "approvalRequests", ignore = true)
     @Mapping(target = "courseLearningPaths", ignore = true)
-    // id, title, description, duration, level, image, requirement tự động map
     Course toEntity(CourseRequestDto courseDto);
 
     // Custom mapping methods

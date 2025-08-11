@@ -1,7 +1,8 @@
 package fu.sep.apjf.dto.response;
 
 import fu.sep.apjf.entity.EnumClass;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 import java.util.List;
 
 public record QuestionResponseDto(
@@ -11,7 +12,8 @@ public record QuestionResponseDto(
         EnumClass.QuestionType type,
         String explanation,
         String fileUrl,
-        LocalDateTime createdAt,
+        Instant createdAt,
         List<OptionResponseDto> options,
         List<String> unitIds
-) {}
+) {
+}

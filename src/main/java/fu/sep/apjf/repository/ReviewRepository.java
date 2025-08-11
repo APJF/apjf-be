@@ -27,5 +27,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Object[]> findTopRatedCourses(Pageable pageable);
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.course.id = :courseId")
-    Optional<Double> calculateAverageRatingByCourseId(@Param("courseId") String courseId);
+    Optional<Float> calculateAverageRatingByCourseId(@Param("courseId") String courseId);
 }

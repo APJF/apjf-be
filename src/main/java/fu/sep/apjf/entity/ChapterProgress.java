@@ -3,7 +3,7 @@ package fu.sep.apjf.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "chapter_progress")
@@ -30,5 +30,5 @@ public class ChapterProgress {
 
     private boolean completed;
 
-    private LocalDateTime completedAt;
+    private Instant completedAt;
 }

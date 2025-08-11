@@ -2,7 +2,8 @@ package fu.sep.apjf.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "review")
@@ -26,14 +27,14 @@ public class Review {
     private User user;
 
     @Column(nullable = false)
-    private Integer rating;
+    private Float rating;
 
     @Column(length = 2000)
     private String comment;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "last_updated_at")
-    private LocalDateTime lastUpdatedAt;
+    private Instant lastUpdatedAt;
 }

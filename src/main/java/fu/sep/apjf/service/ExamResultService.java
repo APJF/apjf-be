@@ -11,7 +11,7 @@ import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class ExamResultService {
         ExamResult result = ExamResult.builder()
                 .exam(exam)
                 .user(user)
-                .startedAt(LocalDateTime.now())
+                .startedAt(Instant.now())
                 .status(EnumClass.ExamStatus.IN_PROGRESS)
                 .build();
         List<ExamResultDetail> details = exam.getQuestions().stream()

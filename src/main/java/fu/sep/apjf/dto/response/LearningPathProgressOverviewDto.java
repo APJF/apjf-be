@@ -5,5 +5,5 @@ public record LearningPathProgressOverviewDto(
         String learningPathTitle,
         int totalUnits,
         int completedUnits,
-        double progressPercentage
+        Float progressPercentage
 ) {}

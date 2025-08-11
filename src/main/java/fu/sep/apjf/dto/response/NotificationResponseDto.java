@@ -1,17 +1,15 @@
 package fu.sep.apjf.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record NotificationResponseDto(
         Long id,
         String content,
         boolean isRead,
-        LocalDateTime createdAt,
-
+        Instant createdAt,
         Long senderId,
         String senderUsername,
-
         Long postId,
         String postTitle
-) {}
-
+) {
+}

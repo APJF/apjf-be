@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +30,7 @@ public class Course {
     private String description;
 
     @Column(name = "duration", nullable = false)
-    private BigDecimal duration;
+    private Float duration;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

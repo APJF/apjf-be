@@ -14,13 +14,13 @@ public record LearningPathRequestDto(
         EnumClass.Level targetLevel,
         String primaryGoal,
         String focusSkill,
-        Integer duration,
+        Float duration,
         Long userId,
         List<String> courseIds
 ) {
     public static LearningPathRequestDto of(Long id, String title, String description, EnumClass.Level targetLevel,
                                             String primaryGoal, String focusSkill,
-                                            Integer duration, Long userId, List<String> courseIds) {
+                                            Float duration, Long userId, List<String> courseIds) {
         return new LearningPathRequestDto(id, title, description, targetLevel, primaryGoal, focusSkill,
                  duration, userId, courseIds);
     }

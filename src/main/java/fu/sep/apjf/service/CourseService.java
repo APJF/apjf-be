@@ -38,7 +38,7 @@ public class CourseService {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
                 .map(course -> {
-                    Double averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
+                    Float averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
                             .orElse(null);
                     CourseResponseDto dto = courseMapper.toDto(course, averageRating);
                     return convertImageUrl(dto);
@@ -51,7 +51,7 @@ public class CourseService {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
-        Double averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
+        Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
                 .orElse(null);
 
         CourseResponseDto dto = courseMapper.toDto(course, averageRating);

@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -61,7 +61,7 @@ public class CommentService {
             Notification notification = Notification.builder()
                     .content(user.getUsername() + " đã bình luận bài viết của bạn: " + comment.getContent())
                     .isRead(false)
-                    .createdAt(LocalDateTime.now())
+                    .createdAt(Instant.now())
                     .sender(user)
                     .recipient(post.getUser()) // Chủ post là người nhận
                     .post(post)

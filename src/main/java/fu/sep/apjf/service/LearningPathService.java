@@ -6,14 +6,18 @@ import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.CourseLearningPathMapper;
 import fu.sep.apjf.mapper.LearningPathMapper;
-import fu.sep.apjf.repository.*;
+import fu.sep.apjf.repository.CourseLearningPathRepository;
+import fu.sep.apjf.repository.CourseRepository;
+import fu.sep.apjf.repository.LearningPathRepository;
+import fu.sep.apjf.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 @Service
@@ -65,8 +69,8 @@ public class LearningPathService {
         path.setTargetLevel(dto.targetLevel() != null ? dto.targetLevel().toString() : null);
         path.setPrimaryGoal(dto.primaryGoal());
         path.setFocusSkill(dto.focusSkill());
-        path.setDuration(dto.duration() != null ? new BigDecimal(dto.duration()) : null);
-        path.setLastUpdatedAt(LocalDateTime.now());
+        path.setDuration(dto.duration());
+        path.setLastUpdatedAt(Instant.now());
         learningPathRepository.save(path);
 
         if (dto.courseIds() != null) {
@@ -112,10 +116,10 @@ public class LearningPathService {
 
         // Tạo CourseLearningPath với learningPathId từ parameter, không từ DTO
         CourseLearningPath entity = new CourseLearningPath(
-            new CourseLearningPathKey(dto.courseId(), learningPathId),
-            course,
-            path,
-            dto.courseOrderNumber()
+                new CourseLearningPathKey(dto.courseId(), learningPathId),
+                course,
+                path,
+                dto.courseOrderNumber()
         );
         courseLearningPathRepository.save(entity);
     }
@@ -131,7 +135,7 @@ public class LearningPathService {
         );
         LearningPath path = learningPathRepository.findById(learningPathId).orElseThrow();
         path.setStatus(EnumClass.PathStatus.STUDYING);
-        path.setLastUpdatedAt(LocalDateTime.now());
+        path.setLastUpdatedAt(Instant.now());
         learningPathRepository.save(path);
     }
 

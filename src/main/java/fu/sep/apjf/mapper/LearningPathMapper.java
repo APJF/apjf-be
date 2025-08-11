@@ -1,25 +1,25 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
-import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
+import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.LearningPath;
 import fu.sep.apjf.entity.User;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface LearningPathMapper {
 
-    // Map từ entity sang DTO đơn (không có danh sách course)
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "targetLevel", source = "targetLevel", qualifiedByName = "stringToLevel")
-    @Mapping(target = "duration", source = "duration", qualifiedByName = "bigDecimalToInteger")
+    @Mapping(target = "duration", source = "duration")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "courses", ignore = true)
     LearningPathResponseDto toDto(LearningPath learningPath);
@@ -39,8 +39,8 @@ public interface LearningPathMapper {
         if (entity != null) {
             entity.setUser(user);
             entity.setStatus(EnumClass.PathStatus.PENDING);
-            entity.setCreatedAt(LocalDateTime.now());
-            entity.setLastUpdatedAt(LocalDateTime.now());
+            entity.setCreatedAt(Instant.now());
+            entity.setLastUpdatedAt(Instant.now());
         }
         return entity;
     }
@@ -54,7 +54,7 @@ public interface LearningPathMapper {
                 learningPath.getPrimaryGoal(),
                 learningPath.getFocusSkill(),
                 learningPath.getStatus(),
-                bigDecimalToInteger(learningPath.getDuration()),
+                learningPath.getDuration(),
                 learningPath.getUser().getId(),
                 learningPath.getUser().getUsername(),
                 learningPath.getCreatedAt(),
@@ -73,8 +73,4 @@ public interface LearningPathMapper {
         }
     }
 
-    @Named("bigDecimalToInteger")
-    default Integer bigDecimalToInteger(BigDecimal duration) {
-        return duration != null ? duration.intValue() : null;
-    }
 }

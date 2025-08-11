@@ -17,7 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class ReviewService {
     private final UserRepository userRepo;
     private final CourseMapper courseMapper;
 
-    public CourseResponseDto addReview(Long userId, String courseId, @Min(1) @Max(5) int rating, String comment) {
+    public CourseResponseDto addReview(Long userId, String courseId, @Min(1) @Max(5) Float rating, String comment) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
@@ -49,8 +49,8 @@ public class ReviewService {
                 .user(user)
                 .rating(rating)
                 .comment(comment)
-                .createdAt(LocalDateTime.now())
-                .lastUpdatedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .lastUpdatedAt(Instant.now())
                 .build();
 
         reviewRepo.save(review);
@@ -90,8 +90,8 @@ public class ReviewService {
         reviewRepo.delete(review);
     }
 
-    public double getAverageRating(String courseId) {
-        return reviewRepo.calculateAverageRatingByCourseId(courseId).orElse(0.0);
+    public Float getAverageRating(String courseId) {
+        return reviewRepo.calculateAverageRatingByCourseId(courseId).orElse(null);
     }
 
     public List<CourseResponseDto> getTopRatedCourses(int topN) {
@@ -100,7 +100,7 @@ public class ReviewService {
 
         for (Object[] obj : result) {
             Course course = (Course) obj[0];
-            Double avgRating = (Double) obj[1];
+            Float avgRating = (Float) obj[1];
             topCourses.add(courseMapper.toDto(course, avgRating));
         }
 

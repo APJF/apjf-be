@@ -3,7 +3,7 @@ package fu.sep.apjf.dto.response;
 public record ReviewResponseDto(
         Long userId,
         String courseId,
-        int rating,
+        Float rating,
         String comment
 ) {
 }

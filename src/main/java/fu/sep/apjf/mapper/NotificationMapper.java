@@ -3,9 +3,8 @@ package fu.sep.apjf.mapper;
 import fu.sep.apjf.dto.request.NotificationRequestDto;
 import fu.sep.apjf.dto.response.NotificationResponseDto;
 import fu.sep.apjf.entity.Notification;
-import fu.sep.apjf.entity.Post;
-import fu.sep.apjf.entity.User;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface NotificationMapper {
@@ -20,8 +19,7 @@ public interface NotificationMapper {
     @Mapping(source = "senderId", target = "sender.id")
     @Mapping(source = "postId", target = "post.id")
     @Mapping(target = "recipient", ignore = true) // recipient sẽ được set thủ công trong service
-    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(java.time.Instant.now())")
     @Mapping(target = "isRead", constant = "false")
     Notification toEntity(NotificationRequestDto dto);
 }
-

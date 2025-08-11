@@ -1,11 +1,11 @@
 package fu.sep.apjf.dto.response;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record UnitProgressResponseDto(
         String unitId,
         String unitTitle,
         boolean completed,
-        LocalDateTime completedAt
+        Instant completedAt
 ) {
 }

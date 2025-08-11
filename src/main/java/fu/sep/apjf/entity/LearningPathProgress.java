@@ -1,9 +1,12 @@
 package fu.sep.apjf.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "learning_path_progress")
@@ -26,5 +29,5 @@ public class LearningPathProgress {
 
     private boolean completed;
 
-    private LocalDateTime completedAt;
+    private Instant completedAt;
 }
