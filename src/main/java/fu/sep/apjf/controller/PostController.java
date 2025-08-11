@@ -25,12 +25,12 @@ public class PostController {
 
     @GetMapping("/list")
     public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list(user.getId())));
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<PostResponseDto>> getById(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id, user.getId())));
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id)));
     }
 
     @PostMapping
