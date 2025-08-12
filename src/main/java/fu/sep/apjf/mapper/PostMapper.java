@@ -14,6 +14,7 @@ public interface PostMapper {
     PostMapper INSTANCE = Mappers.getMapper(PostMapper.class);
 
     @Mapping(target = "id", source = "post.id")
+    @Mapping(target = "username", source = "post.user.username")
     @Mapping(target = "email", source = "post.user.email")
     @Mapping(target = "avatar", source = "post.user.avatar")
     @Mapping(target = "updatedAt", source = "post.updatedAt")

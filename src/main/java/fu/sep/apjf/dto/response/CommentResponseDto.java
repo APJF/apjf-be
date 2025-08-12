@@ -6,9 +6,8 @@ public record CommentResponseDto(
         Long id,
         String content,
         Instant createdAt,
+        String username,
         String email,
         String avatar,
         Long postId
 ) {}
-
-

@@ -195,4 +195,44 @@ public class MinioService {
 
         return result;
     }
+
+    /**
+     * Universal method để generate presigned URLs - tự động detect media type
+     */
+    public Map<String, String> getPresignedUrls(List<String> objectNames) {
+        Map<String, String> result = new HashMap<>();
+
+        for (String objectName : objectNames) {
+            if (objectName != null && !objectName.trim().isEmpty()) {
+                try {
+                    String presignedUrl = detectAndGenerateUrl(objectName);
+
+                    if (presignedUrl != null) {
+                        result.put(objectName, presignedUrl);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to generate presigned URL for {}: {}", objectName, e.getMessage());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Tự động detect loại media và generate URL tương ứng
+     */
+    private String detectAndGenerateUrl(String objectName) throws Exception {
+        // Detect dựa trên naming pattern
+        if (objectName.startsWith("course_image_")) {
+            return getCourseImageUrl(objectName);
+        } else if (objectName.contains("_avatar_")) {
+            return getAvatarUrl(objectName);
+        } else if (objectName.contains("_doc_")) {
+            return getDocumentUrl(objectName);
+        } else {
+            log.warn("Unknown object name pattern: {}", objectName);
+            return null;
+        }
+    }
 }

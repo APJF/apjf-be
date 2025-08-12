@@ -7,6 +7,7 @@ public record PostResponseDto(
         String content,
         Instant createdAt,
         Instant updatedAt,
+        String username,
         String email,
         String avatar,
         Long commentsCount

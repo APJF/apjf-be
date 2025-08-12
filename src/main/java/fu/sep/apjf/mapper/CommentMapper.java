@@ -10,7 +10,8 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
 
-    @Mapping(target = "id", expression = "java(comment.getUser() != null ? comment.getUser().getId() : null)")
+    @Mapping(target = "id", source = "comment.id")
+    @Mapping(target = "username", expression = "java(comment.getUser() != null ? comment.getUser().getUsername() : null)")
     @Mapping(target = "email", expression = "java(comment.getUser() != null ? comment.getUser().getEmail() : null)")
     @Mapping(target = "avatar", expression = "java(comment.getUser() != null ? comment.getUser().getAvatar() : null)")
     @Mapping(target = "postId", expression = "java(comment.getPost() != null ? comment.getPost().getId() : null)")

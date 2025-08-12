@@ -20,32 +20,17 @@ public class MediaController {
 
     private final MinioService minioService;
 
-    @PostMapping("/presign/course-images")
-    public ResponseEntity<ApiResponseDto<Map<String, String>>> getCourseImageUrls(
-            @Valid @RequestBody CourseImagePresignRequest request) {
-        Map<String, String> presignedUrls = minioService.getCourseImageUrls(request.keys());
+    @PostMapping("/presign")
+    public ResponseEntity<ApiResponseDto<Map<String, String>>> getPresignedUrls(
+            @Valid @RequestBody PresignRequest request) {
+        Map<String, String> presignedUrls = minioService.getPresignedUrls(request.keys());
         return ResponseEntity.ok(ApiResponseDto.ok("Presigned URLs generated successfully", presignedUrls));
     }
 
-    @PostMapping("/presign/avatars")
-    public ResponseEntity<ApiResponseDto<Map<String, String>>> getAvatarUrls(
-            @Valid @RequestBody AvatarPresignRequest request) {
-        Map<String, String> presignedUrls = minioService.getAvatarUrls(request.keys());
-        return ResponseEntity.ok(ApiResponseDto.ok("Avatar presigned URLs generated successfully", presignedUrls));
-    }
-
     /**
-     * DTO đơn giản cho batch presign course images
+     * DTO đơn giản cho presign - không cần type
      */
-    public static record CourseImagePresignRequest(
-            @NotEmpty(message = "Keys không được rỗng")
-            List<String> keys
-    ) {}
-
-    /**
-     * DTO đơn giản cho batch presign avatars
-     */
-    public static record AvatarPresignRequest(
+    public static record PresignRequest(
             @NotEmpty(message = "Keys không được rỗng")
             List<String> keys
     ) {}
