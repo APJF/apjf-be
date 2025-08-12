@@ -166,4 +166,6 @@ public class LearningPathService {
                 .toList();
         courseLearningPathRepository.saveAll(courseLinks);
     }
+
+
 }

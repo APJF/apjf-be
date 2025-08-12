@@ -1,6 +1,7 @@
 package fu.sep.apjf.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 public record ChapterProgressResponseDto(
@@ -8,6 +9,6 @@ public record ChapterProgressResponseDto(
         String chapterTitle,
         boolean completed,
         LocalDateTime completedAt,
-        Set<UnitProgressResponseDto> unitProgresses
+        List<UnitProgressResponseDto> unitProgresses
 ) {
 }

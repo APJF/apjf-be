@@ -31,4 +31,5 @@ public class CourseProgress {
     private boolean completed;
 
     private LocalDateTime completedAt;
+
 }
