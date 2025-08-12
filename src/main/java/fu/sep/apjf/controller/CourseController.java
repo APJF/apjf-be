@@ -4,12 +4,13 @@ import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.CourseListResponseDto;
+import fu.sep.apjf.dto.response.CourseDetailResponseDto;
+import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
 import fu.sep.apjf.service.CourseService;
-import fu.sep.apjf.service.ReviewService;
 import fu.sep.apjf.service.MinioService;
+import fu.sep.apjf.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,13 +34,13 @@ public class CourseController {
     private final MinioService minioService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<CourseListResponseDto>>> getAll() {
+    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getAll() {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách khoá học", courseService.findAll()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseDetailResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
     }
@@ -47,7 +48,7 @@ public class CourseController {
 
     @GetMapping("/top-rated")
     public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getTopRatedCourses() {
-        List<CourseResponseDto> topCourses = reviewService.getTopRatedCourses(3);
+        List<CourseResponseDto> topCourses = reviewService.getTopRatedCourses();
         return ResponseEntity.ok(ApiResponseDto.ok("Top 3 khóa học được đánh giá cao nhất", topCourses));
     }
 
@@ -80,6 +81,12 @@ public class CourseController {
     public ResponseEntity<ApiResponseDto<List<ChapterResponseDto>>> getCourseChapters(
             @PathVariable String courseId) {
         return ResponseEntity.ok(ApiResponseDto.ok("Danh sách chapters của course", chapterService.findByCourseId(courseId)));
+    }
+
+    @GetMapping("/{id}/exams")
+    public ResponseEntity<ApiResponseDto<List<ExamOverviewResponseDto>>> getExamsByCourseId(
+            @PathVariable String id) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài kiểm tra của khóa học", courseService.getExamsByCourseId(id)));
     }
 
 }

@@ -3,6 +3,8 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.ExamRequestDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.dto.response.ExamResponseDto;
+import fu.sep.apjf.dto.response.ExamListResponseDto;
+import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.Question;
 import fu.sep.apjf.exception.ResourceNotFoundException;
@@ -81,9 +83,9 @@ public class ExamService {
         return examMapper.toDto(exam);
     }
 
-    public List<ExamResponseDto> findAll() {
+    public List<ExamListResponseDto> findAll() {
         return examRepository.findAll().stream()
-                .map(examMapper::toDto)
+                .map(examMapper::toListDto)
                 .toList();
     }
 
@@ -99,8 +101,8 @@ public class ExamService {
     }
 
     @Transactional
-    public List<fu.sep.apjf.dto.response.QuestionResponseDto> getQuestionsByExamId(String examId) {
-        Exam exam = examRepository.findByIdWithQuestions(examId)
+    public List<QuestionResponseDto> getQuestionsByExamId(String examId) {
+        Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException(NOT_FOUND_EXAM_MSG));
         return exam.getQuestions().stream()
                 .map(questionMapper::toDto)

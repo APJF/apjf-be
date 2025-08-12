@@ -1,4 +1,3 @@
-// ExamResponseDto.java
 package fu.sep.apjf.dto.response;
 
 import fu.sep.apjf.entity.EnumClass;
@@ -6,9 +5,9 @@ import fu.sep.apjf.entity.EnumClass;
 import java.time.Instant;
 
 /**
- * DTO cho exam detail - không bao gồm questions (sẽ có endpoint riêng)
+ * DTO tối ưu cho danh sách exams - không bao gồm questions để cải thiện performance
  */
-public record ExamResponseDto(
+public record ExamListResponseDto(
         String id,
         String title,
         String description,

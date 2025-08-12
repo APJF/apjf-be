@@ -1,18 +1,21 @@
 package fu.sep.apjf.dto.response;
 
+import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.entity.EnumClass;
 
+import java.util.Set;
 
-public record CourseListResponseDto(
+public record CourseDetailResponseDto(
         String id,
         String title,
         String description,
         Float duration,
         EnumClass.Level level,
-        String image,           // Giữ nguyên field image như entity, null nếu không có
+        String image,
         String requirement,
         EnumClass.Status status,
         String prerequisiteCourseId,
+        Set<TopicDto> topics,
         Float averageRating
 ) {
 }

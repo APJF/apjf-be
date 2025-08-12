@@ -2,7 +2,7 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.ReviewRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping("/{courseId}/reviews")
-    public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getReviewsByCourse(@PathVariable("courseId") String courseId) {
+    public ResponseEntity<ApiResponseDto<List<CourseDetailResponseDto>>> getReviewsByCourse(@PathVariable("courseId") String courseId) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách đánh giá theo khóa học", reviewService.getReviewsByCourse(courseId))
         );
@@ -34,10 +34,10 @@ public class ReviewController {
     }
 
     @PostMapping("/{courseId}/reviews")
-    public ResponseEntity<ApiResponseDto<CourseResponseDto>> createReview(
+    public ResponseEntity<ApiResponseDto<CourseDetailResponseDto>> createReview(
             @PathVariable("courseId") String courseId,
             @RequestBody ReviewRequestDto request) {
-        CourseResponseDto created = reviewService.addReview(
+        CourseDetailResponseDto created = reviewService.addReview(
                 request.userId(),
                 courseId,
                 request.rating(),
