@@ -2,8 +2,10 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.PostRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.CommentResponseDto;
 import fu.sep.apjf.dto.response.PostResponseDto;
 import fu.sep.apjf.entity.User;
+import fu.sep.apjf.service.CommentService;
 import fu.sep.apjf.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +24,23 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final CommentService commentService;
 
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list(user.getId())));
+    @GetMapping
+    public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll() {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<PostResponseDto>> getById(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id, user.getId())));
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id)));
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<ApiResponseDto<List<CommentResponseDto>>> getCommentsByPostId(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bình luận của bài viết", commentService.getCommentsByPostId(id)));
     }
 
     @PostMapping
@@ -38,7 +48,7 @@ public class PostController {
             @Valid @RequestBody PostRequestDto dto,
             @AuthenticationPrincipal User user) {
 
-        PostResponseDto created = postService.create(dto,user.getId());
+        PostResponseDto created = postService.create(dto, user.getId());
         return ResponseEntity.created(URI.create("/api/posts/" + created.id()))
                 .body(ApiResponseDto.ok("Tạo bài viết thành công", created));
     }

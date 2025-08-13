@@ -51,6 +51,7 @@ dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
+    implementation 'org.liquibase:liquibase-core'
 
     // Database drivers (runtimeOnly)
     runtimeOnly 'com.h2database:h2'

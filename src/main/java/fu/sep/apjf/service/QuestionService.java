@@ -8,10 +8,12 @@ import fu.sep.apjf.mapper.QuestionMapper;
 import fu.sep.apjf.repository.QuestionRepository;
 import fu.sep.apjf.repository.UnitRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,11 +52,20 @@ public class QuestionService {
         questionRepository.deleteById(id);
     }
 
-    @Transactional(readOnly = true)
-    public List<QuestionResponseDto> getAllQuestions() {
-        return questionRepository.findAll().stream()
-                .map(questionMapper::toDto)
-                .toList();
+    public Page<QuestionResponseDto> getAllQuestions(String questionId, String unitId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return questionRepository.searchQuestionsWithoutOptions(questionId, unitId, pageable)
+                .map(q -> new QuestionResponseDto(
+                        q.getId(),
+                        q.getContent(),
+                        q.getScope(),
+                        q.getType(),
+                        q.getExplanation(),
+                        q.getFileUrl(),
+                        q.getCreatedAt(),
+                        null,
+                        q.getUnits().stream().map(Unit::getId).toList()
+                ));
     }
 
     @Transactional(readOnly = true)

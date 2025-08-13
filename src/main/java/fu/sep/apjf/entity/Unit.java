@@ -70,4 +70,13 @@ public class Unit {
     @Builder.Default
     private Set<UnitProgress> unitProgresses = new HashSet<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private transient Set<ChapterProgress> chapterProgresses = new HashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private transient Set<CourseProgress> courseProgresses = new HashSet<>();
+
+
 }

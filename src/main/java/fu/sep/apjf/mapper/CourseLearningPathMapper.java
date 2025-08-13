@@ -14,6 +14,10 @@ public interface CourseLearningPathMapper {
     @Mapping(target = "courseId", source = "course.id")
     @Mapping(target = "learningPathId", source = "learningPath.id")
     @Mapping(target = "courseOrderNumber", source = "courseOrderNumber")
+    @Mapping(target = "title", source = "course.title")
+    @Mapping(target = "description", source = "course.description")
+    @Mapping(target = "duration", source = "course.duration")
+    @Mapping(target = "level", source = "course.level")
     CourseOrderDto toDto(CourseLearningPath entity);
 
     default CourseLearningPath toEntity(CourseOrderDto dto, Course course, LearningPath path) {

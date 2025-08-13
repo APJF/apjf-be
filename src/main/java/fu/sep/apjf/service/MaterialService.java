@@ -2,7 +2,6 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.MaterialRequestDto;
 import fu.sep.apjf.dto.response.MaterialResponseDto;
-import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Material;
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.exception.ResourceNotFoundException;
@@ -27,7 +26,6 @@ public class MaterialService {
     private static final String MATERIAL_NOT_FOUND_PREFIX = "Không tìm thấy tài liệu với ID: ";
     private final MaterialRepository materialRepository;
     private final UnitRepository unitRepository;
-    private final ApprovalRequestService approvalRequestService;
     private final MaterialMapper materialMapper;
     private final MinioService minioService; // Thêm MinioService injection
 
@@ -104,15 +102,7 @@ public class MaterialService {
 
         Material savedMaterial = materialRepository.save(material);
 
-        // Auto-create approval request for this new material
-        approvalRequestService.autoCreateApprovalRequest(
-                ApprovalRequest.TargetType.MATERIAL,
-                savedMaterial.getId(),
-                ApprovalRequest.RequestType.CREATE,
-                staffId
-        );
-
-        log.info("Tạo tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
+        log.info("Tạo tài liệu {} thành công", savedMaterial.getId());
         return materialMapper.toDto(savedMaterial);
     }
 
@@ -138,15 +128,7 @@ public class MaterialService {
 
         Material savedMaterial = materialRepository.save(updatedMaterial);
 
-        // Auto-create approval request for this updated material
-        approvalRequestService.autoCreateApprovalRequest(
-                ApprovalRequest.TargetType.MATERIAL,
-                savedMaterial.getId(),
-                ApprovalRequest.RequestType.UPDATE,
-                staffId
-        );
-
-        log.info("Cập nhật tài liệu {} và yêu cầu phê duyệt thành công", savedMaterial.getId());
+        log.info("Cập nhật tài liệu {} thành công", savedMaterial.getId());
         return materialMapper.toDto(savedMaterial);
     }
 

@@ -3,14 +3,15 @@ package fu.sep.apjf.dto.response;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.EnumClass.ExamStatus;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record ExamHistoryResponseDto(
         String examResultId,
         String examId,
         String examTitle,
-        double score,
+        Float score,
         ExamStatus status,
         EnumClass.ExamType type,
-        LocalDateTime submittedAt
-) {}
+        Instant submittedAt
+) {
+}

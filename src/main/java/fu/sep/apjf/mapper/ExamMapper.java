@@ -2,6 +2,7 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.ExamRequestDto;
 import fu.sep.apjf.dto.response.ExamResponseDto;
+import fu.sep.apjf.dto.response.ExamListResponseDto;
 import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Exam;
@@ -13,11 +14,21 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface ExamMapper {
 
+    // Method cho exam list - trả về ExamListResponseDto (không có questions chi tiết)
     @Mapping(target = "courseId", source = "course.id")
     @Mapping(target = "chapterId", source = "chapter.id")
     @Mapping(target = "unitId", source = "unit.id")
+    @Mapping(target = "totalQuestions", expression = "java(exam.getQuestions() != null ? exam.getQuestions().size() : 0)")
+    ExamListResponseDto toListDto(Exam exam);
+
+    // Method cho exam detail - trả về ExamResponseDto (không có questions chi tiết, chỉ có count)
+    @Mapping(target = "courseId", source = "course.id")
+    @Mapping(target = "chapterId", source = "chapter.id")
+    @Mapping(target = "unitId", source = "unit.id")
+    @Mapping(target = "totalQuestions", expression = "java(exam.getQuestions() != null ? exam.getQuestions().size() : 0)")
     ExamResponseDto toDto(Exam exam);
 
+    // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "id", source = "id")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "course", source = "courseId", qualifiedByName = "mapIdToCourse")
@@ -52,5 +63,3 @@ public interface ExamMapper {
     }
 
 }
-
-

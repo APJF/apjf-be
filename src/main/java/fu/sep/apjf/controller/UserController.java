@@ -6,6 +6,7 @@ import fu.sep.apjf.dto.response.UserResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.MinioService;
 import fu.sep.apjf.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,8 +28,8 @@ public class UserController {
         return ResponseEntity.ok(ApiResponseDto.ok("Upload avatar thành công", objectName));
     }
 
-    @PostMapping("/profile")
-    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@RequestBody UserRequestDto dto,
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponseDto<Object>> updateProfile(@Valid @RequestBody UserRequestDto dto,
                                                                 @AuthenticationPrincipal User user) {
         String message = userService.updateProfile(user.getEmail(), dto);
         return ResponseEntity.ok(ApiResponseDto.ok(message));

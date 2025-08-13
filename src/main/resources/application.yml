@@ -6,12 +6,28 @@ spring:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
+    hikari:
+      auto-commit: false
+      maximum-pool-size: 3
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      validation-timeout: 5000
+      connection-test-query: SELECT 1
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     open-in-view: false
+    properties:
+      hibernate:
+        connection:
+          provider_disables_autocommit: true
+        jdbc:
+          time_zone: UTC
 
   mail:
     host: smtp.gmail.com
@@ -46,8 +62,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+      max-file-size: 8MB
+      max-request-size: 8MB
 
 app:
   jwt:
@@ -66,3 +82,4 @@ integration:
       avatar: avatar
       document: document
       course-image: course-image
+

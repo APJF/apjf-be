@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface ExamResultDetailRepository extends JpaRepository<ExamResultDetail, Long> {
-
     List<ExamResultDetail> findByExamResultId(Long examResultId);
 }

@@ -1,6 +1,7 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
@@ -13,11 +14,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class ReviewService {
     private final UserRepository userRepo;
     private final CourseMapper courseMapper;
 
-    public CourseResponseDto addReview(Long userId, String courseId, @Min(1) @Max(5) int rating, String comment) {
+    public CourseDetailResponseDto addReview(Long userId, String courseId, @Min(1) @Max(5) Float rating, String comment) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
@@ -49,36 +49,33 @@ public class ReviewService {
                 .user(user)
                 .rating(rating)
                 .comment(comment)
-                .createdAt(LocalDateTime.now())
-                .lastUpdatedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .lastUpdatedAt(Instant.now())
                 .build();
 
         reviewRepo.save(review);
 
         Course updatedCourse = courseRepo.findById(courseId).orElseThrow();
-        return courseMapper.toDto(updatedCourse, getAverageRating(courseId));
+        return courseMapper.toDetailDto(updatedCourse, getAverageRating(courseId));
     }
 
-    public List<CourseResponseDto> getReviewsByCourse(String courseId) {
+    public List<CourseDetailResponseDto> getReviewsByCourse(String courseId) {
         List<Review> reviews = reviewRepo.findByCourseId(courseId);
-
-        // Lazy validation: chỉ check course existence nếu list rỗng để tối ưu queries
         if (reviews.isEmpty() && !courseRepo.existsById(courseId)) {
             throw new EntityNotFoundException(COURSE_NOT_FOUND);
         }
-
         return reviews.stream()
-                .map(review -> courseMapper.toDto(review.getCourse(), getAverageRating(courseId)))
+                .map(review -> courseMapper.toDetailDto(review.getCourse(), getAverageRating(courseId)))
                 .toList();
     }
 
-    public List<CourseResponseDto> getReviewsByUser(Long userId) {
+    public List<CourseDetailResponseDto> getReviewsByUser(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
         return reviewRepo.findByUser(user)
                 .stream()
-                .map(review -> courseMapper.toDto(review.getCourse(), getAverageRating(review.getCourse().getId())))
+                .map(review -> courseMapper.toDetailDto(review.getCourse(), getAverageRating(review.getCourse().getId())))
                 .toList();
     }
 
@@ -93,22 +90,23 @@ public class ReviewService {
         reviewRepo.delete(review);
     }
 
-    public double getAverageRating(String courseId) {
-        // Sử dụng method mới - hiệu quả hơn
-        return reviewRepo.calculateAverageRatingByCourseId(courseId).orElse(0.0);
+    public Float getAverageRating(String courseId) {
+        return reviewRepo.calculateAverageRatingByCourseId(courseId).orElse(null);
     }
 
-    public List<CourseResponseDto> getTopRatedCourses(int topN) {
-        List<Object[]> result = reviewRepo.findTopRatedCourses(PageRequest.of(0, topN));
-        List<CourseResponseDto> topCourses = new ArrayList<>();
+    public List<CourseResponseDto> getTopRatedCourses() {
+        List<Course> topCourses = reviewRepo.findTop3RatedCourses();
 
-        for (Object[] obj : result) {
-            Course course = (Course) obj[0];
-            Double avgRating = (Double) obj[1];
-            topCourses.add(courseMapper.toDto(course, avgRating));
-        }
-
-        return topCourses;
+        return topCourses.stream()
+                .map(course -> {
+                    Float avgRating = getAverageRating(course.getId());
+                    // Áp dụng logic làm tròn về 0.5 để consistent
+                    if (avgRating != null) {
+                        avgRating = Math.round(avgRating * 2.0f) / 2.0f;
+                    }
+                    return courseMapper.toDto(course, avgRating);
+                })
+                .toList();
     }
 
 }

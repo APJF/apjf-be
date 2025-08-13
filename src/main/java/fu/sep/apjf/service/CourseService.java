@@ -2,12 +2,16 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseDetailResponseDto;
+import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseMapper;
+import fu.sep.apjf.mapper.ExamOverviewMapper;
 import fu.sep.apjf.repository.CourseRepository;
+import fu.sep.apjf.repository.ReviewRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,27 +31,59 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
     private final ApprovalRequestService approvalRequestService;
     private final MinioService minioService;
-    private final CourseMapper courseMapper; // Thêm injection
+    private final CourseMapper courseMapper;
+    private final ExamOverviewMapper examMapper;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
         List<Course> courses = courseRepository.findAll();
         return courses.stream()
                 .map(course -> {
-                    CourseResponseDto dto = courseMapper.toDto(course);
-                    return convertImageUrl(dto);
+                    Float averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
+                            .map(this::roundToHalfStar)
+                            .orElse(null);
+                    // Trả về object name thuần túy, không presign
+                    return courseMapper.toDto(course, averageRating);
                 })
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public CourseResponseDto findById(String id) {
+    public CourseDetailResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-        CourseResponseDto dto = courseMapper.toDtoWithExams(course);
-        return convertImageUrl(dto);
+
+        Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
+                .map(this::roundToHalfStar)
+                .orElse(null);
+
+        // Kiểm tra và generate presigned URL nếu cần
+        String imageUrl = course.getImage();
+        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
+            !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+            try {
+                imageUrl = minioService.getCourseImageUrl(imageUrl);
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for course image {}: {}", imageUrl, e.getMessage());
+                // Giữ nguyên object name nếu có lỗi
+            }
+        }
+
+        // Sử dụng mapper với presigned URL
+        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ExamOverviewResponseDto> getExamsByCourseId(String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+
+        return course.getExams().stream()
+                .map(examMapper::toDto)
+                .toList();
     }
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
@@ -55,7 +91,7 @@ public class CourseService {
             throw new EntityExistsException("ID khóa học đã tồn tại");
         }
 
-        Course course = courseMapper.toEntity(dto); // Sử dụng mapper thay vì manual
+        Course course = courseMapper.toEntity(dto);
 
         if (!userRepository.existsById(staffId)) {
             throw new EntityNotFoundException("Không tìm thấy nhân viên");
@@ -70,7 +106,8 @@ public class CourseService {
                 staffId
         );
 
-        return courseMapper.toDto(savedCourse);
+        // Thêm averageRating parameter (course mới tạo chưa có rating)
+        return courseMapper.toDto(savedCourse, null);
     }
 
     public CourseResponseDto update(String currentId, CourseRequestDto dto, Long staffId) {
@@ -104,7 +141,11 @@ public class CourseService {
                 staffId
         );
 
-        return courseMapper.toDto(savedCourse);
+        // Thêm averageRating parameter
+        Float avgRating = reviewRepository.calculateAverageRatingByCourseId(savedCourse.getId())
+                .map(this::roundToHalfStar)
+                .orElse(null);
+        return courseMapper.toDto(savedCourse, avgRating);
     }
 
     public String uploadCourseImage(MultipartFile file) throws Exception {
@@ -123,32 +164,14 @@ public class CourseService {
         return minioService.uploadCourseImage(file);
     }
 
-    // Helper method để chuyển đổi image object name thành presigned URL
-    private CourseResponseDto convertImageUrl(CourseResponseDto dto) {
-        String imageUrl = dto.image();
-        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
-            !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-            try {
-                imageUrl = minioService.getCourseImageUrl(imageUrl);
-            } catch (Exception e) {
-                log.warn("Failed to generate presigned URL for course image {}: {}", dto.image(), e.getMessage());
-                // Giữ nguyên object name nếu có lỗi
-            }
+    /**
+     * Làm tròn rating về các mốc 0.5 (0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
+     */
+    private Float roundToHalfStar(Float rating) {
+        if (rating == null) {
+            return null;
         }
-
-        return new CourseResponseDto(
-                dto.id(),
-                dto.title(),
-                dto.description(),
-                dto.duration(),
-                dto.level(),
-                imageUrl,
-                dto.requirement(),
-                dto.status(),
-                dto.prerequisiteCourseId(),
-                dto.topics(),
-                dto.exams(),
-                dto.averageRating()
-        );
+        // Nhân 2, làm tròn, rồi chia 2 để có các mốc 0.5
+        return Math.round(rating * 2.0f) / 2.0f;
     }
 }

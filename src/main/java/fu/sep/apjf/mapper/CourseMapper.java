@@ -3,6 +3,7 @@ package fu.sep.apjf.mapper;
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
+import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.entity.Course;
 import org.mapstruct.*;
 
@@ -13,31 +14,20 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring", uses = {ExamOverviewMapper.class})
 public interface CourseMapper {
 
-    // Mặc định không load exams (cho findAll)
-    @Mapping(target = "exams", ignore = true)
-    @Mapping(target = "topics", source = "topics", qualifiedByName = "mapTopics")
-    @Mapping(target = "prerequisiteCourseId", source = "prerequisiteCourse.id")
-    @Mapping(target = "averageRating", ignore = true)
-    // id, title, description, duration, level, image, requirement, status tự động map
-    CourseResponseDto toDto(Course course);
+    // Method cho list courses - trả về CourseResponseDto (không có topics và exams)
+    @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
+    CourseResponseDto toDto(Course course, Float averageRating);
 
-    // Load cả exams (cho findById)
-    @Mapping(target = "prerequisiteCourseId", source = "prerequisiteCourse.id")
-    @Mapping(target = "topics", source = "topics", qualifiedByName = "mapTopics")
-    @Mapping(target = "averageRating", ignore = true)
-    // exams, id, title, description, etc. tự động map
-    CourseResponseDto toDtoWithExams(Course course);
-
-    // Map với averageRating
+    // Method cho course detail - trả về CourseDetailResponseDto (có topics, không có exams)
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
-    // exams, averageRating, và các fields khác tự động map
-    CourseResponseDto toDto(Course course, Double averageRating);
+    CourseDetailResponseDto toDetailDto(Course course, Float averageRating);
 
-    // Map với averageRating (double primitive)
+    // Method cho course detail với presigned URL
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
-    CourseResponseDto toDto(Course course, double averageRating);
+    @Mapping(target = "image", source = "presignedImageUrl")
+    CourseDetailResponseDto toDetailDtoWithPresignedUrl(Course course, Float averageRating, String presignedImageUrl);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "status", constant = "INACTIVE")
@@ -48,7 +38,6 @@ public interface CourseMapper {
     @Mapping(target = "reviews", ignore = true)
     @Mapping(target = "approvalRequests", ignore = true)
     @Mapping(target = "courseLearningPaths", ignore = true)
-    // id, title, description, duration, level, image, requirement tự động map
     Course toEntity(CourseRequestDto courseDto);
 
     // Custom mapping methods

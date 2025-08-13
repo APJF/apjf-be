@@ -3,12 +3,10 @@ package fu.sep.apjf.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 @Entity
 @Table(name = "learning_path")
 @Getter
@@ -30,10 +28,10 @@ public class LearningPath {
     @Enumerated(EnumType.STRING)
     private EnumClass.PathStatus status;
 
-    private BigDecimal duration;
+    private Float duration;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime lastUpdatedAt;
+    private Instant createdAt;
+    private Instant lastUpdatedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

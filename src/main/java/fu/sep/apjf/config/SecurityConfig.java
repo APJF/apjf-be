@@ -35,7 +35,8 @@ public class SecurityConfig {
     private static final String[] AUTH_ENDPOINTS = {
             "/api/auth/**",
             "/oauth2/**",
-            "/login/oauth2/**"
+            "/login/oauth2/**",
+            "/api/media/**"
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {
@@ -58,7 +59,8 @@ public class SecurityConfig {
             "/api/users/avatar",
             "/api/learning-paths/**",
             "/api/posts/**",
-            "/api/comments/**"
+            "/api/comments/**",
+            "/api/student/exams/**",
     };
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;

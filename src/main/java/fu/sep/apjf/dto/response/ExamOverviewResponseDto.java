@@ -6,7 +6,7 @@ public record ExamOverviewResponseDto(
         String examId,
         String title,
         String description,
-        double durationMinutes,
+        Float duration,
         int totalQuestions,
         ExamType type // MC hoặc WRITING
 ) {}

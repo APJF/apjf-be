@@ -1,8 +1,16 @@
 package fu.sep.apjf.dto.response;
 
+import fu.sep.apjf.entity.EnumClass;
+import jakarta.validation.constraints.NotBlank;
+
 public record CourseOrderDto(
+        @NotBlank(message = "Course ID không được để trống")
         String courseId,
         Long learningPathId,
-        int courseOrderNumber
-) {}
-
+        int courseOrderNumber,
+        String title,
+        String description,
+        Float duration,
+        EnumClass.Level level
+) {
+}

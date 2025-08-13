@@ -19,8 +19,17 @@ INSERT INTO users (username, password, email, pending_email, address, phone, ava
 
 /* ---------- TOPIC ---------- */
 INSERT INTO topic (name)
-VALUES ('IT'),
-       ('Ăn uống');
+VALUES
+    ('Từ vựng'),
+    ('Ngữ pháp'),
+    ('Hán tự'),
+    ('Giao tiếp'),
+    ('Nghe hiểu'),
+    ('Đọc hiểu'),
+    ('Viết'),
+    ('Luyện thi JLPT'),
+    ('Cuộc sống tại Nhật'),
+    ('Văn hóa Nhật Bản');
 
 /* ---------- COURSE (Simple version for testing) ---------- */
 INSERT INTO course (id, title, description, duration, level, status, prerequisite_course_id, image, requirement) VALUES
@@ -95,7 +104,7 @@ INSERT INTO unit (id, title, description, status, chapter_id, prerequisite_unit_
 ('DN1-CH03-U03', 'どんな毎日？', 'Hoc tu vung co ban', 'ACTIVE', 'DN1-CH03', 'DN1-CH03-U02');
 
 /* ---------- MATERIAL ---------- */
-INSERT INTO material (id, description, file_url, type, unit_id)
+INSERT INTO material (id, file_url, type, unit_id)
 VALUES ('material-01', 'Video Hiragana', '/videos/hiragana.mp4', 'GRAMMAR', 'unit-01'),
        ('material-02', 'PDF Hiragana', '/docs/hiragana.pdf', 'VOCAB', 'unit-01'),
        ('material-03', 'Audio Katakana', '/audios/katakana.mp3', 'LISTENING', 'unit-03'),
@@ -103,8 +112,34 @@ VALUES ('material-01', 'Video Hiragana', '/videos/hiragana.mp4', 'GRAMMAR', 'uni
 
 /* ---------- COURSE_TOPIC ---------- */
 INSERT INTO course_topic (course_id, topic_id)
-VALUES ('course-01', 1),
-       ('course-02', 1);
+VALUES
+-- JPD113 - N5 sơ cấp 1
+('JPD113', 1),  -- Từ vựng
+('JPD113', 2),  -- Ngữ pháp
+('JPD113', 3),  -- Hán tự
+('JPD113', 4),  -- Giao tiếp
+
+-- JPD123 - N5 sơ cấp 2
+('JPD123', 1),
+('JPD123', 2),
+('JPD123', 5),  -- Nghe hiểu
+('JPD123', 6),  -- Đọc hiểu
+
+-- JPD216 - N4 sơ trung cấp 1
+('JPD216', 1),
+('JPD216', 2),
+('JPD216', 3),
+('JPD216', 5),
+('JPD216', 6),
+
+-- JPD316 - N3 trung cấp 1
+('JPD316', 1),
+('JPD316', 2),
+('JPD316', 3),
+('JPD316', 6),
+('JPD316', 7),  -- Viết
+('JPD316', 8),  -- Luyện thi JLPT
+('JPD316', 10); -- Văn hóa Nhật Bản
 
 /* ---------- APPROVAL_REQUEST ---------- */
 INSERT INTO approval_request (course_id, chapter_id, unit_id, material_id, target_type, created_by, created_at,
@@ -131,7 +166,7 @@ VALUES
 /* ---------- EXAM TEST DATA ---------- */
 
 /* Questions */
-INSERT INTO question (id, content, correct_answer, type, scope, explanation, file_url, created_at)
+INSERT INTO question (id, content, type, scope, explanation, file_url, created_at)
 VALUES ('q1', 'Hiragana あ được đọc như thế nào?', 'a', 'MULTIPLE_CHOICE', 'VOCAB', 'あ được đọc là "a"', null, NOW()),
        ('q2', 'Katakana カ được đọc như thế nào?', 'ka', 'MULTIPLE_CHOICE', 'VOCAB', 'カ được đọc là "ka"', null,
         NOW()),

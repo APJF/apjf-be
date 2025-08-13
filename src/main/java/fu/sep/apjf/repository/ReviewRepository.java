@@ -21,11 +21,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Optional<Review> findByUserAndCourse(User user, Course course);
 
-    @Query("SELECT r.course, AVG(r.rating) as avgRating " +
-            "FROM Review r GROUP BY r.course " +
-            "ORDER BY avgRating DESC")
-    List<Object[]> findTopRatedCourses(Pageable pageable);
+    @Query(value = "SELECT r.course FROM Review r " +
+            "GROUP BY r.course " +
+            "ORDER BY AVG(r.rating) DESC " +
+            "LIMIT 3")
+    List<Course> findTop3RatedCourses();
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.course.id = :courseId")
-    Optional<Double> calculateAverageRatingByCourseId(@Param("courseId") String courseId);
+    Optional<Float> calculateAverageRatingByCourseId(@Param("courseId") String courseId);
 }

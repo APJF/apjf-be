@@ -69,7 +69,7 @@ public class ApprovalRequestService {
 
     @Transactional(readOnly = true)
     public List<ApprovalRequestDto> findByReviewedBy(String managerId) {
-        log.info("Lấy danh sách yêu cầu phê duyệt được duy���t bởi: {}", managerId);
+        log.info("Lấy danh sách yêu cầu phê duyệt được duy�����t bởi: {}", managerId);
         User reviewer = userRepository.findById(Long.parseLong(managerId))
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy manager: " + managerId));
         return approvalRequestRepository.findByReviewer(reviewer)
@@ -167,9 +167,45 @@ public class ApprovalRequestService {
         approvalRequest.setReviewer(reviewer);
         approvalRequest.setReviewedAt(Instant.now());
 
+        // Nếu được approve, cập nhật status của entity tương ứng thành ACTIVE
+        if (decision.decision() == Decision.APPROVED) {
+            updateEntityStatus(approvalRequest);
+        }
+
         ApprovalRequest saved = approvalRequestRepository.save(approvalRequest);
 
         log.info("Xử lý yêu cầu phê duyệt thành công ID: {} với quyết định: {}", id, decision.decision());
         return approvalRequestMapper.toDto(saved);
+    }
+
+    private void updateEntityStatus(ApprovalRequest approvalRequest) {
+        switch (approvalRequest.getTargetType()) {
+            case COURSE -> {
+                Course course = approvalRequest.getCourse();
+                if (course != null) {
+                    course.setStatus(EnumClass.Status.ACTIVE);
+                    courseRepository.save(course);
+                    log.info("Cập nhật status của Course {} thành ACTIVE", course.getId());
+                }
+            }
+            case CHAPTER -> {
+                Chapter chapter = approvalRequest.getChapter();
+                if (chapter != null) {
+                    chapter.setStatus(EnumClass.Status.ACTIVE);
+                    chapterRepository.save(chapter);
+                    log.info("Cập nhật status của Chapter {} thành ACTIVE", chapter.getId());
+                }
+            }
+            case UNIT -> {
+                Unit unit = approvalRequest.getUnit();
+                if (unit != null) {
+                    unit.setStatus(EnumClass.Status.ACTIVE);
+                    unitRepository.save(unit);
+                    log.info("Cập nhật status của Unit {} thành ACTIVE", unit.getId());
+                }
+            }
+
+            default -> log.warn("Unknown target type: {}", approvalRequest.getTargetType());
+        }
     }
 }

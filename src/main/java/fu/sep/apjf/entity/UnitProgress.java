@@ -1,8 +1,9 @@
 package fu.sep.apjf.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "unit_progress")
@@ -19,15 +20,15 @@ public class UnitProgress {
 
     @ManyToOne
     @MapsId("unitId")
-    @JoinColumn(name = "unit_id")
+    @JoinColumn(name = "unit_id", nullable = false)
     private Unit unit;
 
     @ManyToOne
     @MapsId("userId")
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private boolean passed;
+    private boolean completed;
 
-    private LocalDateTime passedAt;
+    private Instant completedAt;
 }

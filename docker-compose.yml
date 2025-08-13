@@ -4,7 +4,7 @@ services:
     image: pgvector/pgvector:pg16
     container_name: pgvector-container
     environment:
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: PG16password
     ports:
       - "5432:5432"
     restart: unless-stopped

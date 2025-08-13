@@ -5,10 +5,9 @@ import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.service.QuestionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -34,8 +33,14 @@ public class QuestionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<QuestionResponseDto>>> getAllQuestions() {
-        return ResponseEntity.ok(ApiResponseDto.ok("Lấy danh sách câu hỏi thành công", questionService.getAllQuestions()));
+    public ResponseEntity<ApiResponseDto<Page<QuestionResponseDto>>> getAllQuestions(
+            @RequestParam(required = false) String questionId,
+            @RequestParam(required = false) String unitId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<QuestionResponseDto> questions = questionService.getAllQuestions(questionId, unitId, page, size);
+        return ResponseEntity.ok(ApiResponseDto.ok("Lấy danh sách câu hỏi thành công", questions));
     }
 
     @GetMapping("/{id}")

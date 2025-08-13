@@ -3,12 +3,11 @@ package fu.sep.apjf.dto.response;
 import java.time.Instant;
 
 public record CommentResponseDto(
-        String id,
+        Long id,
         String content,
         Instant createdAt,
+        String username,
         String email,
         String avatar,
-        String postId
+        Long postId
 ) {}
-
-

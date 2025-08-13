@@ -13,5 +13,3 @@ public class UnitProgressKey implements Serializable {
     private String unitId;
     private Long userId;
 }
-
-

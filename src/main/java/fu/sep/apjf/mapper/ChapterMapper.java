@@ -10,14 +10,12 @@ public interface ChapterMapper {
 
     // Mặc định không load exams (cho findAll)
     @Mapping(target = "exams", ignore = true)
-    @Mapping(target = "units", expression = "java(java.util.Collections.emptySet())")
     @Mapping(target = "courseId", source = "course.id")
     @Mapping(target = "prerequisiteChapterId", source = "prerequisiteChapter.id")
     // id, title, description, status tự động map
     ChapterResponseDto toDto(Chapter chapter);
 
     // Load cả exams (cho findById)
-    @Mapping(target = "units", expression = "java(java.util.Collections.emptySet())")
     @Mapping(target = "courseId", source = "course.id")
     @Mapping(target = "prerequisiteChapterId", source = "prerequisiteChapter.id")
     // exams, id, title, description, status tự động map
@@ -26,7 +24,6 @@ public interface ChapterMapper {
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "course", ignore = true)
     @Mapping(target = "prerequisiteChapter", ignore = true)
-    @Mapping(target = "units", ignore = true)
     @Mapping(target = "exams", ignore = true)
     @Mapping(target = "approvalRequests", ignore = true)
     // id, title, description, status tự động map

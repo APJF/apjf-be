@@ -8,7 +8,7 @@ public record ExamRequestDto(
         String id,
         String title,
         String description,
-        Double duration,
+        Float duration,
         EnumClass.ExamType type,
         EnumClass.ExamScopeType examScopeType,
         EnumClass.GradingMethod gradingMethod,
@@ -17,7 +17,7 @@ public record ExamRequestDto(
         String unitId,
         List<String> questionIds
 ) {
-        public static ExamRequestDto of(String id, String title, String description, Double duration,
+        public static ExamRequestDto of(String id, String title, String description, Float duration,
                                         EnumClass.ExamType type, EnumClass.ExamScopeType scope,
                                         EnumClass.GradingMethod gradingMethod,
                                         String courseId, String chapterId, String unitId, List<String> questionIds) {

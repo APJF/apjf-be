@@ -11,7 +11,7 @@ public interface ExamOverviewMapper {
     @Mapping(target = "examId", source = "id")
     @Mapping(target = "title", source = "title")
     @Mapping(target = "description", source = "description")
-    @Mapping(target = "durationMinutes", source = "duration")
+    @Mapping(target = "duration", source = "duration")
     @Mapping(target = "totalQuestions", expression = "java(exam.getQuestions() != null ? exam.getQuestions().size() : 0)")
     @Mapping(target = "type", source = "type")
     ExamOverviewResponseDto toDto(Exam exam);

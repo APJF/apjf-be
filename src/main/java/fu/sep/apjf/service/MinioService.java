@@ -1,10 +1,14 @@
 package fu.sep.apjf.service;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,8 +18,10 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.http.Method;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class MinioService {
     private final MinioClient minioClient;
 
@@ -72,7 +78,8 @@ public class MinioService {
         return objectName;
     }
 
-    // Optimize getAvatarUrl method
+    // Cache cho avatar URLs
+    @Cacheable(cacheNames = "presignedUrls", key = "'avatar_' + #objectName", unless = "#result == null")
     public String getAvatarUrl(String objectName) throws Exception {
         return getPresignedUrl(avatarBucket, objectName, 7, TimeUnit.DAYS);
     }
@@ -94,7 +101,8 @@ public class MinioService {
         return objectName;
     }
 
-    // Optimize getDocumentUrl method
+    // Cache cho document URLs
+    @Cacheable(cacheNames = "presignedUrls", key = "'doc_' + #objectName", unless = "#result == null")
     public String getDocumentUrl(String objectName) throws Exception {
         return getPresignedUrl(documentBucket, objectName, 24, TimeUnit.HOURS);
     }
@@ -117,7 +125,8 @@ public class MinioService {
         return objectName;
     }
 
-    // Optimize getCourseImageUrl method
+    // Optimize getCourseImageUrl method với cache
+    @Cacheable(cacheNames = "presignedUrls", key = "'course_' + #objectName", unless = "#result == null")
     public String getCourseImageUrl(String objectName) throws Exception {
         return getPresignedUrl(courseImageBucket, objectName, 7, TimeUnit.DAYS);
     }
@@ -141,5 +150,89 @@ public class MinioService {
                 .expiry(expiry, unit)
                 .build()
         );
+    }
+
+    /**
+     * Batch generate presigned URLs cho course images
+     */
+    public Map<String, String> getCourseImageUrls(List<String> objectNames) {
+        Map<String, String> result = new HashMap<>();
+
+        for (String objectName : objectNames) {
+            if (objectName != null && !objectName.trim().isEmpty()) {
+                try {
+                    String presignedUrl = getCourseImageUrl(objectName); // Sử dụng cached method
+                    if (presignedUrl != null) {
+                        result.put(objectName, presignedUrl);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to generate presigned URL for course image {}: {}", objectName, e.getMessage());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Batch generate presigned URLs cho avatars
+     */
+    public Map<String, String> getAvatarUrls(List<String> objectNames) {
+        Map<String, String> result = new HashMap<>();
+
+        for (String objectName : objectNames) {
+            if (objectName != null && !objectName.trim().isEmpty()) {
+                try {
+                    String presignedUrl = getAvatarUrl(objectName); // Sử dụng cached method
+                    if (presignedUrl != null) {
+                        result.put(objectName, presignedUrl);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to generate presigned URL for avatar {}: {}", objectName, e.getMessage());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Universal method để generate presigned URLs - tự động detect media type
+     */
+    public Map<String, String> getPresignedUrls(List<String> objectNames) {
+        Map<String, String> result = new HashMap<>();
+
+        for (String objectName : objectNames) {
+            if (objectName != null && !objectName.trim().isEmpty()) {
+                try {
+                    String presignedUrl = detectAndGenerateUrl(objectName);
+
+                    if (presignedUrl != null) {
+                        result.put(objectName, presignedUrl);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to generate presigned URL for {}: {}", objectName, e.getMessage());
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Tự động detect loại media và generate URL tương ứng
+     */
+    private String detectAndGenerateUrl(String objectName) throws Exception {
+        // Detect dựa trên naming pattern
+        if (objectName.startsWith("course_image_")) {
+            return getCourseImageUrl(objectName);
+        } else if (objectName.contains("_avatar_")) {
+            return getAvatarUrl(objectName);
+        } else if (objectName.contains("_doc_")) {
+            return getDocumentUrl(objectName);
+        } else {
+            log.warn("Unknown object name pattern: {}", objectName);
+            return null;
+        }
     }
 }

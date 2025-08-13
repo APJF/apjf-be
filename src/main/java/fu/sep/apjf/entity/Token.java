@@ -3,7 +3,7 @@ package fu.sep.apjf.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "token")
@@ -26,10 +26,10 @@ public class Token {
     private String tokenValue;
 
     @Column(name = "requested_time", nullable = false)
-    private LocalDateTime requestedTime;
+    private Instant requestedTime;
 
     @Column(name = "expiration_time", nullable = false)
-    private LocalDateTime expirationTime;
+    private Instant expirationTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 20)

@@ -16,7 +16,6 @@ public interface QuestionMapper {
     @Mapping(target = "options", source = "options")
     @Mapping(target = "unitIds", source = "units", qualifiedByName = "mapUnitsToIds")
     QuestionResponseDto toDto(Question question);
-
     @Mapping(target = "id", source = "id")
     @Mapping(target = "options", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

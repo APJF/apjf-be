@@ -10,9 +10,9 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface CommentReportMapper {
 
-    @Mapping(target = "id", expression = "java(String.valueOf(report.getId()))")
-    @Mapping(target = "userId", expression = "java(report.getUser() != null ? String.valueOf(report.getUser().getId()) : null)")
-    @Mapping(target = "commentId", expression = "java(report.getComment() != null ? String.valueOf(report.getComment().getId()) : null)")
+    @Mapping(target = "id", expression = "java(report.getUser() != null ? report.getUser().getId() : null)")
+    @Mapping(target = "userId", expression = "java(report.getUser() != null ? report.getUser().getId() : null)")
+    @Mapping(target = "commentId", expression = "java(report.getComment() != null ? report.getComment().getId() : null)")
     CommentReportResponseDto toDto(CommentReport report);
 
     @Mapping(target = "user", expression = "java(user)")
