@@ -13,7 +13,6 @@ public record ChapterResponseDto(
         String description,
         EnumClass.Status status,
         String courseId,
-        String prerequisiteChapterId,
-        Set<ExamOverviewResponseDto> exams
+        String prerequisiteChapterId
 ) {
 }

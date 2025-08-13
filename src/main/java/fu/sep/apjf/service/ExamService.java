@@ -89,6 +89,18 @@ public class ExamService {
                 .toList();
     }
 
+    public List<ExamListResponseDto> findByChapterId(String chapterId) {
+        return examRepository.findByChapterId(chapterId).stream()
+                .map(examMapper::toListDto)
+                .toList();
+    }
+
+    public List<ExamListResponseDto> findByUnitId(String unitId) {
+        return examRepository.findByUnitId(unitId).stream()
+                .map(examMapper::toListDto)
+                .toList();
+    }
+
     private void validateExamScope(ExamRequestDto dto) {
         String missingField = switch (dto.examScopeType()) {
             case COURSE -> (dto.courseId() == null || dto.courseId().isBlank()) ? "courseId" : null;

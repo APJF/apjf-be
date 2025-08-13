@@ -21,7 +21,7 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    @GetMapping("/list")
+    @GetMapping
     public ResponseEntity<ApiResponseDto<List<NotificationResponseDto>>> getAllByUser(
             @AuthenticationPrincipal User user) {
 
@@ -29,7 +29,7 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponseDto.ok("Danh sách thông báo", notifications));
     }
 
-    @PutMapping("/{id}/mark-as-read")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponseDto<Void>> markAsRead(
             @PathVariable @NotNull Long id,
             @AuthenticationPrincipal User user) {
