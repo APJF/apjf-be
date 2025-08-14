@@ -4,7 +4,6 @@ import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.CourseDetailResponseDto;
-import fu.sep.apjf.entity.Course;
 import org.mapstruct.*;
 
 import java.util.Collections;

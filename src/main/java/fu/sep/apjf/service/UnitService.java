@@ -3,7 +3,6 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.UnitRequestDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
-import fu.sep.apjf.entity.Chapter;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.mapper.UnitMapper;

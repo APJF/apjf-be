@@ -2,7 +2,6 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.ChapterRequestDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
-import fu.sep.apjf.entity.Chapter;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", uses = {ExamOverviewMapper.class})

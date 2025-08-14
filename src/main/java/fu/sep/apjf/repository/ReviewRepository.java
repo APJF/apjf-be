@@ -1,9 +1,7 @@
 package fu.sep.apjf.repository;
 
-import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
