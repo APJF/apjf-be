@@ -58,7 +58,7 @@ public class User implements UserDetails {
     private boolean enabled;
 
     @Column(name = "email_verified")
-    private boolean emailVerified = true;
+    private boolean emailVerified;
 
     @Column(name = "vip_expiration")
     private Instant vipExpiration;
