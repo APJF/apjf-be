@@ -6,10 +6,8 @@ public record ReviewRequestDto(
         @NotBlank(message = "ID khóa học không được để trống")
         String courseId,
 
-        @NotNull(message = "ID người dùng không được để trống")
-        Long userId,
-
-        @Min(1) @Max(5)
+        @DecimalMin(value = "1.0", message = "Số sao tối thiểu là 1")
+        @DecimalMax(value = "5.0", message = "Số sao tối đa là 5")
         @NotNull(message = "Số sao không được để trống")
         Float rating,
 
