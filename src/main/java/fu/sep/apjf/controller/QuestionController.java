@@ -1,13 +1,18 @@
 package fu.sep.apjf.controller;
 
+import fu.sep.apjf.dto.request.OptionRequestDto;
 import fu.sep.apjf.dto.request.QuestionRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.OptionResponseDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
+import fu.sep.apjf.service.OptionService;
 import fu.sep.apjf.service.QuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/questions")
@@ -46,6 +51,16 @@ public class QuestionController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<QuestionResponseDto>> getQuestionById(@PathVariable String id) {
         return ResponseEntity.ok(ApiResponseDto.ok("Lấy thông tin câu hỏi thành công", questionService.getQuestionById(id)));
+    }
+
+    @GetMapping("/{questionId}/options")
+    public ResponseEntity<ApiResponseDto<List<OptionResponseDto>>> getByQuestion(@PathVariable String questionId) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách đáp án theo câu hỏi", questionService.getOptionsByQuestionId(questionId)));
+    }
+
+    @PostMapping("/{questionId}/options")
+    public ResponseEntity<ApiResponseDto<OptionResponseDto>> create(@PathVariable String questionId, @RequestBody OptionRequestDto dto) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Tạo đáp án thành công", questionService.createOption(questionId, dto)));
     }
 }
 

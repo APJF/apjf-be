@@ -20,12 +20,7 @@ public class OptionService {
     private final QuestionRepository questionRepository;
     private final OptionMapper optionMapper;
 
-    public OptionResponseDto createOption(String questionId, OptionRequestDto dto) {
-        Question question = questionRepository.findById(questionId).orElseThrow();
-        Option option = optionMapper.toEntity(dto);
-        option.setQuestion(question);
-        return optionMapper.toDto(optionRepository.save(option));
-    }
+
 
     public OptionResponseDto updateOption(String id, OptionRequestDto dto) {
         Option option = optionRepository.findById(id).orElseThrow();
@@ -38,8 +33,4 @@ public class OptionService {
         optionRepository.deleteById(id);
     }
 
-    public List<OptionResponseDto> getOptionsByQuestionId(String questionId) {
-        List<Option> options = optionRepository.findByQuestionId(questionId);
-        return options.stream().map(optionMapper::toDto).toList();
-    }
 }

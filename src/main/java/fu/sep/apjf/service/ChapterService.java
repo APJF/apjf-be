@@ -56,8 +56,10 @@ public class ChapterService {
     public ChapterResponseDto findById(String id) {
         Chapter chapter = chapterRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND));
-        return chapterMapper.toDtoWithExams(chapter); // Load exams cho detail
+        return chapterMapper.toDto(chapter);
     }
+
+
 
     public ChapterResponseDto create(@Valid ChapterRequestDto dto, Long staffId) {
         log.info("Nhân viên {} tạo chương học mới với mã: {}", staffId, dto.id());

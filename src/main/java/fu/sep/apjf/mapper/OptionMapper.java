@@ -10,7 +10,6 @@ public interface OptionMapper {
 
     OptionResponseDto toDto(Option option);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "question", ignore = true)
     @Mapping(target = "selectedByAnswers", ignore = true)
     Option toEntity(OptionRequestDto dto);

@@ -9,17 +9,10 @@ import org.mapstruct.*;
 public interface UnitMapper {
 
     // Mặc định không load exams (cho findAll)
-    @Mapping(target = "exams", ignore = true)
     @Mapping(target = "chapterId", source = "chapter.id")
     @Mapping(target = "prerequisiteUnitId", source = "prerequisiteUnit.id")
     // id, title, description, status tự động map
     UnitResponseDto toDto(Unit unit);
-
-    // Load cả exams (cho findById)
-    @Mapping(target = "chapterId", source = "chapter.id")
-    @Mapping(target = "prerequisiteUnitId", source = "prerequisiteUnit.id")
-    // exams, id, title, description, status tự động map
-    UnitResponseDto toDtoWithExams(Unit unit);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "chapter", ignore = true)

@@ -3,9 +3,11 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.ChapterRequestDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.ExamListResponseDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
+import fu.sep.apjf.service.ExamService;
 import fu.sep.apjf.service.UnitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class ChapterController {
 
     private final ChapterService chapterService;
     private final UnitService unitService;
+    private final ExamService examService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<ChapterResponseDto>>> getAll() {
@@ -34,6 +37,12 @@ public class ChapterController {
     public ResponseEntity<ApiResponseDto<ChapterResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết chương", chapterService.findById(id)));
+    }
+
+    @GetMapping("/{chapterId}/exams")
+    public ResponseEntity<ApiResponseDto<List<ExamListResponseDto>>> getExamsByChapterId(@PathVariable String chapterId) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Danh sách exams của chương", examService.findByChapterId(chapterId)));
     }
 
     @GetMapping("/{chapterId}/units")
