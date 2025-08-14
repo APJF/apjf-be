@@ -8,5 +8,7 @@ public record UserResponseDto(
     String username,
     String phone,
     String avatar,
+    boolean enabled,
+    boolean emailVerified,
     List<String> authorities
 ) {}

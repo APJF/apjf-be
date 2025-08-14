@@ -96,6 +96,8 @@ public class UserService {
                 userDto.username(),
                 userDto.phone(),
                 avatarUrl,
+                userDto.enabled(),
+                userDto.emailVerified(),
                 userDto.authorities()
         );
     }
