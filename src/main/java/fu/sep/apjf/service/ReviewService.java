@@ -1,11 +1,14 @@
 package fu.sep.apjf.service;
 
+import fu.sep.apjf.dto.request.ReviewRequestDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.CourseDetailResponseDto;
+import fu.sep.apjf.dto.response.ReviewResponseDto;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.CourseMapper;
+import fu.sep.apjf.mapper.ReviewMapper;
 import fu.sep.apjf.repository.CourseRepository;
 import fu.sep.apjf.repository.ReviewRepository;
 import fu.sep.apjf.repository.UserRepository;
@@ -27,55 +30,70 @@ import java.util.List;
 public class ReviewService {
 
     private static final String COURSE_NOT_FOUND = "Không tìm thấy khóa học";
+
     private final ReviewRepository reviewRepo;
     private final CourseRepository courseRepo;
     private final UserRepository userRepo;
+    private final ReviewMapper reviewMapper;
     private final CourseMapper courseMapper;
 
-    public CourseDetailResponseDto addReview(Long userId, String courseId, @Min(1) @Max(5) Float rating, String comment) {
+    public ReviewResponseDto addReview(Long userId, ReviewRequestDto reviewRequestDto) {
+
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
-        Course course = courseRepo.findById(courseId)
+        Course course = courseRepo.findById(reviewRequestDto.courseId())
                 .orElseThrow(() -> new EntityNotFoundException(COURSE_NOT_FOUND));
 
         if (reviewRepo.findByUserAndCourse(user, course).isPresent()) {
             throw new IllegalArgumentException("Người dùng đã đánh giá khóa học này");
         }
 
-        Review review = Review.builder()
-                .course(course)
-                .user(user)
-                .rating(rating)
-                .comment(comment)
-                .createdAt(Instant.now())
-                .lastUpdatedAt(Instant.now())
-                .build();
+        Review review = reviewMapper.toEntity(
+                reviewRequestDto,
+                course,
+                user
+        );
 
-        reviewRepo.save(review);
-
-        Course updatedCourse = courseRepo.findById(courseId).orElseThrow();
-        return courseMapper.toDetailDto(updatedCourse, getAverageRating(courseId));
+        Review savedReview = reviewRepo.save(review);
+        return reviewMapper.toDto(savedReview);
     }
 
-    public List<CourseDetailResponseDto> getReviewsByCourse(String courseId) {
-        List<Review> reviews = reviewRepo.findByCourseId(courseId);
-        if (reviews.isEmpty() && !courseRepo.existsById(courseId)) {
+    public List<ReviewResponseDto> getReviewsByCourse(String courseId) {
+        if (!courseRepo.existsById(courseId)) {
             throw new EntityNotFoundException(COURSE_NOT_FOUND);
         }
-        return reviews.stream()
-                .map(review -> courseMapper.toDetailDto(review.getCourse(), getAverageRating(courseId)))
+        return reviewRepo.findByCourseId(courseId)
+                .stream()
+                .map(reviewMapper::toDto)
                 .toList();
     }
 
-    public List<CourseDetailResponseDto> getReviewsByUser(Long userId) {
+    public List<ReviewResponseDto> getReviewsByUser(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy người dùng"));
 
         return reviewRepo.findByUser(user)
                 .stream()
-                .map(review -> courseMapper.toDetailDto(review.getCourse(), getAverageRating(review.getCourse().getId())))
+                .map(reviewMapper::toDto)
                 .toList();
+    }
+
+    public ReviewResponseDto updateReview(Long reviewId, Long userId,
+                                          ReviewRequestDto reviewRequestDto) {
+        Review review = reviewRepo.findById(reviewId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đánh giá"));
+
+        if (!review.getUser().getId().equals(userId)) {
+            throw new SecurityException("Không thể sửa đánh giá của người khác");
+        }
+
+        review.setRating(reviewRequestDto.rating());
+        review.setComment(reviewRequestDto.comment());
+        // lastUpdatedAt sẽ được Hibernate tự cập nhật nếu dùng @UpdateTimestamp
+        Review updatedReview = reviewRepo.save(review);
+
+        return reviewMapper.toDto(updatedReview);
     }
 
     public void deleteReview(Long reviewId, Long userId) {

@@ -2,6 +2,8 @@ package fu.sep.apjf.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
@@ -33,8 +35,10 @@ public class Review {
     private String comment;
 
     @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
     private Instant createdAt;
 
     @Column(name = "last_updated_at")
+    @UpdateTimestamp
     private Instant lastUpdatedAt;
 }
