@@ -2,7 +2,6 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.ReviewRequestDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.dto.response.ReviewResponseDto;
 import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
@@ -13,14 +12,11 @@ import fu.sep.apjf.repository.CourseRepository;
 import fu.sep.apjf.repository.ReviewRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -36,6 +32,7 @@ public class ReviewService {
     private final UserRepository userRepo;
     private final ReviewMapper reviewMapper;
     private final CourseMapper courseMapper;
+    private final MinioService minioService;
 
     public ReviewResponseDto addReview(Long userId, ReviewRequestDto reviewRequestDto) {
 
@@ -56,7 +53,7 @@ public class ReviewService {
         );
 
         Review savedReview = reviewRepo.save(review);
-        return reviewMapper.toDto(savedReview);
+        return mapReviewWithPresignedUrl(savedReview);
     }
 
     public List<ReviewResponseDto> getReviewsByCourse(String courseId) {
@@ -65,8 +62,38 @@ public class ReviewService {
         }
         return reviewRepo.findByCourseId(courseId)
                 .stream()
-                .map(reviewMapper::toDto)
+                .map(this::mapReviewWithPresignedUrl)
                 .toList();
+    }
+
+    private ReviewResponseDto mapReviewWithPresignedUrl(Review review) {
+        ReviewResponseDto dto = reviewMapper.toDto(review);
+
+        // Generate presigned URL for user avatar
+        String avatarUrl = null;
+        try {
+            if (review.getUser().getAvatar() != null) {
+                avatarUrl = minioService.getAvatarUrl(review.getUser().getAvatar());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate presigned URL for avatar: {}", review.getUser().getAvatar(), e);
+        }
+
+        // Create new UserSummaryDto with presigned URL
+        ReviewResponseDto.UserSummaryDto userWithPresignedUrl = new ReviewResponseDto.UserSummaryDto(
+                dto.user().id(),
+                dto.user().username(),
+                avatarUrl
+        );
+
+        return new ReviewResponseDto(
+                dto.id(),
+                dto.courseId(),
+                dto.rating(),
+                dto.comment(),
+                dto.createdAt(),
+                userWithPresignedUrl
+        );
     }
 
     public List<ReviewResponseDto> getReviewsByUser(Long userId) {
@@ -75,7 +102,7 @@ public class ReviewService {
 
         return reviewRepo.findByUser(user)
                 .stream()
-                .map(reviewMapper::toDto)
+                .map(this::mapReviewWithPresignedUrl)
                 .toList();
     }
 
@@ -93,7 +120,7 @@ public class ReviewService {
         // lastUpdatedAt sẽ được Hibernate tự cập nhật nếu dùng @UpdateTimestamp
         Review updatedReview = reviewRepo.save(review);
 
-        return reviewMapper.toDto(updatedReview);
+        return mapReviewWithPresignedUrl(updatedReview);
     }
 
     public void deleteReview(Long reviewId, Long userId) {
