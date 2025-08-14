@@ -22,8 +22,15 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
     @Query("SELECT DISTINCT q FROM Question q LEFT JOIN FETCH q.options LEFT JOIN FETCH q.units")
     List<Question> findAllWithOptionsAndUnits();
 
-    @Query("SELECT q FROM Question q LEFT JOIN FETCH q.options LEFT JOIN FETCH q.units WHERE q.id = :id")
-    Question findByIdWithOptionsAndUnits(@Param("id") String id);
+    @EntityGraph(attributePaths = {"options", "units"})
+    @Query("""
+        SELECT q FROM Question q
+        JOIN q.exams e
+        WHERE e.id = :examId
+    """)
+    List<Question> findByExamIdWithOptionsAndUnits(@Param("examId") String examId);
+
+
 
     @EntityGraph(attributePaths = {"units"})
     @Query("""

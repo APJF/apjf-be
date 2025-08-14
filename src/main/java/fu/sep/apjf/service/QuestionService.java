@@ -68,12 +68,18 @@ public class QuestionService {
                         q.getContent(),
                         q.getScope(),
                         q.getType(),
-                        q.getExplanation(),
                         q.getFileUrl(),
                         q.getCreatedAt(),
                         null,
                         q.getUnits().stream().map(Unit::getId).toList()
                 ));
+    }
+
+    public List<QuestionResponseDto> getQuestionsByExamId(String examId) {
+        List<Question> questions = questionRepository.findByExamIdWithOptionsAndUnits(examId);
+        return questions.stream()
+                .map(questionMapper::toDto) // mapper sang QuestionResponseDto
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -10,10 +10,9 @@ public record QuestionResponseDto(
         String content,
         EnumClass.QuestionScope scope,
         EnumClass.QuestionType type,
-        String explanation,
         String fileUrl,
         Instant createdAt,
-        List<OptionResponseDto> options,
+        List<OptionExamResponseDto> options,
         List<String> unitIds
 ) {
 }

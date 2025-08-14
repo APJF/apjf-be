@@ -2,14 +2,18 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.request.QuestionResultRequestDto;
+import fu.sep.apjf.dto.response.ExamDetailResponseDto;
 import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
+import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
+import fu.sep.apjf.mapper.ExamMapper;
 import fu.sep.apjf.mapper.ExamResultMapper;
 import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,18 +30,27 @@ public class ExamResultService {
     private final OptionRepository optionRepository;
     private final ExamResultMapper examResultMapper;
     private final UserRepository userRepository;
+    private final QuestionService questionService;
 
-    public ExamResultResponseDto startExam(Long userId, String examId) {
-        Exam exam = examRepository.findByIdWithQuestions(examId)
+    @Transactional
+    public ExamDetailResponseDto startExam(Long userId, String examId) {
+        // Lấy exam
+        Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+
+        // Lấy user
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        // Tạo ExamResult
         ExamResult result = ExamResult.builder()
                 .exam(exam)
                 .user(user)
                 .startedAt(Instant.now())
                 .status(EnumClass.ExamStatus.IN_PROGRESS)
                 .build();
+
+        // Tạo chi tiết cho từng câu hỏi
         List<ExamResultDetail> details = exam.getQuestions().stream()
                 .map(q -> {
                     ExamResultDetail d = new ExamResultDetail();
@@ -46,11 +59,34 @@ public class ExamResultService {
                     return d;
                 })
                 .toList();
+
+        // Lưu dữ liệu
         result.setDetails(details);
         examResultRepository.save(result);
         examResultDetailRepository.saveAll(details);
-        return examResultMapper.toDto(result);
+
+        // Lấy danh sách câu hỏi bằng fetch join để tối ưu query
+        List<QuestionResponseDto> questions =
+                questionService.getQuestionsByExamId(examId);
+
+        // Tạo ExamDetailResponseDto thủ công (mapper chỉ map phần không có questions)
+        return new ExamDetailResponseDto(
+                exam.getId(),
+                exam.getTitle(),
+                exam.getDescription(),
+                exam.getDuration(),
+                exam.getType(),
+                exam.getExamScopeType(),
+                exam.getGradingMethod(),
+                exam.getCourse() != null ? exam.getCourse().getId() : null,
+                exam.getChapter() != null ? exam.getChapter().getId() : null,
+                exam.getUnit() != null ? exam.getUnit().getId() : null,
+                exam.getCreatedAt(),
+                questions
+        );
     }
+
+
 
     public ExamResultResponseDto submitExam(Long userId, ExamResultRequestDto dto) {
         Exam exam = examRepository.findById(dto.examId()).orElseThrow();
