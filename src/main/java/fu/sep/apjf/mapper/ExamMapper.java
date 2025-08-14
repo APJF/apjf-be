@@ -3,6 +3,8 @@ package fu.sep.apjf.mapper;
 import fu.sep.apjf.dto.request.ExamRequestDto;
 import fu.sep.apjf.dto.response.ExamResponseDto;
 import fu.sep.apjf.dto.response.ExamListResponseDto;
+import fu.sep.apjf.entity.Chapter;
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.Unit;
 import org.mapstruct.Mapper;

@@ -1,5 +1,6 @@
 package fu.sep.apjf.repository;
 
+import fu.sep.apjf.entity.Course;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -2,6 +2,7 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.CourseDetailResponseDto;
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.CourseMapper;

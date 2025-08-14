@@ -1,6 +1,7 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.response.CourseOrderDto;
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.CourseLearningPath;
 import fu.sep.apjf.entity.CourseLearningPathKey;
 import fu.sep.apjf.entity.LearningPath;

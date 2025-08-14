@@ -3,6 +3,8 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.ChapterRequestDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
+import fu.sep.apjf.entity.Chapter;
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.mapper.ChapterMapper;
 import fu.sep.apjf.repository.ChapterRepository;

@@ -5,6 +5,7 @@ import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseMapper;

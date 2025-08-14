@@ -1,5 +1,6 @@
 package fu.sep.apjf.repository;
 
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
