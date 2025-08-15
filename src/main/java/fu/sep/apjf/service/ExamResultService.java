@@ -6,9 +6,9 @@ import fu.sep.apjf.dto.response.ExamDetailResponseDto;
 import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
 import fu.sep.apjf.dto.response.ExamResultResponseDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
+import fu.sep.apjf.dto.response.OptionExamResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
-import fu.sep.apjf.mapper.ExamMapper;
 import fu.sep.apjf.mapper.ExamResultMapper;
 import fu.sep.apjf.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -30,15 +30,28 @@ public class ExamResultService {
     private final OptionRepository optionRepository;
     private final ExamResultMapper examResultMapper;
     private final UserRepository userRepository;
-    private final QuestionService questionService;
 
     @Transactional
     public ExamDetailResponseDto startExam(Long userId, String examId) {
-        // Lấy exam
-        Exam exam = examRepository.findById(examId)
+        // Kiểm tra xem user đã bắt đầu exam này chưa (idempotent check)
+        ExamResult existingResult = examResultRepository
+                .findByUserIdAndExamIdAndStatus(userId, examId, EnumClass.ExamStatus.IN_PROGRESS);
+
+        if (existingResult != null) {
+            // Nếu đã có exam đang IN_PROGRESS, trả về thông tin exam đó
+            return buildExamDetailResponseFromExistingResult(existingResult.getExam().getId());
+        }
+
+        // Giải pháp 2-query để tránh MultipleBagFetchException:
+        // Query 1: Lấy Exam cơ bản
+        Exam exam = examRepository.findByIdOnly(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
 
-        // Lấy user
+        // Query 2: Lấy Questions với Options riêng biệt
+        List<Question> questionsWithOptions = examRepository.findQuestionsByExamIdWithOptions(examId);
+        exam.setQuestions(questionsWithOptions);
+
+        // User lookup đơn giản
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -50,26 +63,41 @@ public class ExamResultService {
                 .status(EnumClass.ExamStatus.IN_PROGRESS)
                 .build();
 
-        // Tạo chi tiết cho từng câu hỏi
-        List<ExamResultDetail> details = exam.getQuestions().stream()
-                .map(q -> {
-                    ExamResultDetail d = new ExamResultDetail();
-                    d.setExamResult(result);
-                    d.setQuestion(q);
-                    return d;
+        // Batch create details
+        List<ExamResultDetail> details = questionsWithOptions.stream()
+                .map(question -> {
+                    ExamResultDetail detail = new ExamResultDetail();
+                    detail.setExamResult(result);
+                    detail.setQuestion(question);
+                    return detail;
                 })
                 .toList();
 
-        // Lưu dữ liệu
         result.setDetails(details);
+
+        // Single transaction với batch operations
         examResultRepository.save(result);
-        examResultDetailRepository.saveAll(details);
+        if (!details.isEmpty()) {
+            examResultDetailRepository.saveAll(details);
+        }
 
-        // Lấy danh sách câu hỏi bằng fetch join để tối ưu query
-        List<QuestionResponseDto> questions =
-                questionService.getQuestionsByExamId(examId);
+        return buildExamDetailResponseOptimized(exam, questionsWithOptions);
+    }
 
-        // Tạo ExamDetailResponseDto thủ công (mapper chỉ map phần không có questions)
+    private ExamDetailResponseDto buildExamDetailResponseFromExistingResult(String examId) {
+        // Cho trường hợp idempotent, fetch data với 2-query approach
+        Exam exam = examRepository.findByIdOnly(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+        List<Question> questions = examRepository.findQuestionsByExamIdWithOptions(examId);
+        return buildExamDetailResponseOptimized(exam, questions);
+    }
+
+    private ExamDetailResponseDto buildExamDetailResponseOptimized(Exam exam, List<Question> questions) {
+        // Convert với data đã được prefetch (Questions + Options)
+        List<QuestionResponseDto> questionDtos = questions.stream()
+                .map(this::convertQuestionToDtoOptimized)
+                .toList();
+
         return new ExamDetailResponseDto(
                 exam.getId(),
                 exam.getTitle(),
@@ -82,7 +110,31 @@ public class ExamResultService {
                 exam.getChapter() != null ? exam.getChapter().getId() : null,
                 exam.getUnit() != null ? exam.getUnit().getId() : null,
                 exam.getCreatedAt(),
-                questions
+                questionDtos
+        );
+    }
+
+    private QuestionResponseDto convertQuestionToDtoOptimized(Question question) {
+        // Options đã được eager fetch → zero additional queries
+        List<OptionExamResponseDto> options = question.getOptions().stream()
+                .map(option -> new OptionExamResponseDto(
+                        option.getId(),
+                        option.getContent()
+                ))
+                .toList();
+
+        // Không load units để tránh lazy loading
+        List<String> unitIds = List.of();
+
+        return new QuestionResponseDto(
+                question.getId(),
+                question.getContent(),
+                question.getScope(),
+                question.getType(),
+                question.getFileUrl(),
+                question.getCreatedAt(),
+                options,
+                unitIds
         );
     }
 

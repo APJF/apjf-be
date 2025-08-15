@@ -44,4 +44,12 @@ WHERE er.user.id = :userId
     Optional<ExamResult> findLatestInProgress(@Param("userId") Long userId,
                                               @Param("examId") String examId);
 
+    @Query("""
+    SELECT er FROM ExamResult er
+    WHERE er.user.id = :userId AND er.exam.id = :examId AND er.status = :status
+    ORDER BY er.startedAt DESC
+    """)
+    ExamResult findByUserIdAndExamIdAndStatus(@Param("userId") Long userId,
+                                             @Param("examId") String examId,
+                                             @Param("status") fu.sep.apjf.entity.EnumClass.ExamStatus status);
 }
