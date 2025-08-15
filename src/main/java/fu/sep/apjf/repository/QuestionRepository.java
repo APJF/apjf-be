@@ -32,17 +32,19 @@ public interface QuestionRepository extends JpaRepository<Question, String> {
 
 
 
-    @EntityGraph(attributePaths = {"units"})
+    // Repository lấy Question theo trang, không fetch options
     @Query("""
-    SELECT q FROM Question q
-    LEFT JOIN q.units u
-    WHERE (:questionId IS NULL OR q.id LIKE %:questionId%)
-      AND (:unitId IS NULL OR u.id = :unitId)
-""")
-    Page<Question> searchQuestionsWithoutOptions(
+       SELECT q
+       FROM Question q
+       LEFT JOIN q.units u
+       WHERE (:questionId IS NULL OR q.id LIKE %:questionId%)
+         AND (:unitId IS NULL OR u.id LIKE %:unitId%)
+    """)
+    Page<Question> findQuestionsByQuestionIdOrUnitId(
             @Param("questionId") String questionId,
             @Param("unitId") String unitId,
             Pageable pageable
     );
+
 
 }
