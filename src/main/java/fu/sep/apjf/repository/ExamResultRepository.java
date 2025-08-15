@@ -1,5 +1,6 @@
 package fu.sep.apjf.repository;
 
+import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.ExamResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -52,4 +53,8 @@ WHERE er.user.id = :userId
     ExamResult findByUserIdAndExamIdAndStatus(@Param("userId") Long userId,
                                              @Param("examId") String examId,
                                              @Param("status") fu.sep.apjf.entity.EnumClass.ExamStatus status);
+
+    @Query("SELECT e FROM Exam e LEFT JOIN FETCH e.questions WHERE e.id = :examId")
+    Optional<Exam> findByIdWithQuestions(@Param("examId") String examId);
+
 }

@@ -2,11 +2,7 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.request.QuestionResultRequestDto;
-import fu.sep.apjf.dto.response.ExamDetailResponseDto;
-import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
-import fu.sep.apjf.dto.response.ExamResultResponseDto;
-import fu.sep.apjf.dto.response.QuestionResponseDto;
-import fu.sep.apjf.dto.response.OptionExamResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.ExamResultMapper;
@@ -18,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -141,7 +139,7 @@ public class ExamResultService {
 
 
     public ExamResultResponseDto submitExam(Long userId, ExamResultRequestDto dto) {
-        Exam exam = examRepository.findById(dto.examId()).orElseThrow();
+        Exam exam = examRepository.findByIdWithQuestions(dto.examId()).orElseThrow();
 
         if (exam.getType() != EnumClass.ExamType.MULTIPLE_CHOICE) {
             throw new UnsupportedOperationException("Only multiple choice exams are supported in this version.");
@@ -154,24 +152,28 @@ public class ExamResultService {
                 .submittedAt(dto.submittedAt())
                 .exam(exam)
                 .user(user)
-                .status(EnumClass.ExamStatus.SUBMITTED) // tạm thời, sẽ cập nhật sau
+                .status(EnumClass.ExamStatus.SUBMITTED) // tạm thời
                 .build();
 
         List<ExamResultDetail> details = new ArrayList<>();
         int totalQuestions = 0;
         int correctAnswers = 0;
 
-        for (QuestionResultRequestDto questionDto : dto.questionResults()) {
-            Question question = questionRepository.findById(questionDto.questionId()).orElseThrow();
+        // Map questionId -> selectedOptionId từ DTO để dễ tra cứu
+        Map<String, String> selectedMap = dto.questionResults().stream()
+                .collect(Collectors.toMap(QuestionResultRequestDto::questionId, QuestionResultRequestDto::selectedOptionId));
 
+        // Duyệt tất cả câu hỏi trong exam
+        for (Question question : exam.getQuestions()) {
             ExamResultDetail detail = new ExamResultDetail();
             detail.setExamResult(result);
             detail.setQuestion(question);
 
             totalQuestions++;
 
-            if (questionDto.selectedOptionId() != null) {
-                Option selectedOption = optionRepository.findById(questionDto.selectedOptionId()).orElse(null);
+            String selectedOptionId = selectedMap.get(question.getId());
+            if (selectedOptionId != null) {
+                Option selectedOption = optionRepository.findById(selectedOptionId).orElse(null);
                 detail.setSelectedOption(selectedOption);
 
                 boolean isCorrect = selectedOption != null && Boolean.TRUE.equals(selectedOption.getIsCorrect());
@@ -180,7 +182,9 @@ public class ExamResultService {
                     correctAnswers++;
                 }
             } else {
-                detail.setIsCorrect(false); // Không chọn thì sai
+                // Câu không chọn
+                detail.setSelectedOption(null);
+                detail.setIsCorrect(false);
             }
 
             details.add(detail);
@@ -188,9 +192,6 @@ public class ExamResultService {
 
         float score = totalQuestions > 0 ? ((float) correctAnswers / totalQuestions) * 100 : 0.0f;
         result.setScore(score);
-
-        result.setScore(score);
-        result.setDetails(details);
 
         if (score >= 60.0) {
             result.setStatus(EnumClass.ExamStatus.PASSED);
@@ -201,7 +202,26 @@ public class ExamResultService {
         ExamResult savedResult = examResultRepository.save(result);
         examResultDetailRepository.saveAll(details);
 
-        return examResultMapper.toDto(savedResult);
+        List<QuestionResultResponseDto> questionResults = details.stream()
+                .map(d -> new QuestionResultResponseDto(
+                        d.getQuestion().getId(),
+                        d.getQuestion().getContent(),
+                        d.getQuestion().getExplanation(), // nếu có field explanation
+                        d.getSelectedOption() != null ? d.getSelectedOption().getId() : null,
+                        null, // userAnswer, nếu là writing exam bạn có thể lấy từ DTO
+                        d.getIsCorrect()
+                ))
+                .collect(Collectors.toList());
+
+        return new ExamResultResponseDto(
+                savedResult.getId(),
+                savedResult.getExam().getId(),
+                savedResult.getExam().getTitle(),
+                savedResult.getScore(),
+                savedResult.getSubmittedAt(),
+                savedResult.getStatus(),
+                questionResults
+        );
     }
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {
