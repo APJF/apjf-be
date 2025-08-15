@@ -39,17 +39,23 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
-        List<Course> courses = courseRepository.findAll();
-        return courses.stream()
-                .map(course -> {
-                    Float averageRating = reviewRepository.calculateAverageRatingByCourseId(course.getId())
-                            .map(this::roundToHalfStar)
-                            .orElse(null);
-                    // Trả về object name thuần túy, không presign
-                    return courseMapper.toDto(course, averageRating);
-                })
+        return courseRepository.findAllWithAverageRating()
+                .stream()
+                .map(dto -> new CourseResponseDto(
+                        dto.id(),
+                        dto.title(),
+                        dto.description(),
+                        dto.duration(),
+                        dto.level(),
+                        dto.image(),
+                        dto.requirement(),
+                        dto.status(),
+                        dto.prerequisiteCourseId(),
+                        dto.averageRating() != null ? roundToHalfStar(dto.averageRating()) : null
+                ))
                 .toList();
     }
+
 
     @Transactional(readOnly = true)
     public CourseDetailResponseDto findById(String id) {
