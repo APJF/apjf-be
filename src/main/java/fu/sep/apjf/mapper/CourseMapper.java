@@ -3,7 +3,6 @@ package fu.sep.apjf.mapper;
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.entity.Course;
 import org.mapstruct.*;
 
@@ -21,13 +20,13 @@ public interface CourseMapper {
     // Method cho course detail - trả về CourseDetailResponseDto (có topics, không có exams)
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
-    CourseDetailResponseDto toDetailDto(Course course, Float averageRating);
+    CourseResponseDto toDetailDto(Course course, Float averageRating);
 
     // Method cho course detail với presigned URL
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
     @Mapping(target = "image", source = "presignedImageUrl")
-    CourseDetailResponseDto toDetailDtoWithPresignedUrl(Course course, Float averageRating, String presignedImageUrl);
+    CourseResponseDto toDetailDtoWithPresignedUrl(Course course, Float averageRating, String presignedImageUrl);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "status", constant = "INACTIVE")

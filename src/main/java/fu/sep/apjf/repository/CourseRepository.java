@@ -20,24 +20,10 @@ public interface CourseRepository extends JpaRepository<Course, String>, JpaSpec
     Page<Course> findAll(Pageable pageable);
 
     @Query("""
-        SELECT new fu.sep.apjf.dto.response.CourseResponseDto(
-            c.id,
-            c.title,
-            c.description,
-            c.duration,
-            c.level,
-            c.image,
-            c.requirement,
-            c.status,
-            c.prerequisiteCourse.id,
-            CAST(COALESCE(AVG(r.rating), 0) AS float)
-        )
+        SELECT DISTINCT c
         FROM Course c
-        LEFT JOIN Review r ON r.course.id = c.id
-        GROUP BY c.id, c.title, c.description, c.duration, c.level, c.image, c.requirement, c.status, c.prerequisiteCourse.id
+        LEFT JOIN FETCH c.topics t
     """)
-    List<CourseResponseDto> findAllWithAverageRating();
-
-
+    List<Course> findAllCoursesWithTopics();
 
 }

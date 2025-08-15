@@ -121,13 +121,6 @@ public class QuestionService {
         );
     }
 
-    public List<QuestionResponseDto> getQuestionsByExamId(String examId) {
-        List<Question> questions = questionRepository.findByExamIdWithOptionsAndUnits(examId);
-        return questions.stream()
-                .map(questionMapper::toDto) // mapper sang QuestionResponseDto
-                .toList();
-    }
-
     @Transactional(readOnly = true)
     public QuestionResponseDto getQuestionById(String id) {
         Question question = questionRepository.findById(id)

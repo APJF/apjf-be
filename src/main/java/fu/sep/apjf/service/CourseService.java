@@ -1,8 +1,8 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
+import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.Course;
@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,26 +42,42 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
-        return courseRepository.findAllWithAverageRating()
-                .stream()
-                .map(dto -> new CourseResponseDto(
-                        dto.id(),
-                        dto.title(),
-                        dto.description(),
-                        dto.duration(),
-                        dto.level(),
-                        dto.image(),
-                        dto.requirement(),
-                        dto.status(),
-                        dto.prerequisiteCourseId(),
-                        dto.averageRating() != null ? roundToHalfStar(dto.averageRating()) : null
-                ))
-                .toList();
+        List<Course> courses = courseRepository.findAllCoursesWithTopics();
+
+        // Lấy average rating cho tất cả courses chỉ 1 query
+        Map<String, Float> averageRatings = reviewRepository.findAverageRatingForCourses(
+                courses.stream().map(Course::getId).toList()
+        ).stream().collect(Collectors.toMap(
+                r -> r[0].toString(),                // courseId
+                r -> ((Number) r[1]).floatValue()   // average rating
+        ));
+
+        return courses.stream().map(course -> {
+            Set<TopicDto> topicDtos = course.getTopics().stream()
+                    .map(t -> new TopicDto(t.getId(), t.getName()))
+                    .collect(Collectors.toSet());
+
+            Float avgRating = averageRatings.getOrDefault(course.getId(), 0f);
+
+            return new CourseResponseDto(
+                    course.getId(),
+                    course.getTitle(),
+                    course.getDescription(),
+                    course.getDuration(),
+                    course.getLevel(),
+                    course.getImage(),
+                    course.getRequirement(),
+                    course.getStatus(),
+                    course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
+                    topicDtos,
+                    avgRating
+            );
+        }).toList();
     }
 
 
     @Transactional(readOnly = true)
-    public CourseDetailResponseDto findById(String id) {
+    public CourseResponseDto findById(String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
