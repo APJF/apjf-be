@@ -1,6 +1,7 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.ExamRequestDto;
+import fu.sep.apjf.dto.response.ExamDetailResponseDto;
 import fu.sep.apjf.dto.response.ExamResponseDto;
 import fu.sep.apjf.dto.response.ExamListResponseDto;
 import fu.sep.apjf.entity.Chapter;
@@ -27,6 +28,11 @@ public interface ExamMapper {
     @Mapping(target = "unitId", source = "unit.id")
     @Mapping(target = "totalQuestions", expression = "java(exam.getQuestions() != null ? exam.getQuestions().size() : 0)")
     ExamResponseDto toDto(Exam exam);
+
+    @Mapping(target = "courseId", source = "course.id")
+    @Mapping(target = "chapterId", source = "chapter.id")
+    @Mapping(target = "unitId", source = "unit.id")
+    ExamDetailResponseDto toDetailDto(Exam exam);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "id", source = "id")

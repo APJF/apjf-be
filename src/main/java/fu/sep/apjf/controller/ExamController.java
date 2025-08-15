@@ -4,6 +4,7 @@ import fu.sep.apjf.dto.request.ExamRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.ExamResponseDto;
 import fu.sep.apjf.dto.response.ExamListResponseDto;
+import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.service.ExamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -38,9 +39,9 @@ public class ExamController {
     }
 
     @PostMapping("/{examId}/questions")
-    public ResponseEntity<ApiResponseDto<Void>> addQuestions(@PathVariable String examId, @RequestBody List<String> questionIds) {
+    public ResponseEntity<ApiResponseDto<ExamResponseDto>> addQuestions(@PathVariable String examId, @RequestBody List<String> questionIds) {
         examService.addQuestions(examId, questionIds);
-        return ResponseEntity.ok(ApiResponseDto.ok("Thêm danh sách câu hỏi vào bài thi thành công", null));
+        return ResponseEntity.ok(ApiResponseDto.ok("Thêm danh sách câu hỏi vào bài thi thành công", examService.getExamDetail(examId)));
     }
 
     @DeleteMapping("/{examId}/questions")

@@ -1,10 +1,7 @@
 package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
-import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
-import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
-import fu.sep.apjf.dto.response.ExamResultResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ExamResultService;
 import fu.sep.apjf.service.ExamService;
@@ -29,7 +26,7 @@ public class ExamStudentController {
     }
 
     @PostMapping("/{examId}/start")
-    public ResponseEntity<ApiResponseDto<ExamResultResponseDto>> startExam(
+    public ResponseEntity<ApiResponseDto<ExamDetailResponseDto>> startExam(
             @AuthenticationPrincipal User user,
             @PathVariable String examId) {
         return ResponseEntity.ok(ApiResponseDto.ok(
