@@ -33,8 +33,9 @@ public class EmailUtils {
                 <html>
                   <body>
                     <p>Chào bạn,</p>
-                    <p>Vui lòng bấm vào link bên dưới:</p>
+                    <p>Để thực hiện hành động, vui lòng bấm vào link bên dưới :Đ/p>
                     <a href="%s" target="_blank">Click để thực hiện</a>
+                    <p>Hoặc nhập otp<p>
                     <p>OTP của bạn là: <b>%s</b></p>
                   </body>
                 </html>
@@ -61,7 +62,7 @@ public class EmailUtils {
     // Gửi email OTP cho đăng ký
     private void sendRegisterOtpEmail(String email, String otp) throws MessagingException {
         String subject = "Xác thực tài khoản";
-        String htmlContent = getHtmlContent(email, otp, "http://localhost:8080/auth/verify?email=%s&otp=%s");
+        String htmlContent = getHtmlContent(email, otp, "http://localhost:8080/api/auth/verify?email=%s&otp=%s");
         sendEmail(email, subject, htmlContent);
         log.info("Gửi email OTP thành công đến: {}", email);
     }
@@ -69,7 +70,7 @@ public class EmailUtils {
     // Gửi email OTP cho reset password
     private void sendResetPasswordEmail(String email, String otp) throws MessagingException {
         String subject = "Đặt lại mật khẩu";
-        String htmlContent = getHtmlContent(email, otp, "http://localhost:8080/auth/reset-password?email=%s&otp=%s");
+        String htmlContent = getHtmlContent(email, otp, "http://localhost:8080/api/auth/reset-password?email=%s&otp=%s");
         sendEmail(email, subject, htmlContent);
         log.info("Gửi email đặt lại mật khẩu thành công đến: {}", email);
     }
