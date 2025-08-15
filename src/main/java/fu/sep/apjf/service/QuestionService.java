@@ -3,6 +3,8 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.OptionRequestDto;
 import fu.sep.apjf.dto.request.QuestionRequestDto;
 import fu.sep.apjf.dto.response.OptionResponseDto;
+import fu.sep.apjf.dto.response.PageDto;
+import fu.sep.apjf.dto.response.QuestionWithOptionsResponseDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
 import fu.sep.apjf.entity.Option;
 import fu.sep.apjf.entity.Question;
@@ -19,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,19 +64,61 @@ public class QuestionService {
         questionRepository.deleteById(id);
     }
 
-    public Page<QuestionResponseDto> getAllQuestions(String questionId, String unitId, int page, int size) {
+    @Transactional(readOnly = true)
+    public PageDto<QuestionWithOptionsResponseDto> getAllQuestions(
+            String questionId, String unitId, int page, int size) {
+
         Pageable pageable = PageRequest.of(page, size);
-        return questionRepository.searchQuestionsWithoutOptions(questionId, unitId, pageable)
-                .map(q -> new QuestionResponseDto(
+
+        if (unitId != null && unitId.isBlank()) {
+            unitId = null; // coi rỗng như null
+        }
+
+        // Lấy page question theo query gộp
+        Page<Question> questionPage = questionRepository
+                .findQuestionsByQuestionIdOrUnitId(questionId, unitId, pageable);
+
+        // Lấy tất cả questionId từ page
+        final List<String> questionIds = questionPage.getContent().stream()
+                .map(Question::getId)
+                .toList();
+
+        // Fetch options nếu có questionId
+        final Map<String, List<OptionResponseDto>> optionsMap;
+        if (!questionIds.isEmpty()) {
+            List<Option> options = optionRepository.findByQuestionIds(questionIds);
+            optionsMap = options.stream()
+                    .collect(Collectors.groupingBy(
+                            o -> o.getQuestion().getId(),
+                            Collectors.mapping(
+                                    o -> new OptionResponseDto(o.getId(), o.getContent(), o.getIsCorrect()),
+                                    Collectors.toList()
+                            )
+                    ));
+        } else {
+            optionsMap = Collections.emptyMap();
+        }
+
+        // Build DTO
+        List<QuestionWithOptionsResponseDto> dtoList = questionPage.getContent().stream()
+                .map(q -> new QuestionWithOptionsResponseDto(
                         q.getId(),
                         q.getContent(),
                         q.getScope(),
                         q.getType(),
                         q.getFileUrl(),
                         q.getCreatedAt(),
-                        null,
-                        q.getUnits().stream().map(Unit::getId).toList()
-                ));
+                        optionsMap.getOrDefault(q.getId(), Collections.emptyList())
+                ))
+                .toList();
+
+        return new PageDto<>(
+                dtoList,
+                questionPage.getNumber(),
+                questionPage.getSize(),
+                questionPage.getTotalElements(),
+                questionPage.getTotalPages()
+        );
     }
 
     public List<QuestionResponseDto> getQuestionsByExamId(String examId) {

@@ -2,6 +2,7 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.QuestionRequestDto;
 import fu.sep.apjf.dto.response.QuestionResponseDto;
+import fu.sep.apjf.dto.response.QuestionWithOptionsResponseDto;
 import fu.sep.apjf.entity.Question;
 import fu.sep.apjf.entity.Unit;
 import org.mapstruct.*;
@@ -16,6 +17,9 @@ public interface QuestionMapper {
     @Mapping(target = "options", source = "options")
     @Mapping(target = "unitIds", source = "units", qualifiedByName = "mapUnitsToIds")
     QuestionResponseDto toDto(Question question);
+
+    @Mapping(target = "options", source = "options")
+    QuestionWithOptionsResponseDto toWithOptionDto(Question question);
     @Mapping(target = "id", source = "id")
     @Mapping(target = "options", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

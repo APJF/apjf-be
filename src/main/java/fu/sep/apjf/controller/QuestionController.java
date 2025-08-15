@@ -2,10 +2,7 @@ package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.OptionRequestDto;
 import fu.sep.apjf.dto.request.QuestionRequestDto;
-import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.OptionResponseDto;
-import fu.sep.apjf.dto.response.QuestionResponseDto;
-import fu.sep.apjf.service.OptionService;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.service.QuestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,15 +35,16 @@ public class QuestionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<Page<QuestionResponseDto>>> getAllQuestions(
+    public ResponseEntity<ApiResponseDto<PageDto<QuestionWithOptionsResponseDto>>> getAllQuestions(
             @RequestParam(required = false) String questionId,
             @RequestParam(required = false) String unitId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Page<QuestionResponseDto> questions = questionService.getAllQuestions(questionId, unitId, page, size);
+        PageDto<QuestionWithOptionsResponseDto> questions = questionService.getAllQuestions(questionId,unitId, page, size);
         return ResponseEntity.ok(ApiResponseDto.ok("Lấy danh sách câu hỏi thành công", questions));
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<QuestionResponseDto>> getQuestionById(@PathVariable String id) {
