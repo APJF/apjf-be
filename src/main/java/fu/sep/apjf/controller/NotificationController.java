@@ -24,7 +24,6 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<NotificationResponseDto>>> getAllByUser(
             @AuthenticationPrincipal User user) {
-
         List<NotificationResponseDto> notifications = notificationService.getByUserId(user.getId());
         return ResponseEntity.ok(ApiResponseDto.ok("Danh sách thông báo", notifications));
     }

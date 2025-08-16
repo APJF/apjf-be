@@ -10,4 +10,5 @@ import java.util.List;
 public interface UnitRepository extends JpaRepository<Unit, String> {
 
     List<Unit> findByChapterId(String chapterId);
+    List<Unit> findByChapterIdIn(List<String> chapterIds);
 }

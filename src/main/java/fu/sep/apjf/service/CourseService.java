@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,9 @@ public class CourseService {
     private final ExamOverviewMapper examMapper;
     private final CourseProgressRepository courseProgressRepository;
     private final UnitProgressRepository unitProgressRepository;
+    private final ChapterRepository chapterRepository;
+    private final UnitRepository unitRepository;
+    private final ChapterProgressRepository chapterProgressRepository;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
@@ -169,6 +173,7 @@ public class CourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
 
+        // 1. Tạo CourseProgress
         CourseProgress progress = courseProgressRepository.findByUserAndCourseId(user, courseId)
                 .orElseGet(() -> courseProgressRepository.save(
                         CourseProgress.builder()
@@ -178,6 +183,49 @@ public class CourseService {
                                 .build()
                 ));
 
+        // 2. Lấy danh sách chapters của course
+        List<Chapter> chapters = chapterRepository.findByCourseId(courseId);
+
+        // 3. Tạo ChapterProgress cho từng chapter (nếu chưa có)
+        List<ChapterProgress> chapterProgressList = new ArrayList<>();
+        for (Chapter chapter : chapters) {
+            if (!chapterProgressRepository.existsByUserAndChapter(user, chapter)) {
+                chapterProgressList.add(
+                        ChapterProgress.builder()
+                                .id(new ChapterProgressKey(chapter.getId(), user.getId()))
+                                .user(user)
+                                .chapter(chapter)
+                                .completed(false)
+                                .build()
+                );
+            }
+        }
+        if (!chapterProgressList.isEmpty()) {
+            chapterProgressRepository.saveAll(chapterProgressList);
+        }
+
+        // 4. Lấy tất cả units thuộc chapters
+        List<String> chapterIds = chapters.stream().map(Chapter::getId).toList();
+        List<Unit> units = unitRepository.findByChapterIdIn(chapterIds);
+
+        // 5. Tạo UnitProgress cho từng unit (nếu chưa có)
+        List<UnitProgress> unitProgressList = new ArrayList<>();
+        for (Unit unit : units) {
+            if (!unitProgressRepository.existsByUserAndUnit(user, unit)) {
+                unitProgressList.add(
+                        UnitProgress.builder()
+                                .id(new UnitProgressKey(unit.getId(), user.getId()))
+                                .user(user)
+                                .unit(unit)
+                                .completed(false)
+                                .build()
+                );
+            }
+        }
+        if (!unitProgressList.isEmpty()) {
+            unitProgressRepository.saveAll(unitProgressList);
+        }
+
         return new CourseDetailProgressResponseDto(
                 course.getId(),
                 course.getTitle(),
@@ -185,7 +233,6 @@ public class CourseService {
                 progress.getCompletedAt()
         );
     }
-
 
     @Transactional(readOnly = true)
     public CourseResponseDto findById(String id) {
