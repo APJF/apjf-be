@@ -52,6 +52,15 @@ public class CourseService {
                 r -> ((Number) r[1]).floatValue()   // average rating
         ));
 
+        // Lấy tất cả image object names và generate presigned URLs batch
+        List<String> imageObjectNames = courses.stream()
+                .map(Course::getImage)
+                .filter(image -> image != null && !image.trim().isEmpty() &&
+                        !image.startsWith("http://") && !image.startsWith("https://"))
+                .toList();
+
+        Map<String, String> presignedImageUrls = minioService.getCourseImageUrls(imageObjectNames);
+
         return courses.stream().map(course -> {
             Set<TopicDto> topicDtos = course.getTopics().stream()
                     .map(t -> new TopicDto(t.getId(), t.getName()))
@@ -59,13 +68,20 @@ public class CourseService {
 
             Float avgRating = averageRatings.getOrDefault(course.getId(), 0f);
 
+            // Kiểm tra và sử dụng presigned URL nếu có
+            String imageUrl = course.getImage();
+            if (imageUrl != null && !imageUrl.trim().isEmpty() &&
+                !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                imageUrl = presignedImageUrls.getOrDefault(imageUrl, imageUrl);
+            }
+
             return new CourseResponseDto(
                     course.getId(),
                     course.getTitle(),
                     course.getDescription(),
                     course.getDuration(),
                     course.getLevel(),
-                    course.getImage(),
+                    imageUrl,  // Sử dụng presigned URL thay vì raw object name
                     course.getRequirement(),
                     course.getStatus(),
                     course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
