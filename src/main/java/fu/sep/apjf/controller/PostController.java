@@ -27,13 +27,13 @@ public class PostController {
     private final CommentService commentService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll() {
-        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list()));
+    public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list(user.getId())));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDto<PostResponseDto>> getById(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id)));
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id, user.getId())));
     }
 
     @GetMapping("/{id}/comments")
