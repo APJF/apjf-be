@@ -5,7 +5,7 @@ import java.time.Instant;
 public record NotificationResponseDto(
         Long id,
         String content,
-        boolean isRead,
+        boolean read,
         Instant createdAt,
         Long senderId,
         String senderUsername,

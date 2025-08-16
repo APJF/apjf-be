@@ -8,6 +8,7 @@ import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ExamService;
 import fu.sep.apjf.service.MaterialService;
+import fu.sep.apjf.service.ProgressTrackingService;
 import fu.sep.apjf.service.UnitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class UnitController {
     private final UnitService unitService;
     private final MaterialService materialService;
     private final ExamService examService;
+    private final ProgressTrackingService trackingService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<UnitResponseDto>>> getAll() {
@@ -52,6 +54,15 @@ public class UnitController {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết bài học", unitService.findById(id)));
     }
+
+    @PostMapping("/{unitId}/pass")
+    public ResponseEntity<ApiResponseDto<Void>> markUnitPassed(
+            @PathVariable String unitId,
+            @AuthenticationPrincipal User user) {
+        trackingService.markUnitPassed(unitId, user.getId());
+        return ResponseEntity.ok(ApiResponseDto.ok("Đánh dấu hoàn thành bài học thành công", null));
+    }
+
 
     @PostMapping
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> create(

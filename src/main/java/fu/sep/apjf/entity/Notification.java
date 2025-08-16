@@ -22,7 +22,7 @@ public class Notification {
     private String content;
 
     @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
+    private boolean isRead;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();

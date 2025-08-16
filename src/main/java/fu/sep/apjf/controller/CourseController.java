@@ -1,10 +1,8 @@
 package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
-import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.ChapterResponseDto;
-import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
+import fu.sep.apjf.dto.response.*;
+import fu.sep.apjf.entity.CourseProgress;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
 import fu.sep.apjf.service.CourseService;
@@ -36,6 +34,18 @@ public class CourseController {
     public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getAll() {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách khoá học", courseService.findAll()));
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponseDto<List<CourseDetailResponseDto>>> getAllByUser(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Danh sách khoá học", courseService.getAllByUser(user)));
+    }
+
+    @GetMapping("/{id}/enroll")
+    public ResponseEntity<ApiResponseDto<CourseDetailProgressResponseDto>> enroll(@AuthenticationPrincipal User user, @PathVariable String id) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Tham gia khóa học thành công", courseService.enrollCourse(user,id)));
     }
 
     @GetMapping("/{id}")
