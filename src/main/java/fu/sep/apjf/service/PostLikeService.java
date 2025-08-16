@@ -1,5 +1,6 @@
 package fu.sep.apjf.service;
 
+import fu.sep.apjf.dto.request.NotificationRequestDto;
 import fu.sep.apjf.dto.request.PostLikeRequestDto;
 import fu.sep.apjf.dto.response.PostLikeResponseDto;
 import fu.sep.apjf.entity.Post;
@@ -28,6 +29,7 @@ public class PostLikeService {
     private final PostRepository postRepo;
     private final UserRepository userRepo;
     private final PostLikeMapper postLikeMapper;
+    private final NotificationService notificationService;
 
     public PostLikeResponseDto toggleLike(PostLikeRequestDto dto, Long userId) {
         User user = userRepo.findById(userId)
@@ -45,6 +47,9 @@ public class PostLikeService {
             postLike.setUser(user);
             postLike.setPost(post);
             postLikeRepo.save(postLike);
+
+            NotificationRequestDto noti= new NotificationRequestDto(user.getUsername() + " đã thích bài viết của bạn.", userId, post.getId());
+            notificationService.create(noti);
         }
 
         int totalLikes = postLikeRepo.countByPost(post);
