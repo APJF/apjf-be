@@ -101,6 +101,36 @@ public class MinioService {
         return objectName;
     }
 
+    // New method to upload document using original filename
+    public String uploadDocumentWithOriginalName(MultipartFile file) throws Exception {
+        // Validate file size (50MB cho documents)
+        if (file.getSize() > 50 * 1024 * 1024) {
+            throw new IllegalArgumentException("Kích thước file không được vượt quá 50MB");
+        }
+
+        createBucketIfNotExists(documentBucket);
+        String originalFilename = file.getOriginalFilename();
+
+        if (originalFilename == null || originalFilename.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên file không hợp lệ");
+        }
+
+        // Sanitize filename - remove special characters and spaces
+        String sanitizedFilename = originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
+
+        // Add UUID to ensure uniqueness while keeping original name
+        String nameWithoutExtension = sanitizedFilename.contains(".")
+            ? sanitizedFilename.substring(0, sanitizedFilename.lastIndexOf("."))
+            : sanitizedFilename;
+        String extension = sanitizedFilename.contains(".")
+            ? sanitizedFilename.substring(sanitizedFilename.lastIndexOf("."))
+            : "";
+
+        String objectName = nameWithoutExtension + "_" + UUID.randomUUID() + extension;
+        uploadFile(documentBucket, objectName, file);
+        return objectName;
+    }
+
     // Cache cho document URLs
     @Cacheable(cacheNames = "presignedUrls", key = "'doc_' + #objectName", unless = "#result == null")
     public String getDocumentUrl(String objectName) throws Exception {

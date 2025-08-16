@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -62,10 +63,31 @@ public class MaterialController {
 
     @PreAuthorize("hasRole('STAFF')")
     @PostMapping("/upload")
-    public ResponseEntity<ApiResponseDto<String>> uploadFile(@RequestParam("file") MultipartFile file,
-                                                             @AuthenticationPrincipal User user) throws Exception {
-        String objectName = minioService.uploadDocument(file, user.getUsername());
-        return ResponseEntity.ok(ApiResponseDto.ok("Upload file thành công", objectName));
+    public ResponseEntity<ApiResponseDto<List<String>>> uploadFiles(@RequestParam("files") MultipartFile[] files,
+                                                                   @AuthenticationPrincipal User user) throws Exception {
+        if (files == null || files.length == 0) {
+            throw new IllegalArgumentException("Vui lòng chọn ít nhất một file để upload");
+        }
+
+        List<String> uploadedObjectNames = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (!file.isEmpty()) {
+                String objectName = minioService.uploadDocumentWithOriginalName(file);
+                uploadedObjectNames.add(objectName);
+                log.info("Uploaded file: {} -> {}", file.getOriginalFilename(), objectName);
+            }
+        }
+
+        if (uploadedObjectNames.isEmpty()) {
+            throw new IllegalArgumentException("Không có file nào được upload thành công");
+        }
+
+        String message = uploadedObjectNames.size() == 1
+                ? "Upload file thành công"
+                : String.format("Upload %d files thành công", uploadedObjectNames.size());
+
+        return ResponseEntity.ok(ApiResponseDto.ok(message, uploadedObjectNames));
     }
 
     @DeleteMapping("/{id}")

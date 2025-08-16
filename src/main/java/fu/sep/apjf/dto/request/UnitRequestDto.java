@@ -1,15 +1,15 @@
 package fu.sep.apjf.dto.request;
 
 import fu.sep.apjf.entity.EnumClass.Status;
-import fu.sep.apjf.validation.ValidId;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
  * DTO đại diện cho thông tin yêu cầu về bài học (Unit)
  */
 public record UnitRequestDto(
-        @ValidId(message = "ID bài học chỉ được chứa chữ cái, số, dấu gạch ngang (-) và dấu gạch dưới (_)")
+        @NotNull(message = "ID bài học không được để trống")
         String id,
         @NotBlank(message = "Tiêu đề bài học không được để trống")
         @Size(min = 1, max = 255, message = "Tiêu đề bài học phải từ 1 đến 255 ký tự")
@@ -19,9 +19,9 @@ public record UnitRequestDto(
         String description,
         Status status,
         @NotBlank(message = "ID chương không được để trống")
-        @ValidId(message = "ID chương chỉ được chứa chữ cái, số, dấu gạch ngang (-) và dấu gạch dưới (_)")
+        @NotNull(message = "ID chương không được để trống")
         String chapterId,
-        @ValidId(message = "ID bài học tiên quyết chỉ được chứa chữ cái, số, dấu gạch ngang (-) và dấu gạch dưới (_)")
+        @NotNull(message = "ID bài học tiên quyết không được để trống")
         String prerequisiteUnitId
 ) {
 }

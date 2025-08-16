@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = {})
 @Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-@Pattern(regexp = "^[a-zA-Z0-9_-]+$", message = "ID chỉ được chứa chữ cái, số, dấu gạch ngang (-) và dấu gạch dưới (_)")
+@Pattern(regexp = "^[-a-zA-Z0-9_]+$", message = "ID chỉ được chứa chữ cái, số, dấu gạch ngang (-) và dấu gạch dưới (_)")
 public @interface ValidId {
     String message() default "ID không hợp lệ";
     Class<?>[] groups() default {};
