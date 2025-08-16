@@ -21,7 +21,6 @@ public record UnitRequestDto(
         @NotBlank(message = "ID chương không được để trống")
         @NotNull(message = "ID chương không được để trống")
         String chapterId,
-        @NotNull(message = "ID bài học tiên quyết không được để trống")
         String prerequisiteUnitId
 ) {
 }
