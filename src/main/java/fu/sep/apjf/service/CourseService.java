@@ -2,17 +2,15 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
+import fu.sep.apjf.dto.response.CourseDetailResponseDto;
+import fu.sep.apjf.dto.response.CourseProgressResponseDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
-import fu.sep.apjf.entity.ApprovalRequest;
-import fu.sep.apjf.entity.Course;
-import fu.sep.apjf.entity.EnumClass;
+import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseMapper;
 import fu.sep.apjf.mapper.ExamOverviewMapper;
-import fu.sep.apjf.repository.CourseRepository;
-import fu.sep.apjf.repository.ReviewRepository;
-import fu.sep.apjf.repository.UserRepository;
+import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +37,8 @@ public class CourseService {
     private final MinioService minioService;
     private final CourseMapper courseMapper;
     private final ExamOverviewMapper examMapper;
+    private final CourseProgressRepository courseProgressRepository;
+    private final UnitProgressRepository unitProgressRepository;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
@@ -86,11 +86,100 @@ public class CourseService {
                     course.getStatus(),
                     course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
                     topicDtos,
-                    avgRating
+                    avgRating,
+                    false
             );
         }).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<CourseDetailResponseDto> getAllByUser(User user) {
+        // Lấy tất cả progress của user (đã enroll course nào thì mới có record trong CourseProgress)
+        List<CourseProgress> progresses = courseProgressRepository.findByUser(user);
+
+        // Lấy courseId list từ progresses
+        List<String> courseIds = progresses.stream()
+                .map(cp -> cp.getCourse().getId())
+                .toList();
+
+        // Lấy courses + topics bằng batch query
+        List<Course> courses = courseRepository.findAllCoursesWithTopics();
+
+        // Lấy average rating cho tất cả courses
+        Map<String, Float> averageRatings = reviewRepository.findAverageRatingForCourses(courseIds)
+                .stream().collect(Collectors.toMap(
+                        r -> r[0].toString(),
+                        r -> ((Number) r[1]).floatValue()
+                ));
+
+        // Lấy image objectNames để tạo presigned url
+        List<String> imageObjectNames = courses.stream()
+                .map(Course::getImage)
+                .filter(img -> img != null && !img.trim().isEmpty()
+                        && !img.startsWith("http://")
+                        && !img.startsWith("https://"))
+                .toList();
+        Map<String, String> presignedImageUrls = minioService.getCourseImageUrls(imageObjectNames);
+
+        // Map course -> dto
+        return courses.stream().map(course -> {
+            Set<TopicDto> topicDtos = course.getTopics().stream()
+                    .map(t -> new TopicDto(t.getId(), t.getName()))
+                    .collect(Collectors.toSet());
+
+            Float avgRating = averageRatings.getOrDefault(course.getId(), 0f);
+
+            String imageUrl = course.getImage();
+            if (imageUrl != null && !imageUrl.trim().isEmpty()
+                    && !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                imageUrl = presignedImageUrls.getOrDefault(imageUrl, imageUrl);
+            }
+
+            // Tìm progress tương ứng
+            CourseProgress progress = progresses.stream()
+                    .filter(cp -> cp.getCourse().getId().equals(course.getId()))
+                    .findFirst()
+                    .orElse(null);
+
+            CourseProgressResponseDto progressDto = null;
+            if (progress != null) {
+                progressDto = new CourseProgressResponseDto(
+                        progress.isCompleted(),
+                        calculateProgressPercent(user, course)
+                );
+            }
+
+            return new CourseDetailResponseDto(
+                    course.getId(),
+                    course.getTitle(),
+                    course.getDescription(),
+                    course.getDuration(),
+                    course.getLevel(),
+                    imageUrl,
+                    course.getRequirement(),
+                    course.getStatus(),
+                    course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
+                    topicDtos,
+                    avgRating,
+                    progressDto
+            );
+        }).toList();
+    }
+
+
+    @Transactional
+    public CourseProgress enrollCourse(User user, String courseId) {
+        Course course= courseRepository.findById(courseId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+        return courseProgressRepository.findByUserAndCourseId(user, courseId)
+                .orElseGet(() -> {
+                    CourseProgress progress = CourseProgress.builder()
+                            .user(user)
+                            .course(course)
+                            .completed(false)
+                            .build();
+                    return courseProgressRepository.save(progress);
+                });
+    }
 
     @Transactional(readOnly = true)
     public CourseResponseDto findById(String id) {
@@ -215,4 +304,21 @@ public class CourseService {
         // Nhân 2, làm tròn, rồi chia 2 để có các mốc 0.5
         return Math.round(rating * 2.0f) / 2.0f;
     }
+
+    public float calculateProgressPercent(User user, Course course) {
+        // Tổng số Unit trong Course
+        int totalUnits = course.getChapters().stream()
+                .mapToInt(ch -> ch.getUnits().size())
+                .sum();
+
+        if (totalUnits == 0) return 0f;
+
+        // Số Unit đã hoàn thành
+        long completedUnits = unitProgressRepository
+                .countByUserAndUnitCourseIdAndCompletedTrue(user, course.getId());
+
+        return (completedUnits * 100f) / totalUnits;
+    }
+
+
 }

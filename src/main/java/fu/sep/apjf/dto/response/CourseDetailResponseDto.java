@@ -5,7 +5,7 @@ import fu.sep.apjf.entity.EnumClass;
 
 import java.util.Set;
 
-public record CourseResponseDto(
+public record CourseDetailResponseDto(
         String id,
         String title,
         String description,
@@ -17,6 +17,6 @@ public record CourseResponseDto(
         String prerequisiteCourseId,
         Set<TopicDto> topics,
         Float averageRating,
-        boolean isEnrolled
+        CourseProgressResponseDto courseProgress
 ) {
 }

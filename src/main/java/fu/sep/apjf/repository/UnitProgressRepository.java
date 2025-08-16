@@ -1,18 +1,11 @@
-//package fu.sep.apjf.repository;
-//
-//import fu.sep.apjf.entity.UnitProgress;
-//import fu.sep.apjf.entity.UnitProgressKey;
-//import org.springframework.data.jpa.repository.JpaRepository;
-//
-//import java.util.List;
-//
-//public interface UnitProgressRepository extends JpaRepository<UnitProgress, UnitProgressKey> {
-//    List<UnitProgress> findByUserId(Long userId);
-//    List<UnitProgress> findByUserIdAndUnit_ChapterId(Long userId, String chapterId);
-//
-//    boolean existsByUnitIdAndUserIdAndPassedTrue(String unitId, Long userId);
-//
-//
-//    List<UnitProgress> findByUserIdAndUnit_Chapter_CourseId(Long userId, String courseId);
-//
-//}
+package fu.sep.apjf.repository;
+
+import fu.sep.apjf.entity.UnitProgress;
+import fu.sep.apjf.entity.UnitProgressKey;
+import fu.sep.apjf.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UnitProgressRepository extends JpaRepository<UnitProgress, UnitProgressKey> {
+    long countByUserAndUnitCourseIdAndCompletedTrue(User user, String courseId);
+}
+
