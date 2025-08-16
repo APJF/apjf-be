@@ -2,15 +2,12 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.ExamResultRequestDto;
 import fu.sep.apjf.dto.request.QuestionResultRequestDto;
-import fu.sep.apjf.dto.response.ExamDetailResponseDto;
-import fu.sep.apjf.dto.response.ExamHistoryResponseDto;
-import fu.sep.apjf.dto.response.ExamResultResponseDto;
-import fu.sep.apjf.dto.response.QuestionResponseDto;
-import fu.sep.apjf.dto.response.OptionExamResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.ExamResultMapper;
 import fu.sep.apjf.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ExamResultService {
 
+    private static final String EXAM_NOT_FOUND = "Exam not found";
+
     private final ExamRepository examRepository;
     private final ExamResultRepository examResultRepository;
     private final ExamResultDetailRepository examResultDetailRepository;
-    private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
     private final ExamResultMapper examResultMapper;
     private final UserRepository userRepository;
@@ -45,7 +46,7 @@ public class ExamResultService {
         // Giải pháp 2-query để tránh MultipleBagFetchException:
         // Query 1: Lấy Exam cơ bản
         Exam exam = examRepository.findByIdOnly(examId)
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND));
 
         // Query 2: Lấy Questions với Options riêng biệt
         List<Question> questionsWithOptions = examRepository.findQuestionsByExamIdWithOptions(examId);
@@ -87,7 +88,7 @@ public class ExamResultService {
     private ExamDetailResponseDto buildExamDetailResponseFromExistingResult(String examId) {
         // Cho trường hợp idempotent, fetch data với 2-query approach
         Exam exam = examRepository.findByIdOnly(examId)
-                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND));
         List<Question> questions = examRepository.findQuestionsByExamIdWithOptions(examId);
         return buildExamDetailResponseOptimized(exam, questions);
     }
@@ -140,68 +141,95 @@ public class ExamResultService {
 
 
 
+    @Transactional
     public ExamResultResponseDto submitExam(Long userId, ExamResultRequestDto dto) {
-        Exam exam = examRepository.findById(dto.examId()).orElseThrow();
+        // Lấy exam cùng questions
+        Exam exam = examRepository.findByIdWithQuestions(dto.examId())
+                .orElseThrow(() -> new EntityNotFoundException(EXAM_NOT_FOUND));
 
         if (exam.getType() != EnumClass.ExamType.MULTIPLE_CHOICE) {
             throw new UnsupportedOperationException("Only multiple choice exams are supported in this version.");
         }
 
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         ExamResult result = ExamResult.builder()
                 .startedAt(dto.startedAt())
                 .submittedAt(dto.submittedAt())
                 .exam(exam)
                 .user(user)
-                .status(EnumClass.ExamStatus.SUBMITTED) // tạm thời, sẽ cập nhật sau
+                .status(EnumClass.ExamStatus.SUBMITTED) // tạm thời
                 .build();
+
+        // Map questionId -> selectedOptionId từ DTO
+        Map<String, String> selectedMap = dto.questionResults().stream()
+                .collect(Collectors.toMap(QuestionResultRequestDto::questionId, QuestionResultRequestDto::selectedOptionId));
+
+        // Lấy tất cả option cần dùng trong 1 query
+        List<String> selectedOptionIds = selectedMap.values().stream()
+                .filter(Objects::nonNull)
+                .toList();
+
+        Map<String, Option> optionMap = optionRepository.findAllById(selectedOptionIds)
+                .stream()
+                .collect(Collectors.toMap(Option::getId, o -> o));
 
         List<ExamResultDetail> details = new ArrayList<>();
         int totalQuestions = 0;
         int correctAnswers = 0;
 
-        for (QuestionResultRequestDto questionDto : dto.questionResults()) {
-            Question question = questionRepository.findById(questionDto.questionId()).orElseThrow();
-
+        for (Question question : exam.getQuestions()) {
             ExamResultDetail detail = new ExamResultDetail();
             detail.setExamResult(result);
             detail.setQuestion(question);
 
             totalQuestions++;
 
-            if (questionDto.selectedOptionId() != null) {
-                Option selectedOption = optionRepository.findById(questionDto.selectedOptionId()).orElse(null);
-                detail.setSelectedOption(selectedOption);
+            String selectedOptionId = selectedMap.get(question.getId());
+            Option selectedOption = selectedOptionId != null ? optionMap.get(selectedOptionId) : null;
+            detail.setSelectedOption(selectedOption);
 
-                boolean isCorrect = selectedOption != null && Boolean.TRUE.equals(selectedOption.getIsCorrect());
-                detail.setIsCorrect(isCorrect);
-                if (isCorrect) {
-                    correctAnswers++;
-                }
-            } else {
-                detail.setIsCorrect(false); // Không chọn thì sai
-            }
+            boolean isCorrect = selectedOption != null && Boolean.TRUE.equals(selectedOption.getIsCorrect());
+            detail.setIsCorrect(isCorrect);
+            if (isCorrect) correctAnswers++;
 
             details.add(detail);
         }
 
+        // Tính điểm
         float score = totalQuestions > 0 ? ((float) correctAnswers / totalQuestions) * 100 : 0.0f;
         result.setScore(score);
+        result.setStatus(score >= 60.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
 
-        result.setScore(score);
-        result.setDetails(details);
-
-        if (score >= 60.0) {
-            result.setStatus(EnumClass.ExamStatus.PASSED);
-        } else {
-            result.setStatus(EnumClass.ExamStatus.FAILED);
-        }
-
+        // Lưu ExamResult
         ExamResult savedResult = examResultRepository.save(result);
+
+        // Batch insert tất cả ExamResultDetail
         examResultDetailRepository.saveAll(details);
 
-        return examResultMapper.toDto(savedResult);
+        // Tạo danh sách QuestionResultResponseDto
+        List<QuestionResultResponseDto> questionResults = details.stream()
+                .map(d -> new QuestionResultResponseDto(
+                        d.getQuestion().getId(),
+                        d.getQuestion().getContent(),
+                        d.getQuestion().getExplanation(),
+                        d.getSelectedOption() != null ? d.getSelectedOption().getId() : null,
+                        null,
+                        d.getIsCorrect()
+                ))
+                .toList();
+
+        // Trả về DTO
+        return new ExamResultResponseDto(
+                savedResult.getId(),
+                savedResult.getExam().getId(),
+                savedResult.getExam().getTitle(),
+                savedResult.getScore(),
+                savedResult.getSubmittedAt(),
+                savedResult.getStatus(),
+                questionResults
+        );
     }
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {

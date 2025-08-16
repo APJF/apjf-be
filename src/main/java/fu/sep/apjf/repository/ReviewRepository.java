@@ -20,6 +20,17 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Optional<Review> findByUserAndCourse(User user, Course course);
 
+
+
+    @Query("""
+       SELECT r.course.id, COALESCE(AVG(r.rating), 0)
+       FROM Review r
+       WHERE r.course.id IN :courseIds
+       GROUP BY r.course.id
+    """)
+    List<Object[]> findAverageRatingForCourses(@Param("courseIds") List<String> courseIds);
+
+
     @Query(value = "SELECT r.course FROM Review r " +
             "GROUP BY r.course " +
             "ORDER BY AVG(r.rating) DESC " +

@@ -4,7 +4,6 @@ import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.CourseDetailResponseDto;
 import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
@@ -40,7 +39,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<CourseDetailResponseDto>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
     }

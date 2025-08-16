@@ -13,7 +13,11 @@ import lombok.*;
 public class ExamResultDetail {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "exam_result_detail_seq")
+    @SequenceGenerator(
+            name = "exam_result_detail_seq",
+            sequenceName = "exam_result_detail_seq"
+    )
     private Long id;
 
     @Column(name = "user_answer")
