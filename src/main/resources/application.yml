@@ -28,6 +28,11 @@ spring:
           provider_disables_autocommit: true
         jdbc:
           time_zone: UTC
+        jdbc.batch_size: 50            # Kích thước batch (số record mỗi lần insert)
+        order_inserts: true            # Sắp xếp insert theo entity type, tối ưu batch
+        order_updates: true            # Sắp xếp update theo entity type
+        batch_versioned_data: true
+
 
   mail:
     host: smtp.gmail.com
