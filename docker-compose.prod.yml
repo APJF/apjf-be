@@ -1,0 +1,29 @@
+services:
+  minio:
+    image: bitnami/minio:latest
+    container_name: minio-container
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin@2024
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/bitnami/minio/data
+      - minio-config:/opt/bitnami/minio/config
+    command: minio server /bitnami/minio/data --console-address ":9001"
+
+  apjf-be:
+    image: phanphuong27/apjf-be
+    container_name: apjf-be-container
+    env_file:
+      - .env
+
+    ports:
+      - "8080:8080"
+
+
+
+volumes:
+  minio-data:
+  minio-config:

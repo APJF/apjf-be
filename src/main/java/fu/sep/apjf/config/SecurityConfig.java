@@ -64,6 +64,7 @@ public class SecurityConfig {
             "/api/student/exams/**",
             "/api/post-likes/**",
             "/api/notifications/**",
+            "/api/topics"
     };
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;

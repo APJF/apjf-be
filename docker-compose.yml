@@ -10,8 +10,7 @@ services:
     restart: unless-stopped
     volumes:
       - pgvector-data:/var/lib/postgresql/data
-    networks:
-      - backend-network
+
 
   pgadmin:
     image: dpage/pgadmin4:9.4
@@ -21,8 +20,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: password
     ports:
       - "5050:80"
-    networks:
-      - backend-network
+
 
   # === MinIO ===
   minio:
@@ -38,14 +36,9 @@ services:
       - minio-data:/bitnami/minio/data
       - minio-config:/opt/bitnami/minio/config
     command: minio server /bitnami/minio/data --console-address ":9001"
-    networks:
-      - backend-network
+
 
 volumes:
   pgvector-data:
   minio-data:
   minio-config:
-
-networks:
-  backend-network:
-    driver: bridge

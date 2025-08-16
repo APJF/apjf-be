@@ -67,3 +67,11 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('bootBuildImage') {
+    imageName = 'apjf-be:0.0.1-SNAPSHOT'
+    environment = [
+            'BP_JVM_VERSION': '21',     // tuỳ bạn
+            'BP_EXPOSE_PORT': '8080'    // cổng bạn muốn expose
+    ]
+}
