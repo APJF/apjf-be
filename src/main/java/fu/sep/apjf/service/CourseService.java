@@ -2,10 +2,7 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
-import fu.sep.apjf.dto.response.CourseDetailResponseDto;
-import fu.sep.apjf.dto.response.CourseProgressResponseDto;
-import fu.sep.apjf.dto.response.CourseResponseDto;
-import fu.sep.apjf.dto.response.ExamOverviewResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseMapper;
@@ -145,7 +142,7 @@ public class CourseService {
             if (progress != null) {
                 progressDto = new CourseProgressResponseDto(
                         progress.isCompleted(),
-                        calculateProgressPercent(user, course)
+                        calculateCourseProgress(user, course.getId())
                 );
             }
 
@@ -168,18 +165,27 @@ public class CourseService {
 
 
     @Transactional
-    public CourseProgress enrollCourse(User user, String courseId) {
-        Course course= courseRepository.findById(courseId).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
-        return courseProgressRepository.findByUserAndCourseId(user, courseId)
-                .orElseGet(() -> {
-                    CourseProgress progress = CourseProgress.builder()
-                            .user(user)
-                            .course(course)
-                            .completed(false)
-                            .build();
-                    return courseProgressRepository.save(progress);
-                });
+    public CourseDetailProgressResponseDto enrollCourse(User user, String courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+
+        CourseProgress progress = courseProgressRepository.findByUserAndCourseId(user, courseId)
+                .orElseGet(() -> courseProgressRepository.save(
+                        CourseProgress.builder()
+                                .user(user)
+                                .course(course)
+                                .completed(false)
+                                .build()
+                ));
+
+        return new CourseDetailProgressResponseDto(
+                course.getId(),
+                course.getTitle(),
+                progress.isCompleted(),
+                progress.getCompletedAt()
+        );
     }
+
 
     @Transactional(readOnly = true)
     public CourseResponseDto findById(String id) {
@@ -305,20 +311,15 @@ public class CourseService {
         return Math.round(rating * 2.0f) / 2.0f;
     }
 
-    public float calculateProgressPercent(User user, Course course) {
-        // Tổng số Unit trong Course
-        int totalUnits = course.getChapters().stream()
-                .mapToInt(ch -> ch.getUnits().size())
-                .sum();
+    public float calculateCourseProgress(User user, String courseId) {
+        long totalUnits = unitProgressRepository.countUnitsByCourseId(courseId);
+        if (totalUnits == 0) return 0;
 
-        if (totalUnits == 0) return 0f;
+        long completedUnits = unitProgressRepository.countCompletedUnitsByUserAndCourse(user, courseId);
 
-        // Số Unit đã hoàn thành
-        long completedUnits = unitProgressRepository
-                .countByUserAndUnitCourseIdAndCompletedTrue(user, course.getId());
-
-        return (completedUnits * 100f) / totalUnits;
+        return (completedUnits * 100.0f) / totalUnits;
     }
+
 
 
 }

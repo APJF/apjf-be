@@ -43,7 +43,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}/enroll")
-    public ResponseEntity<ApiResponseDto<CourseProgress>> enroll(@AuthenticationPrincipal User user, @PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseDetailProgressResponseDto>> enroll(@AuthenticationPrincipal User user, @PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Tham gia khóa học thành công", courseService.enrollCourse(user,id)));
     }
