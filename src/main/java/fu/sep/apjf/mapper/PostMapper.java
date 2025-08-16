@@ -1,6 +1,7 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.PostRequestDto;
+import fu.sep.apjf.dto.response.PostLikeResponseDto;
 import fu.sep.apjf.dto.response.PostResponseDto;
 import fu.sep.apjf.entity.Post;
 import org.mapstruct.*;
@@ -20,6 +21,16 @@ public interface PostMapper {
     @Mapping(target = "updatedAt", source = "post.updatedAt")
     @Mapping(target = "commentsCount", source = "commentsCount")
     PostResponseDto toDto(Post post, Long commentsCount);
+
+    @Mapping(target = "id", source = "post.id")
+    @Mapping(target = "username", source = "post.user.username")
+    @Mapping(target = "email", source = "post.user.email")
+    @Mapping(target = "avatar", source = "post.user.avatar")
+    @Mapping(target = "updatedAt", source = "post.updatedAt")
+    @Mapping(target = "commentsCount", source = "commentsCount")
+    @Mapping(target = "likeInfo", source = "likeInfo") // truyền PostLikeResponseDto từ service
+    PostResponseDto toDetailDto(Post post, Long commentsCount, PostLikeResponseDto likeInfo);
+
 
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "comments", ignore = true)

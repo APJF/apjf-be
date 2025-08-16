@@ -10,6 +10,7 @@ public record PostResponseDto(
         String username,
         String email,
         String avatar,
-        Long commentsCount
+        Long commentsCount,
+        PostLikeResponseDto likeInfo
 ) {
 }
