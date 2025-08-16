@@ -1,2 +1,14 @@
 databaseChangeLog:
-  - 
+  - changeSet:
+      id: 001-extend-material-id-length
+      author: system
+      changes:
+        - modifyDataType:
+            tableName: material
+            columnName: id
+            newDataType: varchar(100)
+      rollback:
+        - modifyDataType:
+            tableName: material
+            columnName: id
+            newDataType: varchar(36)

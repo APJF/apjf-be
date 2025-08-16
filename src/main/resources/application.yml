@@ -17,9 +17,12 @@ spring:
       validation-timeout: 5000
       connection-test-query: SELECT 1
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     open-in-view: false
     properties:
@@ -87,4 +90,3 @@ integration:
       avatar: avatar
       document: document
       course-image: course-image
-

@@ -27,7 +27,7 @@ import lombok.ToString;
 public class Material {
 
     @Id
-    @Column(length = 36)
+    @Column(length = 100)
     private String id;
 
     @Column(name = "file_url", nullable = false, length = 512)
