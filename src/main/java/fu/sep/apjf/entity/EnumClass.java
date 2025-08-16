@@ -3,7 +3,12 @@ package fu.sep.apjf.entity;
 public class EnumClass {
 
     public enum Level {
-        N5, N4, N3, N2, N1
+        N5_L, N5_M, N5_H,
+        N4_L, N4_M, N4_H,
+        N3_L, N3_M, N3_H,
+        N2_L, N2_M, N2_H,
+        N1_L, N1_M, N1_H,
+        N5,N4,N3,N2,N1
     }
 
     public enum Status {// staff gửi duyệt
