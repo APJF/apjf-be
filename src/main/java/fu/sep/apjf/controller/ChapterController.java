@@ -71,4 +71,12 @@ public class ChapterController {
                 ApiResponseDto.ok("Cập nhật chương thành công", chapterService.update(id, dto, user.getId())));
     }
 
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<ApiResponseDto<ChapterResponseDto>> deactivate(
+            @PathVariable String id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Vô hiệu hóa chương thành công", chapterService.deactivate(id, user.getId())));
+    }
+
 }
