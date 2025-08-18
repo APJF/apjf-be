@@ -34,10 +34,11 @@ public class ExamStudentController {
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<ApiResponseDto<ExamResultResponseDto>> submitExam(
+    public ResponseEntity<ApiResponseDto<String>> submitExam(
             @AuthenticationPrincipal User user,
             @RequestBody ExamResultRequestDto dto) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Nộp bài thành công", examResultService.submitExam(user.getId(), dto)));
+        examResultService.submitExam(user.getId(), dto);
+        return ResponseEntity.ok(ApiResponseDto.ok("Nộp bài thành công"));
     }
 
     @GetMapping
@@ -47,7 +48,7 @@ public class ExamStudentController {
     }
 
     @GetMapping("/result/{resultId}")
-    public ResponseEntity<ApiResponseDto<List<QuestionResultResponseDto>>> getExamResultDetail(@PathVariable Long resultId) {
+    public ResponseEntity<ApiResponseDto<ExamResultResponseDto>> getExamResultDetail(@PathVariable Long resultId) {
         return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết kết quả bài thi", examResultService.getExamResultDetails(resultId)));
     }
 }

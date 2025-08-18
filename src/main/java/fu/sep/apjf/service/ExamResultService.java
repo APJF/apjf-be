@@ -144,7 +144,7 @@ public class ExamResultService {
 
 
     @Transactional
-    public ExamResultResponseDto submitExam(Long userId, ExamResultRequestDto dto) {
+    public void submitExam(Long userId, ExamResultRequestDto dto) {
         // Lấy exam cùng questions
         Exam exam = examRepository.findByIdWithQuestions(dto.examId())
                 .orElseThrow(() -> new EntityNotFoundException(EXAM_NOT_FOUND));
@@ -205,40 +205,12 @@ public class ExamResultService {
         result.setStatus(score >= 60.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
 
         // Lưu ExamResult
-        ExamResult savedResult = examResultRepository.save(result);
+        examResultRepository.save(result);
 
         // Batch insert tất cả ExamResultDetail
         examResultDetailRepository.saveAll(details);
 
-        // Tạo danh sách QuestionResultResponseDto
-        List<QuestionResultResponseDto> questionResults = details.stream()
-                .map(d -> new QuestionResultResponseDto(
-                        d.getQuestion().getId(),
-                        d.getQuestion().getContent(),
-                        d.getQuestion().getExplanation(),
-                        d.getSelectedOption() != null ? d.getSelectedOption().getId() : null,
-                        null,
-                        d.getIsCorrect(),
-                        d.getQuestion().getOptions().stream()
-                                .map(o -> new OptionResponseDto(
-                                        o.getId(),
-                                        o.getContent(),
-                                        o.getIsCorrect()
-                                ))
-                                .toList()
-                ))
-                .toList();
-
-        // Trả về DTO
-        return new ExamResultResponseDto(
-                savedResult.getId(),
-                savedResult.getExam().getId(),
-                savedResult.getExam().getTitle(),
-                savedResult.getScore(),
-                savedResult.getSubmittedAt(),
-                savedResult.getStatus(),
-                questionResults
-        );
+        // Nếu chạy tới đây tức là thành công
     }
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {
@@ -258,10 +230,24 @@ public class ExamResultService {
     }
 
     @Transactional(readOnly = true)
-    public List<QuestionResultResponseDto> getExamResultDetails(Long examResultId) {
-        return detailRepository.findByExamResultIdWithOptions(examResultId)
+    public ExamResultResponseDto getExamResultDetails(Long examResultId) {
+        ExamResult examResult = examResultRepository.findById(examResultId)
+                .orElseThrow(() -> new EntityNotFoundException("ExamResult not found"));
+
+        List<QuestionResultResponseDto> details = detailRepository.findByExamResultIdWithOptions(examResultId)
                 .stream()
                 .map(questionResultMapper::toDto)
                 .toList();
+
+        return new ExamResultResponseDto(
+                examResult.getId(),
+                examResult.getExam().getId(),
+                examResult.getExam().getTitle(),
+                examResult.getScore(),
+                examResult.getSubmittedAt(),
+                examResult.getStatus(),
+                details
+        );
     }
+
 }
