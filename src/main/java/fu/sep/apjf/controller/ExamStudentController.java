@@ -47,7 +47,7 @@ public class ExamStudentController {
     }
 
     @GetMapping("/result/{resultId}")
-    public ResponseEntity<ApiResponseDto<ExamResultResponseDto>> getExamResultDetail(@PathVariable Long resultId) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết kết quả bài thi", examResultService.getExamResult(resultId)));
+    public ResponseEntity<ApiResponseDto<List<QuestionResultResponseDto>>> getExamResultDetail(@PathVariable Long resultId) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết kết quả bài thi", examResultService.getExamResultDetails(resultId)));
     }
 }

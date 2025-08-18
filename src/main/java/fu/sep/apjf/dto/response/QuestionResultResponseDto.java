@@ -2,6 +2,8 @@ package fu.sep.apjf.dto.response;
 
 import lombok.Builder;
 
+import java.util.List;
+
 @Builder
 public record QuestionResultResponseDto(
         String questionId,
@@ -9,5 +11,6 @@ public record QuestionResultResponseDto(
         String explanation,
         String selectedOptionId, // dùng cho MC
         String userAnswer,       // dùng cho Writing
-        boolean isCorrect
+        boolean isCorrect,
+        List<OptionResponseDto> options
 ) {}

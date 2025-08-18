@@ -6,6 +6,7 @@ import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.ExamResultMapper;
+import fu.sep.apjf.mapper.QuestionResultMapper;
 import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,8 @@ public class ExamResultService {
     private final ExamResultRepository examResultRepository;
     private final ExamResultDetailRepository examResultDetailRepository;
     private final OptionRepository optionRepository;
-    private final ExamResultMapper examResultMapper;
+    private final QuestionResultMapper questionResultMapper;
+    private final ExamResultDetailRepository detailRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -216,7 +218,14 @@ public class ExamResultService {
                         d.getQuestion().getExplanation(),
                         d.getSelectedOption() != null ? d.getSelectedOption().getId() : null,
                         null,
-                        d.getIsCorrect()
+                        d.getIsCorrect(),
+                        d.getQuestion().getOptions().stream()
+                                .map(o -> new OptionResponseDto(
+                                        o.getId(),
+                                        o.getContent(),
+                                        o.getIsCorrect()
+                                ))
+                                .toList()
                 ))
                 .toList();
 
@@ -248,8 +257,11 @@ public class ExamResultService {
                 .toList();
     }
 
-    public ExamResultResponseDto getExamResult(Long resultId) {
-        ExamResult result = examResultRepository.findByIdWithDetails(resultId).orElseThrow();
-        return examResultMapper.toDto(result);
+    @Transactional(readOnly = true)
+    public List<QuestionResultResponseDto> getExamResultDetails(Long examResultId) {
+        return detailRepository.findByExamResultIdWithOptions(examResultId)
+                .stream()
+                .map(questionResultMapper::toDto)
+                .toList();
     }
 }
