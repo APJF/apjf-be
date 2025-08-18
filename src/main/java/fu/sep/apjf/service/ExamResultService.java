@@ -144,7 +144,7 @@ public class ExamResultService {
 
 
     @Transactional
-    public void submitExam(Long userId, ExamResultRequestDto dto) {
+    public Long submitExam(Long userId, ExamResultRequestDto dto) {
         // Lấy exam cùng questions
         Exam exam = examRepository.findByIdWithQuestions(dto.examId())
                 .orElseThrow(() -> new EntityNotFoundException(EXAM_NOT_FOUND));
@@ -205,12 +205,12 @@ public class ExamResultService {
         result.setStatus(score >= 60.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
 
         // Lưu ExamResult
-        examResultRepository.save(result);
+        ExamResult examResult = examResultRepository.save(result);
 
         // Batch insert tất cả ExamResultDetail
         examResultDetailRepository.saveAll(details);
 
-        // Nếu chạy tới đây tức là thành công
+        return examResult.getId();
     }
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {

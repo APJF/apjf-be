@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/student/exams")
@@ -34,12 +36,18 @@ public class ExamStudentController {
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<ApiResponseDto<String>> submitExam(
+    public ResponseEntity<ApiResponseDto<Map<String, Object>>> submitExam(
             @AuthenticationPrincipal User user,
             @RequestBody ExamResultRequestDto dto) {
-        examResultService.submitExam(user.getId(), dto);
-        return ResponseEntity.ok(ApiResponseDto.ok("Nộp bài thành công"));
+
+        Long examResultId = examResultService.submitExam(user.getId(), dto);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("examResultId", examResultId);
+
+        return ResponseEntity.ok(ApiResponseDto.ok("Nộp bài thành công", data));
     }
+
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<ExamHistoryResponseDto>>> getHistory(
