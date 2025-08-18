@@ -79,6 +79,15 @@ public class CourseController {
                 ApiResponseDto.ok("Cập nhật khóa học thành công", courseService.update(id, dto, user.getId())));
     }
 
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> deactivate(
+            @PathVariable String id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Vô hiệu hóa khóa học thành công", courseService.deactivate(id, user.getId())));
+    }
+
+
     @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadCourseImage(
             @RequestParam("file") MultipartFile file) throws Exception {

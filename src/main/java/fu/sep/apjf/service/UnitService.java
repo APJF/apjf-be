@@ -9,6 +9,7 @@ import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.mapper.UnitMapper;
 import fu.sep.apjf.repository.ChapterRepository;
 import fu.sep.apjf.repository.UnitRepository;
+import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class UnitService {
     private final ChapterRepository chapterRepo;
     private final ApprovalRequestService approvalRequestService;
     private final UnitMapper unitMapper;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public List<UnitResponseDto> list() {
@@ -133,4 +135,29 @@ public class UnitService {
         log.info("Cập nhật đơn vị học tập {} và yêu cầu phê duyệt thành công", savedUnit.getId());
         return unitMapper.toDto(savedUnit);
     }
+
+    public UnitResponseDto deactivate(String unitId, Long staffId) {
+
+        // Check role STAFF
+        if (!userRepository.existsById(staffId)) {
+            throw new EntityNotFoundException("Không tìm thấy nhân viên");
+        }
+
+        // Tìm unit
+        Unit existingUnit = unitRepo.findById(unitId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy đơn vị học tập"));
+
+        // Nếu đã INACTIVE thì không cần đổi nữa
+        if (existingUnit.getStatus() == EnumClass.Status.INACTIVE) {
+            throw new IllegalStateException("Đơn vị học tập đã ở trạng thái INACTIVE");
+        }
+
+        // Cập nhật status thành INACTIVE
+        existingUnit.setStatus(EnumClass.Status.INACTIVE);
+
+        Unit savedUnit = unitRepo.save(existingUnit);
+
+        return unitMapper.toDto(savedUnit);
+    }
+
 }

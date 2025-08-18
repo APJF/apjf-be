@@ -9,10 +9,12 @@ import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.mapper.ChapterMapper;
 import fu.sep.apjf.repository.ChapterRepository;
 import fu.sep.apjf.repository.CourseRepository;
+import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class ChapterService {
     private final ChapterRepository chapterRepo;
     private final CourseRepository courseRepo;
     private final ApprovalRequestService approvalRequestService;
+    private final UserRepository userRepository;
     private final ChapterMapper chapterMapper; // Thêm injection
 
     @Transactional(readOnly = true)
@@ -133,4 +136,28 @@ public class ChapterService {
         log.info("Cập nhật chương học {} và yêu cầu phê duyệt thành công", savedChapter.getId());
         return chapterMapper.toDto(savedChapter);
     }
+
+    public ChapterResponseDto deactivate(String chapterId, Long staffId) {
+        // Check role STAFF
+        if (!userRepository.existsById(staffId)) {
+            throw new EntityNotFoundException("Không tìm thấy nhân viên");
+        }
+
+        // Tìm chapter
+        Chapter existingChapter = chapterRepo.findById(chapterId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chương học"));
+
+        // Nếu đã INACTIVE thì không cần đổi nữa
+        if (existingChapter.getStatus() == EnumClass.Status.INACTIVE) {
+            throw new IllegalStateException("Chương học đã ở trạng thái INACTIVE");
+        }
+
+        // Cập nhật status thành INACTIVE
+        existingChapter.setStatus(EnumClass.Status.INACTIVE);
+
+        Chapter savedChapter = chapterRepo.save(existingChapter);
+
+        return chapterMapper.toDto(savedChapter);
+    }
+
 }

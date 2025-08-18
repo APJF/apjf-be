@@ -331,6 +331,33 @@ public class CourseService {
         return courseMapper.toDto(savedCourse, avgRating);
     }
 
+    public CourseResponseDto deactivate(String courseId, Long staffId) {
+        // Kiểm tra khóa học có tồn tại không
+        Course existingCourse = courseRepository.findById(courseId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy khóa học"));
+
+        // Nếu đã INACTIVE thì không cần đổi nữa
+        if (existingCourse.getStatus() == EnumClass.Status.INACTIVE) {
+            throw new IllegalStateException("Khóa học đã ở trạng thái INACTIVE");
+        }
+
+        if (!userRepository.existsById(staffId)) {
+            throw new EntityNotFoundException("Không tìm thấy nhân viên");
+        }
+        // Cập nhật status thành INACTIVE
+        existingCourse.setStatus(EnumClass.Status.INACTIVE);
+
+        Course savedCourse = courseRepository.save(existingCourse);
+
+        // Lấy averageRating để trả về DTO
+        Float avgRating = reviewRepository.calculateAverageRatingByCourseId(savedCourse.getId())
+                .map(this::roundToHalfStar)
+                .orElse(null);
+
+        return courseMapper.toDto(savedCourse, avgRating);
+    }
+
+
     public String uploadCourseImage(MultipartFile file) throws Exception {
         // Validate file type
         String contentType = file.getContentType();

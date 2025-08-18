@@ -82,4 +82,13 @@ public class UnitController {
                 ApiResponseDto.ok("Cập nhật bài học thành công", unitService.update(id, dto, user.getId())));
     }
 
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<ApiResponseDto<UnitResponseDto>> deactivate(
+            @PathVariable String id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Vô hiệu hóa bài học thành công", unitService.deactivate(id, user.getId())));
+    }
+
+
 }
