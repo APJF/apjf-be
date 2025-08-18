@@ -14,6 +14,7 @@ public interface QuestionResultMapper {
     @Mapping(source = "selectedOption.id", target = "selectedOptionId")
     @Mapping(source = "userAnswer", target = "userAnswer")
     @Mapping(source = "isCorrect", target = "isCorrect")
+    @Mapping(source = "question.options", target = "options")
     QuestionResultResponseDto toDto(ExamResultDetail detail);
 
     @Mapping(target = "id", ignore = true)

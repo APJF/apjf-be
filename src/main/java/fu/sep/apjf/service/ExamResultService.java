@@ -6,6 +6,7 @@ import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.ExamResultMapper;
+import fu.sep.apjf.mapper.QuestionResultMapper;
 import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,8 @@ public class ExamResultService {
     private final ExamResultRepository examResultRepository;
     private final ExamResultDetailRepository examResultDetailRepository;
     private final OptionRepository optionRepository;
-    private final ExamResultMapper examResultMapper;
+    private final QuestionResultMapper questionResultMapper;
+    private final ExamResultDetailRepository detailRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -142,7 +144,7 @@ public class ExamResultService {
 
 
     @Transactional
-    public ExamResultResponseDto submitExam(Long userId, ExamResultRequestDto dto) {
+    public void submitExam(Long userId, ExamResultRequestDto dto) {
         // Lấy exam cùng questions
         Exam exam = examRepository.findByIdWithQuestions(dto.examId())
                 .orElseThrow(() -> new EntityNotFoundException(EXAM_NOT_FOUND));
@@ -203,33 +205,12 @@ public class ExamResultService {
         result.setStatus(score >= 60.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
 
         // Lưu ExamResult
-        ExamResult savedResult = examResultRepository.save(result);
+        examResultRepository.save(result);
 
         // Batch insert tất cả ExamResultDetail
         examResultDetailRepository.saveAll(details);
 
-        // Tạo danh sách QuestionResultResponseDto
-        List<QuestionResultResponseDto> questionResults = details.stream()
-                .map(d -> new QuestionResultResponseDto(
-                        d.getQuestion().getId(),
-                        d.getQuestion().getContent(),
-                        d.getQuestion().getExplanation(),
-                        d.getSelectedOption() != null ? d.getSelectedOption().getId() : null,
-                        null,
-                        d.getIsCorrect()
-                ))
-                .toList();
-
-        // Trả về DTO
-        return new ExamResultResponseDto(
-                savedResult.getId(),
-                savedResult.getExam().getId(),
-                savedResult.getExam().getTitle(),
-                savedResult.getScore(),
-                savedResult.getSubmittedAt(),
-                savedResult.getStatus(),
-                questionResults
-        );
+        // Nếu chạy tới đây tức là thành công
     }
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {
@@ -248,8 +229,25 @@ public class ExamResultService {
                 .toList();
     }
 
-    public ExamResultResponseDto getExamResult(Long resultId) {
-        ExamResult result = examResultRepository.findByIdWithDetails(resultId).orElseThrow();
-        return examResultMapper.toDto(result);
+    @Transactional(readOnly = true)
+    public ExamResultResponseDto getExamResultDetails(Long examResultId) {
+        ExamResult examResult = examResultRepository.findById(examResultId)
+                .orElseThrow(() -> new EntityNotFoundException("ExamResult not found"));
+
+        List<QuestionResultResponseDto> details = detailRepository.findByExamResultIdWithOptions(examResultId)
+                .stream()
+                .map(questionResultMapper::toDto)
+                .toList();
+
+        return new ExamResultResponseDto(
+                examResult.getId(),
+                examResult.getExam().getId(),
+                examResult.getExam().getTitle(),
+                examResult.getScore(),
+                examResult.getSubmittedAt(),
+                examResult.getStatus(),
+                details
+        );
     }
+
 }
