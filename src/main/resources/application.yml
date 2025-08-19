@@ -8,17 +8,20 @@ spring:
     password: ${POSTGRES_PASSWORD}
     hikari:
       auto-commit: false
-      maximum-pool-size: 12      # đủ cho 5 dev x2 + dư địa
-      minimum-idle: 2
-      connection-timeout: 30000  # 30s
-      idle-timeout: 600000       # 10 phút
-      max-lifetime: 1800000      # 30 phút (nhỏ hơn timeout phía PG)
+      maximum-pool-size: 12          # đủ cho 5 dev x2 + dư địa
+      minimum-idle: 6                # ~50% pool, giữ pool ổn định hơn
+      connection-timeout: 30000      # 30s
+      idle-timeout: 300000           # 5 phút
+      max-lifetime: 420000           # 7 phút (nhỏ hơn timeout TCP Azure LB)
+      keepalive-time: 120000         # 2 phút, gửi ping định kỳ để giữ kết nối
       leak-detection-threshold: 60000
       validation-timeout: 5000
-      connection-test-query: SELECT 1
+
       data-source-properties:
         statement_timeout: 30000                   # 30s
         idle_in_transaction_session_timeout: 60000 # 60s
+        tcpKeepAlive: true                         # bật TCP keepalive
+        socketTimeout: 60                          # cắt đọc treo sau 60s
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
