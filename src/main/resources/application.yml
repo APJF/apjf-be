@@ -8,14 +8,17 @@ spring:
     password: ${POSTGRES_PASSWORD}
     hikari:
       auto-commit: false
-      maximum-pool-size: 3
-      minimum-idle: 1
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      maximum-pool-size: 12      # đủ cho 5 dev x2 + dư địa
+      minimum-idle: 2
+      connection-timeout: 30000  # 30s
+      idle-timeout: 600000       # 10 phút
+      max-lifetime: 1800000      # 30 phút (nhỏ hơn timeout phía PG)
       leak-detection-threshold: 60000
       validation-timeout: 5000
       connection-test-query: SELECT 1
+      data-source-properties:
+        statement_timeout: 30000                   # 30s
+        idle_in_transaction_session_timeout: 60000 # 60s
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
