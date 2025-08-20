@@ -43,9 +43,7 @@ public class SecurityConfig {
     // 2. GUEST ENDPOINTS - Chỉ cho phép GET (cho khách không đăng nhập)
     private static final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/courses",              // Xem danh sách khóa học
-            "/api/courses/*/chapters",   // Xem chapters của course
-            "/api/courses/top-rated",    // Xem top rated courses
-            "/api/courses/*/reviews",    // Xem reviews của course
+            "/api/courses/**",
             "/api/topics",               // Xem danh sách topics
             "/api/posts",                // Xem danh sách posts (chỉ GET)
             "/api/posts/*",              // Xem chi tiết post và comments (chỉ GET)
