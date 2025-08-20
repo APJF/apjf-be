@@ -43,7 +43,7 @@ public class CourseController {
                 ApiResponseDto.ok("Danh sách khoá học", courseService.getAllByUser(user)));
     }
     @PreAuthorize("hasRole('USER')")
-    @GetMapping("/{id}/enroll")
+    @PostMapping("/{id}/enroll")
     public ResponseEntity<ApiResponseDto<CourseDetailProgressResponseDto>> enroll(@AuthenticationPrincipal User user, @PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Tham gia khóa học thành công", courseService.enrollCourse(user,id)));
