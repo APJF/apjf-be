@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,13 +36,13 @@ public class CourseController {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách khoá học", courseService.findAll()));
     }
-
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/user")
     public ResponseEntity<ApiResponseDto<List<CourseDetailResponseDto>>> getAllByUser(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Danh sách khoá học", courseService.getAllByUser(user)));
     }
-
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}/enroll")
     public ResponseEntity<ApiResponseDto<CourseDetailProgressResponseDto>> enroll(@AuthenticationPrincipal User user, @PathVariable String id) {
         return ResponseEntity.ok(
@@ -60,7 +61,7 @@ public class CourseController {
         List<CourseResponseDto> topCourses = reviewService.getTopRatedCourses();
         return ResponseEntity.ok(ApiResponseDto.ok("Top 3 khóa học được đánh giá cao nhất", topCourses));
     }
-
+    @PreAuthorize("hasRole('STAFF')")
     @PostMapping
     public ResponseEntity<ApiResponseDto<CourseResponseDto>> create(
             @Valid @RequestBody CourseRequestDto dto,
@@ -69,7 +70,7 @@ public class CourseController {
         return ResponseEntity.created(URI.create("/api/courses/" + created.id()))
                 .body(ApiResponseDto.ok("Tạo khóa học thành công", created));
     }
-
+    @PreAuthorize("hasRole('STAFF')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponseDto<CourseResponseDto>> update(
             @PathVariable String id,
@@ -78,7 +79,7 @@ public class CourseController {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Cập nhật khóa học thành công", courseService.update(id, dto, user.getId())));
     }
-
+    @PreAuthorize("hasRole('STAFF')")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ApiResponseDto<CourseResponseDto>> deactivate(
             @PathVariable String id,
@@ -87,7 +88,7 @@ public class CourseController {
                 ApiResponseDto.ok("Vô hiệu hóa khóa học thành công", courseService.deactivate(id, user.getId())));
     }
 
-
+    @PreAuthorize("hasRole('STAFF')")
     @PostMapping("/upload")
     public ResponseEntity<ApiResponseDto<String>> uploadCourseImage(
             @RequestParam("file") MultipartFile file) throws Exception {
