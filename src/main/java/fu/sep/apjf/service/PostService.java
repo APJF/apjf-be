@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,35 +37,51 @@ public class PostService {
     private final PostLikeRepository postLikeRepo;
 
     @Transactional(readOnly = true)
-    public List<PostResponseDto> list(Long currentUserId) {
+    public List<PostResponseDto> list(Authentication authentication) {
+        // Xử lý logic authentication ở service layer
+        Long currentUserId = null;
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            currentUserId = user.getId();
+        }
+
         List<Post> posts = postRepo.findAllWithUser();
         List<Long> postIds = posts.stream().map(Post::getId).toList();
 
         Map<Long, Long> commentsCountMap = commentRepo.countByPostIds(postIds);
         Map<Long, Long> likesCountMap = postLikeRepo.countByPostIds(postIds);
-        Map<Long, Boolean> likedMap = postLikeRepo.hasUserLikedByPostIds(postIds, currentUserId);
+
+        // Chỉ check like status n��u user đã đăng nhập
+        Map<Long, Boolean> likedMap = currentUserId != null
+            ? postLikeRepo.hasUserLikedByPostIds(postIds, currentUserId)
+            : Map.of(); // Map rỗng nếu user chưa đăng nhập
 
         return posts.stream()
                 .map(post -> {
                     Long commentsCount = commentsCountMap.getOrDefault(post.getId(), 0L);
                     int totalLikes = likesCountMap.getOrDefault(post.getId(), 0L).intValue();
-                    boolean likedByUser = likedMap.getOrDefault(post.getId(), false);
+                    boolean likedByUser = currentUserId != null && likedMap.getOrDefault(post.getId(), false);
                     PostLikeResponseDto likeInfo = new PostLikeResponseDto(likedByUser, totalLikes);
                     return postMapper.toDetailDto(post, commentsCount, likeInfo);
                 })
                 .toList();
     }
 
-
-
     @Transactional(readOnly = true)
-    public PostResponseDto get(Long id, Long currentUserId) {
+    public PostResponseDto get(Long id, Authentication authentication) {
+        // Xử lý logic authentication ở service layer
+        Long currentUserId = null;
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            currentUserId = user.getId();
+        }
+
         Post post = postRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND));
         Long commentsCount = commentRepo.countByPostId(post.getId());
         int totalLikes = postLikeService.countLikes(post.getId());
-        boolean likedByUser = postLikeService.hasUserLiked(post.getId(), currentUserId);
-        PostLikeResponseDto likeInfo = new PostLikeResponseDto(likedByUser, totalLikes );
+
+        // Chỉ check like status nếu user đã đăng nhập
+        boolean likedByUser = currentUserId != null && postLikeService.hasUserLiked(post.getId(), currentUserId);
+        PostLikeResponseDto likeInfo = new PostLikeResponseDto(likedByUser, totalLikes);
         return postMapper.toDetailDto(post, commentsCount, likeInfo);
     }
 

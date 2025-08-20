@@ -32,6 +32,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    // 1. PUBLIC ENDPOINTS - Cho tất cả mọi người (bao gồm cả POST, PUT) - Auth và Authentication
     private static final String[] AUTH_ENDPOINTS = {
             "/api/auth/**",
             "/oauth2/**",
@@ -39,32 +40,61 @@ public class SecurityConfig {
             "/api/media/**"
     };
 
+    // 2. GUEST ENDPOINTS - Chỉ cho phép GET (cho khách không đăng nhập)
     private static final String[] PUBLIC_GET_ENDPOINTS = {
-            "/api/courses/**",
-            "/api/chapters/**",
-            "/api/units/**",
-            "/api/materials/**",
-            "/api/exams/**",
-            "/api/learning-paths/**",
-            "/api/questions/**",
-            "/api/student/exams/**",
-            "/api/options/**",
-            "/api/student/history/**",
-            "/api/reviews/**",
+            "/api/courses",              // Xem danh sách khóa học
+            "/api/courses/*/chapters",   // Xem chapters của course
+            "/api/courses/top-rated",    // Xem top rated courses
+            "/api/courses/*/reviews",    // Xem reviews của course
+            "/api/topics",               // Xem danh sách topics
+            "/api/posts",                // Xem danh sách posts (chỉ GET)
+            "/api/posts/*",              // Xem chi tiết post và comments (chỉ GET)
+            "/api/posts/*/comments",     // Xem comments của post (chỉ GET)
+            "/api/chapters/**",          // Xem chapters
+            "/api/units/**",             // Xem units
+            "/api/materials/**",         // Xem materials
+            "/api/learning-paths/**",    // Xem learning paths
+            "/api/reviews/**"            // Xem reviews
     };
 
+    // 3. USER ENDPOINTS - Dành cho role USER (và các role cao hơn)
     private static final String[] USER_ALLOWED_ENDPOINTS = {
-            "/api/exams/*/start",
-            "/api/exam-results/**",
-            "/api/users/profile",
-            "/api/users/avatar",
-            "/api/learning-paths/**",
-            "/api/posts/**",
-            "/api/comments/**",
-            "/api/student/exams/**",
-            "/api/post-likes/**",
-            "/api/notifications/**",
-            "/api/topics"
+            "/api/users/profile",        // Cập nhật profile, email, phone
+            "/api/users/avatar",         // Upload avatar
+            "/api/reviews",              // POST - Tạo review khóa học
+            "/api/reviews/**",           // CRUD reviews của chính mình
+            "/api/notifications/**",     // Xem thông báo
+            "/api/posts",                // POST - Đăng post mới
+            "/api/posts/*",              // PUT, DELETE - Cập nhật, xóa post
+            "/api/comments/**",          // Comment posts
+            "/api/post-likes/**",        // Like posts
+            "/api/student/exams/**",     // Làm exam
+            "/api/student/history/**",   // Xem lịch sử học tập
+            "/api/courses/user",         // Khóa học của user
+            "/api/courses/*/enroll"      // Đăng ký khóa học
+    };
+
+    // 4. STAFF ENDPOINTS - CRUD course, chapter, unit, material
+    private static final String[] STAFF_ENDPOINTS = {
+            "/api/courses",              // POST - Tạo course mới
+            "/api/courses/*",            // PUT, PATCH, DELETE - CRUD courses
+            "/api/courses/upload",       // Upload course image
+            "/api/chapters/**",          // CRUD chapters
+            "/api/units/**",             // CRUD units (trừ GET đã có ở PUBLIC_GET)
+            "/api/materials/**",         // CRUD materials (trừ GET đã có ở PUBLIC_GET)
+            "/api/questions/**",         // CRUD questions
+            "/api/exams/**",             // CRUD exams (trừ student/exams và GET)
+            "/api/options/**"            // CRUD options
+    };
+
+    // 5. MANAGER ENDPOINTS - Duyệt approval requests
+    private static final String[] MANAGER_ENDPOINTS = {
+            "/api/approval-requests/**"  // Duyệt các yêu cầu
+    };
+
+    // 6. ADMIN ENDPOINTS - Quản trị hệ thống
+    private static final String[] ADMIN_ENDPOINTS = {
+            "/api/admin/**"              // Quản trị hệ thống
     };
 
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
@@ -97,6 +127,9 @@ public class SecurityConfig {
                         .requestMatchers(AUTH_ENDPOINTS).permitAll()  // Allow all methods for auth endpoints
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()  // Only GET for public endpoints
                         .requestMatchers(USER_ALLOWED_ENDPOINTS).hasAnyRole("USER", "MANAGER", "ADMIN", "STAFF")
+                        .requestMatchers(STAFF_ENDPOINTS).hasAnyRole("STAFF", "MANAGER", "ADMIN")
+                        .requestMatchers(MANAGER_ENDPOINTS).hasAnyRole("MANAGER", "ADMIN")
+                        .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                         .anyRequest().hasAnyRole("MANAGER", "ADMIN", "STAFF"))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(unauthorizedHandler)

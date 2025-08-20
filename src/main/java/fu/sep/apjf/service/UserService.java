@@ -116,7 +116,7 @@ public class UserService {
         // 3. Kiểm tra tài khoản có bị ban không
         if (!user.isEnabled()) {
             log.warn("User {} attempted to login with banned account", user.getEmail());
-            throw new BadCredentialsException("con lợn này, mày đã bị ban =)))");
+            throw new BadCredentialsException("tài khoản của bạn đã bị vô hiệu, xin vui lòng đọc chính sách của chúng tôi và liên hệ lại nếu bạn tin rằng đây là một sai xót");
         }
 
         // 4. Kiểm tra email đã được xác thực chưa

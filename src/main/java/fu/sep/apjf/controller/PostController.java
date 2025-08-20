@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,19 +28,18 @@ public class PostController {
     private final CommentService commentService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list(user.getId())));
+    public ResponseEntity<ApiResponseDto<List<PostResponseDto>>> getAll(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài viết", postService.list(authentication)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<PostResponseDto>> getById(@PathVariable Long id, @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id, user.getId())));
+    public ResponseEntity<ApiResponseDto<PostResponseDto>> getById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài viết", postService.get(id, authentication)));
     }
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<ApiResponseDto<List<CommentResponseDto>>> getCommentsByPostId(
-            @PathVariable Long id,
-            @AuthenticationPrincipal User user) {
+            @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bình luận của bài viết", commentService.getCommentsByPostId(id)));
     }
 
