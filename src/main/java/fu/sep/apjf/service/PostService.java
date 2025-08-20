@@ -39,9 +39,11 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponseDto> list(Authentication authentication) {
         // Xử lý logic authentication ở service layer
-        Long currentUserId = null;
+        final Long currentUserId;
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
             currentUserId = user.getId();
+        } else {
+            currentUserId = null;
         }
 
         List<Post> posts = postRepo.findAllWithUser();
@@ -50,7 +52,7 @@ public class PostService {
         Map<Long, Long> commentsCountMap = commentRepo.countByPostIds(postIds);
         Map<Long, Long> likesCountMap = postLikeRepo.countByPostIds(postIds);
 
-        // Chỉ check like status n��u user đã đăng nhập
+        // Chỉ check like status nếu user đã đăng nhập
         Map<Long, Boolean> likedMap = currentUserId != null
             ? postLikeRepo.hasUserLikedByPostIds(postIds, currentUserId)
             : Map.of(); // Map rỗng nếu user chưa đăng nhập
@@ -69,9 +71,11 @@ public class PostService {
     @Transactional(readOnly = true)
     public PostResponseDto get(Long id, Authentication authentication) {
         // Xử lý logic authentication ở service layer
-        Long currentUserId = null;
+        final Long currentUserId;
         if (authentication != null && authentication.getPrincipal() instanceof User user) {
             currentUserId = user.getId();
+        } else {
+            currentUserId = null;
         }
 
         Post post = postRepo.findById(id)
