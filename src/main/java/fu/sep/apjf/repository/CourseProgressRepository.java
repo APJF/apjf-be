@@ -13,6 +13,8 @@ public interface CourseProgressRepository extends JpaRepository<CourseProgress, 
     // Kiểm tra một user đã enroll 1 course chưa
     Optional<CourseProgress> findByUserAndCourseId(User user, String courseId);
 
+    boolean existsByUserAndCourseId(User user, String courseId);
+
     // Lấy tất cả CourseProgress của user cho danh sách courseId (dùng cho load list tránh N+1)
     List<CourseProgress> findByUser(User user);
 }

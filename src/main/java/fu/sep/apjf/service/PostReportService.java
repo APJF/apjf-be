@@ -44,8 +44,8 @@ public class PostReportService {
         );
     }
 
-    public PostReportResponseDto create(@Valid PostReportRequestDto dto) {
-        User user = userRepo.findById(dto.userId())
+    public PostReportResponseDto create(@Valid PostReportRequestDto dto, Long userId) {
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
         Post post = postRepo.findById(dto.postId())
                 .orElseThrow(() -> new EntityNotFoundException("Post không tồn tại"));

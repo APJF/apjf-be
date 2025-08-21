@@ -10,9 +10,6 @@ public record PostReportRequestDto(
         @Size(min = 1, max = 255, message = "Nội dung phải từ 1 đến 255 ký tự")
         String content,
 
-        @NotNull(message = "User ID không được để trống")
-        Long userId,
-
         @NotNull(message = "Post ID không được để trống")
         Long postId
 ) {}
