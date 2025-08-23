@@ -39,7 +39,7 @@ public class PostReportController {
             @AuthenticationPrincipal User user) {
 
         log.info("User {} gửi báo cáo bài viết: {}", user.getUsername(), dto.postId());
-        PostReportResponseDto created = postReportService.create(dto);
+        PostReportResponseDto created = postReportService.create(dto, user.getId());
         return ResponseEntity.created(URI.create("/api/post-reports/" + created.id()))
                 .body(ApiResponseDto.ok("Gửi báo cáo thành công", created));
     }

@@ -26,7 +26,8 @@ public interface CourseMapper {
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
     @Mapping(target = "image", source = "presignedImageUrl")
-    CourseResponseDto toDetailDtoWithPresignedUrl(Course course, Float averageRating, String presignedImageUrl);
+    @Mapping(target = "isEnrolled", source = "isEnrolled")
+    CourseResponseDto toDetailDtoWithPresignedUrl(Course course, Float averageRating, String presignedImageUrl, boolean isEnrolled);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "status", constant = "INACTIVE")

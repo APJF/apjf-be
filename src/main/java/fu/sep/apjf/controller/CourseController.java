@@ -55,6 +55,12 @@ public class CourseController {
                 ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getCourseDetailByUser(@AuthenticationPrincipal User user,@PathVariable String id) {
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Chi tiết khóa học", courseService.findCourseDetailByUser(user, id)));
+    }
+
 
     @GetMapping("/top-rated")
     public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getTopRatedCourses() {

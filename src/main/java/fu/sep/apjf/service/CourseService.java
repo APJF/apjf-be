@@ -16,10 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -95,7 +92,7 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public List<CourseDetailResponseDto> getAllByUser(User user) {
-        // Lấy tất cả progress của user (đã enroll course nào thì mới có record trong CourseProgress)
+        // Lấy tất cả progress của user
         List<CourseProgress> progresses = courseProgressRepository.findByUser(user);
 
         // Lấy courseId list từ progresses
@@ -103,10 +100,14 @@ public class CourseService {
                 .map(cp -> cp.getCourse().getId())
                 .toList();
 
-        // Lấy courses + topics bằng batch query
-        List<Course> courses = courseRepository.findAllCoursesWithTopics();
+        if (courseIds.isEmpty()) {
+            return List.of(); // Nếu chưa enroll khóa học nào thì trả về list rỗng
+        }
 
-        // Lấy average rating cho tất cả courses
+        // Chỉ lấy các course mà user đã enroll
+        List<Course> courses = courseRepository.findCoursesWithTopicsByIds(courseIds);
+
+        // Lấy average rating cho những courses này
         Map<String, Float> averageRatings = reviewRepository.findAverageRatingForCourses(courseIds)
                 .stream().collect(Collectors.toMap(
                         r -> r[0].toString(),
@@ -168,10 +169,17 @@ public class CourseService {
     }
 
 
+
     @Transactional
     public CourseDetailProgressResponseDto enrollCourse(User user, String courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
+
+        Optional<CourseProgress> courseProgress= courseProgressRepository.findByUserAndCourseId(user, courseId);
+
+        if (courseProgress.isPresent()) {
+            throw new IllegalStateException("Bạn đã đăng ký khóa học này rồi!");
+        }
 
         // 1. Tạo CourseProgress
         CourseProgress progress = courseProgressRepository.findByUserAndCourseId(user, courseId)
@@ -256,7 +264,34 @@ public class CourseService {
         }
 
         // Sử dụng mapper với presigned URL
-        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl);
+        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, false);
+    }
+
+    @Transactional(readOnly = true)
+    public CourseResponseDto findCourseDetailByUser(User user, String id) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
+
+        Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
+                .map(this::roundToHalfStar)
+                .orElse(null);
+
+        boolean isEnrolled = courseProgressRepository.existsByUserAndCourseId(user, id);
+
+        // Kiểm tra và generate presigned URL nếu cần
+        String imageUrl = course.getImage();
+        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
+                !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+            try {
+                imageUrl = minioService.getCourseImageUrl(imageUrl);
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for course image {}: {}", imageUrl, e.getMessage());
+                // Giữ nguyên object name nếu có lỗi
+            }
+        }
+
+        // Sử dụng mapper với presigned URL
+        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, isEnrolled);
     }
 
     @Transactional(readOnly = true)
