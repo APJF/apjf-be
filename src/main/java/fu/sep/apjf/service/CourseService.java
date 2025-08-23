@@ -243,7 +243,7 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseResponseDto findById(String id) {
+    public CourseResponseDto findById(User user,String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
@@ -263,36 +263,14 @@ public class CourseService {
             }
         }
 
+        if(courseProgressRepository.existsByUserAndCourseId(user, id)){
+            return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, true);
+        }
+
         // Sử dụng mapper với presigned URL
         return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, false);
     }
 
-    @Transactional(readOnly = true)
-    public CourseResponseDto findCourseDetailByUser(User user, String id) {
-        Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-
-        Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
-                .map(this::roundToHalfStar)
-                .orElse(null);
-
-        boolean isEnrolled = courseProgressRepository.existsByUserAndCourseId(user, id);
-
-        // Kiểm tra và generate presigned URL nếu cần
-        String imageUrl = course.getImage();
-        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
-                !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-            try {
-                imageUrl = minioService.getCourseImageUrl(imageUrl);
-            } catch (Exception e) {
-                log.warn("Failed to generate presigned URL for course image {}: {}", imageUrl, e.getMessage());
-                // Giữ nguyên object name nếu có lỗi
-            }
-        }
-
-        // Sử dụng mapper với presigned URL
-        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, isEnrolled);
-    }
 
     @Transactional(readOnly = true)
     public List<ExamOverviewResponseDto> getExamsByCourseId(String courseId) {
