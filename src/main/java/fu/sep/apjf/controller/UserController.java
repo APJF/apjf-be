@@ -3,6 +3,7 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.UserRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.UserResponseDto;
+import fu.sep.apjf.dto.response.UserStatsResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.MinioService;
 import fu.sep.apjf.service.UserService;
