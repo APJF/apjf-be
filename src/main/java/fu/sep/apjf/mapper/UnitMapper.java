@@ -1,9 +1,13 @@
 package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.UnitRequestDto;
+import fu.sep.apjf.dto.response.MaterialResponseDto;
+import fu.sep.apjf.dto.response.UnitDetailResponseDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
 import fu.sep.apjf.entity.Unit;
 import org.mapstruct.*;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {ExamOverviewMapper.class})
 public interface UnitMapper {
@@ -13,6 +17,11 @@ public interface UnitMapper {
     @Mapping(target = "prerequisiteUnitId", source = "prerequisiteUnit.id")
     // id, title, description, status tự động map
     UnitResponseDto toDto(Unit unit);
+
+    @Mapping(target = "chapterId", source = "unit.chapter.id")
+    @Mapping(target = "prerequisiteUnitId", source = "unit.prerequisiteUnit.id")
+    @Mapping(target = "materials", source = "materials")
+    UnitDetailResponseDto toDetailDto(Unit unit, List<MaterialResponseDto> materials);
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "chapter", ignore = true)

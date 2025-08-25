@@ -29,5 +29,15 @@ public interface CourseRepository extends JpaRepository<Course, String>, JpaSpec
     @Query("SELECT DISTINCT c FROM Course c LEFT JOIN FETCH c.topics WHERE c.id IN :courseIds")
     List<Course> findCoursesWithTopicsByIds(@Param("courseIds") List<String> courseIds);
 
+    @Query("""
+        SELECT DISTINCT c FROM Course c
+        LEFT JOIN FETCH c.chapters ch
+        LEFT JOIN FETCH ch.units u
+        LEFT JOIN FETCH u.materials m
+        LEFT JOIN FETCH c.topics t
+        WHERE c.id = :id
+    """)
+    Optional<Course> findCourseWithStructureById(@Param("id") String id);
+
 
 }

@@ -8,6 +8,7 @@ import fu.sep.apjf.entity.Review;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.mapper.CourseMapper;
 import fu.sep.apjf.mapper.ReviewMapper;
+import fu.sep.apjf.repository.CourseProgressRepository;
 import fu.sep.apjf.repository.CourseRepository;
 import fu.sep.apjf.repository.ReviewRepository;
 import fu.sep.apjf.repository.UserRepository;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +34,8 @@ public class ReviewService {
     private final CourseRepository courseRepo;
     private final UserRepository userRepo;
     private final ReviewMapper reviewMapper;
-    private final CourseMapper courseMapper;
     private final MinioService minioService;
+    private final CourseProgressRepository courseProgressRepository;
 
     public ReviewResponseDto addReview(Long userId, ReviewRequestDto reviewRequestDto) {
 
@@ -140,8 +143,16 @@ public class ReviewService {
 
     public List<CourseResponseDto> getTopRatedCourses() {
         List<Course> topCourses = reviewRepo.findTop3RatedCourses();
+        Map<String, Integer> totalStudents = courseProgressRepository
+                .countTotalStudentsForCourses(topCourses.stream().map(Course::getId).toList())
+                .stream()
+                .collect(Collectors.toMap(
+                        r -> r[0].toString(),
+                        r -> ((Number) r[1]).intValue()
+                ));
         return topCourses.stream().map(course -> {
             Float avgRating = getAverageRating(course.getId());
+            int students = totalStudents.getOrDefault(course.getId(), 0);
             if (avgRating != null) {
                 avgRating = Math.round(avgRating * 2.0f) / 2.0f;
             }
@@ -165,7 +176,7 @@ public class ReviewService {
                 course.getTopics() != null ? course.getTopics().stream().map(t -> new fu.sep.apjf.dto.request.TopicDto(t.getId(), t.getName())).collect(java.util.stream.Collectors.toSet()) : java.util.Collections.emptySet(),
                 avgRating,
                 false, // isEnrolled, not available in this context
-                0 // totalStudent, default to 0 or fetch actual value if available
+                students// totalStudent, default to 0 or fetch actual value if available
             );
         }).toList();
     }

@@ -3,9 +3,10 @@ package fu.sep.apjf.dto.response;
 import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.entity.EnumClass;
 
+import java.util.List;
 import java.util.Set;
 
-public record CourseResponseDto(
+public record CourseDetailWithStructureResponseDto(
         String id,
         String title,
         String description,
@@ -18,6 +19,7 @@ public record CourseResponseDto(
         Set<TopicDto> topics,
         Float averageRating,
         boolean isEnrolled,
-        int totalEnrolled
+        int totalEnrolled,
+        List<ChapterDetailResponseDto> chapters
 ) {
 }
