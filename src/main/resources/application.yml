@@ -28,7 +28,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto:
     show-sql: true
     open-in-view: false
     properties:
@@ -86,6 +86,16 @@ app:
     jwtRefreshExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000}
   oauth2:
     redirectUri: ${OAUTH2_REDIRECT_URI:http://localhost:5173/oauth2/redirect}
+
+vnpay:
+  payUrl: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}   # Production: https://pay.vnpay.vn/vpcpay.html
+  tmnCode: ${VNPAY_TMN_CODE:YOUR_TMN_CODE}
+  hashSecret: ${VNPAY_HASH_SECRET:YOUR_HASH_SECRET}
+  returnUrlDefault: ${VNPAY_RETURN_URL:https://your-frontend.com/payment/vnpay/return}
+  currCode: VND
+  locale: vn            # hoặc en
+  version: 2.1.0
+  expireMinutes: 15     # thời hạn hoá đơn
 
 integration:
   minio:
