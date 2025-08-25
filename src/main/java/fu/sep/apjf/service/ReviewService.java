@@ -140,17 +140,33 @@ public class ReviewService {
 
     public List<CourseResponseDto> getTopRatedCourses() {
         List<Course> topCourses = reviewRepo.findTop3RatedCourses();
-
-        return topCourses.stream()
-                .map(course -> {
-                    Float avgRating = getAverageRating(course.getId());
-                    // Áp dụng logic làm tròn về 0.5 để consistent
-                    if (avgRating != null) {
-                        avgRating = Math.round(avgRating * 2.0f) / 2.0f;
-                    }
-                    return courseMapper.toDto(course, avgRating);
-                })
-                .toList();
+        return topCourses.stream().map(course -> {
+            Float avgRating = getAverageRating(course.getId());
+            if (avgRating != null) {
+                avgRating = Math.round(avgRating * 2.0f) / 2.0f;
+            }
+            String presignedImageUrl = null;
+            try {
+                presignedImageUrl = minioService.getCourseImageUrl(course.getImage());
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for course image {}: {}", course.getImage(), e.getMessage());
+            }
+            // Manually build CourseResponseDto with presigned image URL
+            return new CourseResponseDto(
+                course.getId(),
+                course.getTitle(),
+                course.getDescription(),
+                course.getDuration(),
+                course.getLevel(),
+                presignedImageUrl,
+                course.getRequirement(),
+                course.getStatus(),
+                course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
+                course.getTopics() != null ? course.getTopics().stream().map(t -> new fu.sep.apjf.dto.request.TopicDto(t.getId(), t.getName())).collect(java.util.stream.Collectors.toSet()) : java.util.Collections.emptySet(),
+                avgRating,
+                false // isEnrolled, not available in this context
+            );
+        }).toList();
     }
 
 }
