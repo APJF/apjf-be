@@ -50,6 +50,14 @@ public class CourseService {
                 r -> ((Number) r[1]).floatValue()   // average rating
         ));
 
+        Map<String, Integer> totalStudents = courseProgressRepository
+                .countTotalStudentsForCourses(courses.stream().map(Course::getId).toList())
+                .stream()
+                .collect(Collectors.toMap(
+                        r -> r[0].toString(),
+                        r -> ((Number) r[1]).intValue()
+                ));
+
         // Lấy tất cả image object names và generate presigned URLs batch
         List<String> imageObjectNames = courses.stream()
                 .map(Course::getImage)
@@ -65,6 +73,8 @@ public class CourseService {
                     .collect(Collectors.toSet());
 
             Float avgRating = averageRatings.getOrDefault(course.getId(), 0f);
+            int students = totalStudents.getOrDefault(course.getId(), 0);
+
 
             // Kiểm tra và sử dụng presigned URL nếu có
             String imageUrl = course.getImage();
@@ -85,7 +95,8 @@ public class CourseService {
                     course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
                     topicDtos,
                     avgRating,
-                    false
+                    false,
+                    students
             );
         }).toList();
     }
@@ -243,13 +254,16 @@ public class CourseService {
     }
 
     @Transactional(readOnly = true)
-    public CourseResponseDto findById(String id) {
+    public CourseResponseDto findById(User user,String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
         Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
                 .map(this::roundToHalfStar)
                 .orElse(null);
+
+        int totalStudent = courseProgressRepository.countTotalStudentsByCourseId(course.getId());
+
 
         // Kiểm tra và generate presigned URL nếu cần
         String imageUrl = course.getImage();
@@ -263,36 +277,14 @@ public class CourseService {
             }
         }
 
-        // Sử dụng mapper với presigned URL
-        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, false);
-    }
-
-    @Transactional(readOnly = true)
-    public CourseResponseDto findCourseDetailByUser(User user, String id) {
-        Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
-
-        Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
-                .map(this::roundToHalfStar)
-                .orElse(null);
-
-        boolean isEnrolled = courseProgressRepository.existsByUserAndCourseId(user, id);
-
-        // Kiểm tra và generate presigned URL nếu cần
-        String imageUrl = course.getImage();
-        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
-                !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-            try {
-                imageUrl = minioService.getCourseImageUrl(imageUrl);
-            } catch (Exception e) {
-                log.warn("Failed to generate presigned URL for course image {}: {}", imageUrl, e.getMessage());
-                // Giữ nguyên object name nếu có lỗi
-            }
+        if(courseProgressRepository.existsByUserAndCourseId(user, id)){
+            return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, true,totalStudent);
         }
 
         // Sử dụng mapper với presigned URL
-        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, isEnrolled);
+        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, false,totalStudent);
     }
+
 
     @Transactional(readOnly = true)
     public List<ExamOverviewResponseDto> getExamsByCourseId(String courseId) {

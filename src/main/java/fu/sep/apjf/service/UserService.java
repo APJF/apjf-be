@@ -3,7 +3,9 @@ package fu.sep.apjf.service;
 import fu.sep.apjf.dto.request.LoginRequestDto;
 import fu.sep.apjf.dto.request.RegisterDto;
 import fu.sep.apjf.dto.response.LoginResponseDto;
+import fu.sep.apjf.dto.response.UserMonthResponseDto;
 import fu.sep.apjf.dto.response.UserResponseDto;
+import fu.sep.apjf.dto.response.UserStatsResponseDto;
 import fu.sep.apjf.entity.Authority;
 import fu.sep.apjf.entity.Token;
 import fu.sep.apjf.entity.Token.TokenType;
@@ -29,12 +31,10 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.*;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -101,6 +101,33 @@ public class UserService {
                 userDto.authorities()
         );
     }
+
+    public UserStatsResponseDto getUserStats() {
+        LocalDateTime startDate = LocalDate.now().minusMonths(5).withDayOfMonth(1).atStartOfDay();
+
+        List<User> users = userRepository.findEnabledUsersFrom(startDate);
+        int totalEnabledUsers = users.size();
+
+        Map<YearMonth, Long> counts = users.stream()
+                .collect(Collectors.groupingBy(
+                        u -> YearMonth.from(u.getCreateAt()),
+                        Collectors.counting()
+                ));
+
+        // Tạo list 6 tháng gần nhất, nếu tháng nào không có user thì trả 0
+        List<UserMonthResponseDto> userMonthList =
+                IntStream.rangeClosed(0, 5)
+                        .mapToObj(i -> {
+                            YearMonth month = YearMonth.now().minusMonths(i);
+                            long total = counts.getOrDefault(month, 0L);
+                            return new UserMonthResponseDto(month, total);
+                        })
+                        .sorted(Comparator.comparing(UserMonthResponseDto::month))
+                        .toList();
+
+        return new UserStatsResponseDto(totalEnabledUsers, userMonthList);
+    }
+
 
     // Method mới để login
     public LoginResponseDto login(LoginRequestDto loginDTO) {

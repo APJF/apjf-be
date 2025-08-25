@@ -50,17 +50,10 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getById(@AuthenticationPrincipal User user, @PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(id)));
+                ApiResponseDto.ok("Chi tiết khóa học", courseService.findById(user, id)));
     }
-
-    @GetMapping("/user/{id}")
-    public ResponseEntity<ApiResponseDto<CourseResponseDto>> getCourseDetailByUser(@AuthenticationPrincipal User user,@PathVariable String id) {
-        return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết khóa học", courseService.findCourseDetailByUser(user, id)));
-    }
-
 
     @GetMapping("/top-rated")
     public ResponseEntity<ApiResponseDto<List<CourseResponseDto>>> getTopRatedCourses() {

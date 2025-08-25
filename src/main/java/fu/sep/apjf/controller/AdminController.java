@@ -4,9 +4,11 @@ import fu.sep.apjf.dto.request.UpdateUserAuthoritiesDto;
 import fu.sep.apjf.dto.request.UpdateUserStatusDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.UserResponseDto;
+import fu.sep.apjf.dto.response.UserStatsResponseDto;
 import fu.sep.apjf.entity.Authority;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.AdminService;
+import fu.sep.apjf.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final UserService userService;
 
     @GetMapping("/users")
     public ResponseEntity<ApiResponseDto<List<UserResponseDto>>> getAllUsers(@AuthenticationPrincipal User admin) {
@@ -57,6 +60,12 @@ public class AdminController {
             @AuthenticationPrincipal User admin) {
         String message = adminService.updateUserStatus(dto, admin.getEmail());
         return ResponseEntity.ok(ApiResponseDto.ok(message));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponseDto<UserStatsResponseDto>> getUserStats() {
+        UserStatsResponseDto stats = userService.getUserStats();
+        return ResponseEntity.ok(ApiResponseDto.ok("Thống kê người dùng", stats));
     }
 
 }

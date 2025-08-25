@@ -17,6 +17,7 @@ public record CourseResponseDto(
         String prerequisiteCourseId,
         Set<TopicDto> topics,
         Float averageRating,
-        boolean isEnrolled
+        boolean isEnrolled,
+        int totalStudent
 ) {
 }
