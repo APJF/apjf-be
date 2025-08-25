@@ -5,8 +5,7 @@ import fu.sep.apjf.dto.request.TopicDto;
 import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
-import fu.sep.apjf.mapper.CourseMapper;
-import fu.sep.apjf.mapper.ExamOverviewMapper;
+import fu.sep.apjf.mapper.*;
 import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,6 +36,9 @@ public class CourseService {
     private final ChapterRepository chapterRepository;
     private final UnitRepository unitRepository;
     private final ChapterProgressRepository chapterProgressRepository;
+    private final ChapterMapper chapterMapper;
+    private final UnitMapper unitMapper;
+    private final MaterialMapper materialMapper;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
@@ -243,7 +245,69 @@ public class CourseService {
         }).toList();
     }
 
+    @Transactional(readOnly = true)
+    public CourseDetailWithStructureResponseDto getCourseDetail(User user, String id) {
+        // 1. Lấy course + chapters + units + materials + topics
+        Course course = courseRepository.findCourseWithStructureById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
 
+        // 2. Tính điểm đánh giá trung bình
+        Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
+                .map(this::roundToHalfStar)
+                .orElse(null);
+
+        // 3. Đếm số học viên đăng ký
+        int totalEnrolled = courseProgressRepository.countTotalStudentsByCourseId(course.getId());
+
+        // 4. Generate presigned URL cho ảnh khóa học nếu cần
+        String imageUrl = course.getImage();
+        if (imageUrl != null && !imageUrl.trim().isEmpty() &&
+                !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+            try {
+                imageUrl = minioService.getCourseImageUrl(imageUrl);
+            } catch (Exception e) {
+                log.warn("Failed to generate presigned URL for course image {}: {}", imageUrl, e.getMessage());
+            }
+        }
+
+        Set<TopicDto> topicDtos = course.getTopics().stream()
+                .map(t -> new TopicDto(t.getId(), t.getName()))
+                .collect(Collectors.toSet());
+
+        // 5. Mapping sang DTO
+        List<ChapterDetailResponseDto> chapterDtos = course.getChapters().stream()
+                .map(chapter -> {
+                    List<UnitDetailResponseDto> unitDtos = chapter.getUnits().stream()
+                            .map(unit -> {
+                                List<MaterialResponseDto> materialDtos = unit.getMaterials().stream()
+                                        .map(materialMapper::toDto)
+                                        .toList();
+                                return unitMapper.toDetailDto(unit, materialDtos);
+                            })
+                            .toList();
+                    return chapterMapper.toDetailDto(chapter, unitDtos);
+                })
+                .toList();
+
+        boolean isEnrolled = courseProgressRepository.existsByUserAndCourseId(user, id);
+
+        return new CourseDetailWithStructureResponseDto(
+                course.getId(),
+                course.getTitle(),
+                course.getDescription(),
+                course.getDuration(),
+                course.getLevel(),
+                imageUrl,
+                course.getRequirement(),
+                course.getStatus(),
+                course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
+                topicDtos,
+                averageRating,
+                isEnrolled,
+                totalEnrolled,
+                chapterDtos
+        );
+    }
 
     @Transactional
     public CourseDetailProgressResponseDto enrollCourse(User user, String courseId) {
