@@ -59,17 +59,79 @@ public class CourseService {
 
         Map<String, String> presignedImageUrls = minioService.getCourseImageUrls(imageObjectNames);
 
-        return courses.stream().map(course -> {
+        // Map thứ tự Level N5 -> N1
+        Map<EnumClass.Level, Integer> levelOrder = Map.of(
+                EnumClass.Level.N5, 1,
+                EnumClass.Level.N4, 2,
+                EnumClass.Level.N3, 3,
+                EnumClass.Level.N2, 4,
+                EnumClass.Level.N1, 5
+        );
+
+        // Tạo map ID -> Course để dễ truy cập
+        Map<String, Course> courseMap = courses.stream()
+                .collect(Collectors.toMap(Course::getId, c -> c));
+
+        // Đồ thị phụ thuộc và in-degree
+        Map<String, List<String>> graph = new HashMap<>();
+        Map<String, Integer> inDegree = new HashMap<>();
+
+        for (Course c : courses) {
+            graph.putIfAbsent(c.getId(), new ArrayList<>());
+            inDegree.putIfAbsent(c.getId(), 0);
+
+            if (c.getPrerequisiteCourse() != null) {
+                String preId = c.getPrerequisiteCourse().getId();
+                graph.putIfAbsent(preId, new ArrayList<>());
+                graph.get(preId).add(c.getId()); // pre → current
+                inDegree.put(c.getId(), inDegree.getOrDefault(c.getId(), 0) + 1);
+                inDegree.putIfAbsent(preId, 0);
+            }
+        }
+
+        // Hàng đợi cho Topological Sort, ưu tiên Level thấp hơn trước
+        PriorityQueue<String> queue = new PriorityQueue<>((id1, id2) -> {
+            Course c1 = courseMap.get(id1);
+            Course c2 = courseMap.get(id2);
+            int cmp = Integer.compare(
+                    levelOrder.getOrDefault(c1.getLevel(), Integer.MAX_VALUE),
+                    levelOrder.getOrDefault(c2.getLevel(), Integer.MAX_VALUE)
+            );
+            return cmp != 0 ? cmp : c1.getTitle().compareTo(c2.getTitle());
+        });
+
+        // Thêm các course có in-degree = 0 vào queue
+        for (Map.Entry<String, Integer> entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.offer(entry.getKey());
+            }
+        }
+
+        // Thực hiện topological sort
+        List<Course> sortedCourses = new ArrayList<>();
+        while (!queue.isEmpty()) {
+            String currentId = queue.poll();
+            sortedCourses.add(courseMap.get(currentId));
+
+            for (String next : graph.getOrDefault(currentId, List.of())) {
+                inDegree.put(next, inDegree.get(next) - 1);
+                if (inDegree.get(next) == 0) {
+                    queue.offer(next);
+                }
+            }
+        }
+
+        // Convert sang DTO
+        return sortedCourses.stream().map(course -> {
             Set<TopicDto> topicDtos = course.getTopics().stream()
                     .map(t -> new TopicDto(t.getId(), t.getName()))
                     .collect(Collectors.toSet());
 
             Float avgRating = averageRatings.getOrDefault(course.getId(), 0f);
 
-            // Kiểm tra và sử dụng presigned URL nếu có
             String imageUrl = course.getImage();
             if (imageUrl != null && !imageUrl.trim().isEmpty() &&
-                !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                    !imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
                 imageUrl = presignedImageUrls.getOrDefault(imageUrl, imageUrl);
             }
 
@@ -79,7 +141,7 @@ public class CourseService {
                     course.getDescription(),
                     course.getDuration(),
                     course.getLevel(),
-                    imageUrl,  // Sử dụng presigned URL thay vì raw object name
+                    imageUrl,
                     course.getRequirement(),
                     course.getStatus(),
                     course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
@@ -89,6 +151,8 @@ public class CourseService {
             );
         }).toList();
     }
+
+
 
     @Transactional(readOnly = true)
     public List<CourseDetailResponseDto> getAllByUser(User user) {
