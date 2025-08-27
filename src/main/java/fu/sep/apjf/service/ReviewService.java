@@ -176,7 +176,8 @@ public class ReviewService {
                 course.getTopics() != null ? course.getTopics().stream().map(t -> new fu.sep.apjf.dto.request.TopicDto(t.getId(), t.getName())).collect(java.util.stream.Collectors.toSet()) : java.util.Collections.emptySet(),
                 avgRating,
                 false, // isEnrolled, not available in this context
-                students// totalStudent, default to 0 or fetch actual value if available
+                students,// totalStudent, default to 0 or fetch actual value if available
+                null
             );
         }).toList();
     }

@@ -5,10 +5,7 @@ import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.ChapterMapper;
-import fu.sep.apjf.repository.ChapterRepository;
-import fu.sep.apjf.repository.CourseRepository;
-import fu.sep.apjf.repository.UnitProgressRepository;
-import fu.sep.apjf.repository.UserRepository;
+import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +32,7 @@ public class ChapterService {
     private final UserRepository userRepository;
     private final ChapterMapper chapterMapper; // Thêm injection
     private final UnitProgressRepository unitProgressRepository;
+    private final UnitRepository unitRepository;
 
     @Transactional(readOnly = true)
     public List<ChapterResponseDto> findAll() {
@@ -58,11 +56,28 @@ public class ChapterService {
     }
 
     @Transactional(readOnly = true)
-    public ChapterResponseDto findById(String id) {
+    public ChapterProgressResponseDto findById(String id, Long userId) {
         Chapter chapter = chapterRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(CHAPTER_NOT_FOUND));
-        return chapterMapper.toDto(chapter);
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy chapter với ID: " + id));
+
+        long totalUnits = unitRepository.countUnitsByChapterId(chapter.getId());
+        long completedUnits = unitRepository.countCompletedUnitsByUserAndChapter(userId, chapter.getId());
+
+        float percent = totalUnits == 0 ? 0 : ((float) completedUnits / totalUnits) * 100;
+        boolean isCompleted = chapterRepo.isChapterCompleted(chapter.getId(), userId);
+
+        return new ChapterProgressResponseDto(
+                chapter.getId(),
+                chapter.getTitle(),
+                chapter.getDescription(),
+                chapter.getStatus(),
+                chapter.getCourse().getId(),
+                chapter.getPrerequisiteChapter() != null ? chapter.getPrerequisiteChapter().getId() : null,
+                isCompleted,
+                percent
+        );
     }
+
 
 
 

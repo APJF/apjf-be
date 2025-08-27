@@ -25,12 +25,18 @@ public interface LearningPathMapper {
     @Mapping(target = "courses", ignore = true)
     LearningPathResponseDto toDto(LearningPath learningPath);
 
-    @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "targetLevel", source = "targetLevel", qualifiedByName = "stringToLevel")
-    @Mapping(target = "duration", source = "duration")
-    @Mapping(target = "status", source = "status")
-    List<LearningPathDetailResponseDto> toDetailDto(List<LearningPath> learningPath);
+    @Mapping(target = "userId", source = "learningPath.user.id")
+    @Mapping(target = "username", source = "learningPath.user.username")
+    @Mapping(target = "targetLevel", source = "learningPath.targetLevel")
+    @Mapping(target = "status", source = "learningPath.status")
+    @Mapping(target = "duration", source = "learningPath.duration")
+    @Mapping(target = "isCompleted", source = "isCompleted")
+    @Mapping(target = "percent", source = "percent")
+    LearningPathDetailResponseDto toDetailDto(
+            LearningPath learningPath,
+            boolean isCompleted,
+            float percent
+    );
 
     // Map từ request DTO sang entity khi tạo mới
     @Mapping(target = "id", ignore = true)

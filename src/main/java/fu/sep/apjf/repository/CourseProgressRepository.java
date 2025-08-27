@@ -1,5 +1,6 @@
 package fu.sep.apjf.repository;
 
+import fu.sep.apjf.entity.Course;
 import fu.sep.apjf.entity.CourseProgress;
 import fu.sep.apjf.entity.CourseProgressKey;
 import fu.sep.apjf.entity.User;
@@ -17,8 +18,10 @@ public interface CourseProgressRepository extends JpaRepository<CourseProgress, 
 
     boolean existsByUserAndCourseId(User user, String courseId);
 
+    boolean existsByCourseAndUserIdAndCompleted(Course course, Long userId, boolean completed);
+
     // Lấy tất cả CourseProgress của user cho danh sách courseId (dùng cho load list tránh N+1)
-    List<CourseProgress> findByUser(User user);
+    List<CourseProgress> findByUserId(Long userId);
 
     @Query("SELECT COUNT(cp) FROM CourseProgress cp WHERE cp.course.id = :courseId")
     int countTotalStudentsByCourseId(@Param("courseId") String courseId);

@@ -31,9 +31,9 @@ public class ChapterController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<ChapterResponseDto>> getById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<ChapterProgressResponseDto>> getById(@AuthenticationPrincipal User user, @PathVariable String id) {
         return ResponseEntity.ok(
-                ApiResponseDto.ok("Chi tiết chương", chapterService.findById(id)));
+                ApiResponseDto.ok("Chi tiết chương", chapterService.findById(id,user.getId())));
     }
 
     @GetMapping("/{id}/detail")

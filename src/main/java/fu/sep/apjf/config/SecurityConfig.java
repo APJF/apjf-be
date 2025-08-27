@@ -51,7 +51,6 @@ public class SecurityConfig {
             "/api/chapters/**",          // Xem chapters
             "/api/units/**",             // Xem units
             "/api/materials/**",         // Xem materials
-            "/api/learning-paths/**",    // Xem learning paths
             "/api/reviews/**"            // Xem reviews
     };
 
@@ -68,7 +67,8 @@ public class SecurityConfig {
             "/api/post-likes/**",        // Like posts
             "/api/student/exams/**",     // Làm exam
             "/api/student/history/**",   // Xem lịch sử học tập
-            "/api/courses/user",         // Khóa học của user
+            "/api/courses/user",
+            "/api/learning-paths/**",
             "/api/courses/*/enroll"      // Đăng ký khóa học
     };
 

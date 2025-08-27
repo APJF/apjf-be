@@ -5,6 +5,6 @@ import java.util.Set;
 
 public record CourseProgressResponseDto(
         boolean completed,
-        float persent
+        float percent
 ) {
 }
