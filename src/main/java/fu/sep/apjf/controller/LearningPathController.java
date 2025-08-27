@@ -3,6 +3,7 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
+import fu.sep.apjf.dto.response.LearningPathDetailResponseDto;
 import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.LearningPathService;
@@ -22,7 +23,7 @@ public class LearningPathController {
     private final LearningPathService learningPathService;
 
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<LearningPathResponseDto>>> getUserLearningPaths(
+    public ResponseEntity<ApiResponseDto<List<LearningPathDetailResponseDto>>> getUserLearningPaths(
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(ApiResponseDto.ok(
             "Danh sách lộ trình học",

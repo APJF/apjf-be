@@ -16,7 +16,8 @@ public interface UnitProgressRepository extends JpaRepository<UnitProgress, Long
     boolean existsByUserAndUnit(User user, Unit unit);
 
     // Nếu chỉ có id
-    boolean existsByUserAndUnitId(User user, String unitId);
+    @Query("SELECT up FROM UnitProgress up WHERE up.user = :user AND up.unit.chapter.id = :chapterId")
+    List<UnitProgress> findByUserAndChapter(@Param("user") User user, @Param("chapterId") String chapterId);
 
     // Đếm tổng số Unit của 1 course
     @Query("SELECT COUNT(u) FROM Unit u WHERE u.chapter.course.id = :courseId")

@@ -2,12 +2,14 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.ChapterRequestDto;
 import fu.sep.apjf.dto.response.ChapterDetailResponseDto;
+import fu.sep.apjf.dto.response.ChapterDetailWithProgressResponseDto;
 import fu.sep.apjf.dto.response.ChapterResponseDto;
 import fu.sep.apjf.dto.response.UnitDetailResponseDto;
 import fu.sep.apjf.entity.Chapter;
 import org.mapstruct.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper(componentModel = "spring", uses = {ExamOverviewMapper.class})
 public interface ChapterMapper {

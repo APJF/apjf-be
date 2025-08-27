@@ -2,6 +2,7 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
+import fu.sep.apjf.dto.response.LearningPathDetailResponseDto;
 import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.LearningPath;
@@ -23,6 +24,13 @@ public interface LearningPathMapper {
     @Mapping(target = "status", source = "status")
     @Mapping(target = "courses", ignore = true)
     LearningPathResponseDto toDto(LearningPath learningPath);
+
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "targetLevel", source = "targetLevel", qualifiedByName = "stringToLevel")
+    @Mapping(target = "duration", source = "duration")
+    @Mapping(target = "status", source = "status")
+    List<LearningPathDetailResponseDto> toDetailDto(List<LearningPath> learningPath);
 
     // Map từ request DTO sang entity khi tạo mới
     @Mapping(target = "id", ignore = true)
