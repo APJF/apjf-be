@@ -2,6 +2,7 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
 import fu.sep.apjf.dto.response.CourseOrderDto;
+import fu.sep.apjf.dto.response.LearningPathDetailResponseDto;
 import fu.sep.apjf.dto.response.LearningPathResponseDto;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.CourseLearningPathMapper;
@@ -90,16 +91,10 @@ public class LearningPathService {
         learningPathRepository.deleteById(id);
     }
 
-    public List<LearningPathResponseDto> getLearningPathsByUser(Long userId) {
+    public List<LearningPathDetailResponseDto> getLearningPathsByUser(Long userId) {
         List<LearningPath> paths = learningPathRepository.findByUserId(userId);
 
-        return paths.stream()
-                .map(path -> {
-                    List<CourseOrderDto> courseDtos = courseLearningPathRepository.findByLearningPathId(path.getId())
-                            .stream().map(courseLearningPathMapper::toDto).toList();
-                    return learningPathMapper.toResponseDto(path, courseDtos);
-                })
-                .toList();
+        return learningPathMapper.toDetailDto(paths);
     }
 
     public void addCourseToLearningPath(Long learningPathId, CourseOrderDto dto) {

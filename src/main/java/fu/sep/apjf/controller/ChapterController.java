@@ -1,10 +1,7 @@
 package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.ChapterRequestDto;
-import fu.sep.apjf.dto.response.ChapterResponseDto;
-import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.ExamListResponseDto;
-import fu.sep.apjf.dto.response.UnitResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ChapterService;
 import fu.sep.apjf.service.ExamService;
@@ -37,6 +34,16 @@ public class ChapterController {
     public ResponseEntity<ApiResponseDto<ChapterResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết chương", chapterService.findById(id)));
+    }
+
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<ApiResponseDto<ChapterDetailWithProgressResponseDto>> getChapterDetail(
+            @AuthenticationPrincipal User user,
+            @PathVariable String id) {
+
+        return ResponseEntity.ok(
+                ApiResponseDto.ok("Chi tiết chương học", chapterService.getChapterDetailWithProgress(user, id))
+        );
     }
 
     @GetMapping("/{chapterId}/exams")
