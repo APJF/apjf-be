@@ -2,15 +2,17 @@ package fu.sep.apjf.repository;
 
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.entity.UnitProgress;
+import fu.sep.apjf.entity.UnitProgressKey;
 import fu.sep.apjf.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UnitProgressRepository extends JpaRepository<UnitProgress, Long> {
-    List<UnitProgress> findByUnitIdIn(List<String> unitIds);
+    Optional<UnitProgress> findById(UnitProgressKey id);
 
     // Check tồn tại progress của 1 user cho 1 unit
     boolean existsByUserAndUnit(User user, Unit unit);

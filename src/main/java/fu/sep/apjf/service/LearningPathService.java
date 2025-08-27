@@ -32,6 +32,7 @@ public class LearningPathService {
     private final LearningPathMapper learningPathMapper;
     private final CourseLearningPathMapper courseLearningPathMapper;
     private final CourseProgressRepository courseProgressRepository;
+    private final LearningPathProgressRepository learningPathProgressRepository;
 
     public LearningPathDetailResponseDto getLearningPathById(Long id) {
         LearningPath path = learningPathRepository.findById(id)
@@ -158,8 +159,6 @@ public class LearningPathService {
             );
         }).toList();
     }
-
-
 
     public void addCourseToLearningPath(Long learningPathId, CourseOrderDto dto) {
         Course course = courseRepository.findById(dto.courseId()).orElseThrow();

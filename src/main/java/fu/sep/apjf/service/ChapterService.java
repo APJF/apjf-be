@@ -33,6 +33,8 @@ public class ChapterService {
     private final ChapterMapper chapterMapper; // Thêm injection
     private final UnitProgressRepository unitProgressRepository;
     private final UnitRepository unitRepository;
+    private final ChapterProgressRepository chapterProgressRepository;
+    private final CourseService courseService;
 
     @Transactional(readOnly = true)
     public List<ChapterResponseDto> findAll() {
@@ -77,9 +79,6 @@ public class ChapterService {
                 percent
         );
     }
-
-
-
 
     public ChapterResponseDto create(@Valid ChapterRequestDto dto, Long staffId) {
         log.info("Nhân viên {} tạo chương học mới với mã: {}", staffId, dto.id());

@@ -39,6 +39,8 @@ public class CourseService {
     private final ChapterMapper chapterMapper;
     private final UnitMapper unitMapper;
     private final MaterialMapper materialMapper;
+    private final CourseLearningPathRepository courseLearningPathRepository;
+    private final LearningPathService learningPathService;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
@@ -526,7 +528,6 @@ public class CourseService {
 
         return courseMapper.toDto(savedCourse, avgRating);
     }
-
 
     public String uploadCourseImage(MultipartFile file) throws Exception {
         // Validate file type

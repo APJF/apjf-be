@@ -33,6 +33,7 @@ public class ExamResultService {
     private final QuestionResultMapper questionResultMapper;
     private final ExamResultDetailRepository detailRepository;
     private final UserRepository userRepository;
+    private final ProgressTrackingService progressTrackingService;
 
     @Transactional
     public ExamDetailResponseDto startExam(Long userId, String examId) {
@@ -209,6 +210,21 @@ public class ExamResultService {
 
         // Batch insert tất cả ExamResultDetail
         examResultDetailRepository.saveAll(details);
+
+        if (result.getStatus() == EnumClass.ExamStatus.PASSED) {
+            switch (exam.getExamScopeType()) {
+                case UNIT -> {
+                    progressTrackingService.markUnitPassed(exam.getUnit().getId(), userId);
+                }
+                case CHAPTER -> {
+                    progressTrackingService.markChapterComplete( exam.getChapter().getId(),userId);
+                }
+                case COURSE -> {
+                    progressTrackingService.markCourseComplete(exam.getCourse().getId(),userId);
+                }
+                default -> throw new UnsupportedOperationException("Unsupported exam scope type.");
+            }
+        }
 
         return examResult.getId();
     }
