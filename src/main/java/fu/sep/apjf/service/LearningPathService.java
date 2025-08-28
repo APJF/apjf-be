@@ -34,23 +34,22 @@ public class LearningPathService {
     private final CourseProgressRepository courseProgressRepository;
     private final LearningPathProgressRepository learningPathProgressRepository;
 
+    @Transactional(readOnly = true)
     public LearningPathDetailResponseDto getLearningPathById(Long id) {
-        LearningPath path = learningPathRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Learning Path với ID: " + id));
+        LearningPath path = learningPathRepository.findByIdWithCourses(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy Learning Path với ID: " + id));
 
-        // Lấy tất cả Course từ các CourseLearningPath
         List<Course> courses = path.getCourseLearningPaths().stream()
                 .map(CourseLearningPath::getCourse)
                 .toList();
 
-        // Tính % hoàn thành theo số lượng course đã complete
         long completedCourses = courses.stream()
                 .filter(course -> courseProgressRepository
                         .existsByCourseAndUserIdAndCompleted(course, path.getUser().getId(), true))
                 .count();
-        float percent = courses.isEmpty() ? 0f : (completedCourses * 100f / courses.size());
 
-        // Convert targetLevel từ String sang Enum
+        float percent = courses.isEmpty() ? 0f : (completedCourses * 100f / courses.size());
         EnumClass.Level targetLevel = EnumClass.Level.valueOf(path.getTargetLevel());
 
         return new LearningPathDetailResponseDto(
@@ -70,7 +69,6 @@ public class LearningPathService {
                 percent
         );
     }
-
 
     @Transactional
     public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto, Long userId) {
