@@ -1,6 +1,7 @@
 package fu.sep.apjf.repository;
 
 import fu.sep.apjf.entity.Course;
+import fu.sep.apjf.entity.EnumClass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,5 +40,5 @@ public interface CourseRepository extends JpaRepository<Course, String>, JpaSpec
     """)
     Optional<Course> findCourseWithStructureById(@Param("id") String id);
 
-
+    int countByStatus(EnumClass.Status status);
 }

@@ -9,4 +9,6 @@ import java.util.List;
 public interface CourseLearningPathRepository extends JpaRepository<CourseLearningPath, CourseLearningPathKey> {
     void deleteByLearningPathIdAndCourseId(Long learningPathId, String courseId);
     List<CourseLearningPath> findByLearningPathId(Long learningPathId);
+
+    List<CourseLearningPath> findByCourseId(String courseId);
 }

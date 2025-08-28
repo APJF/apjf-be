@@ -2,15 +2,17 @@ package fu.sep.apjf.repository;
 
 import fu.sep.apjf.entity.Unit;
 import fu.sep.apjf.entity.UnitProgress;
+import fu.sep.apjf.entity.UnitProgressKey;
 import fu.sep.apjf.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UnitProgressRepository extends JpaRepository<UnitProgress, Long> {
-    List<UnitProgress> findByUnitIdIn(List<String> unitIds);
+    Optional<UnitProgress> findById(UnitProgressKey id);
 
     // Check tồn tại progress của 1 user cho 1 unit
     boolean existsByUserAndUnit(User user, Unit unit);
@@ -20,14 +22,17 @@ public interface UnitProgressRepository extends JpaRepository<UnitProgress, Long
     List<UnitProgress> findByUserAndChapter(@Param("user") User user, @Param("chapterId") String chapterId);
 
     // Đếm tổng số Unit của 1 course
-    @Query("SELECT COUNT(u) FROM Unit u WHERE u.chapter.course.id = :courseId")
-    long countUnitsByCourseId(@Param("courseId") String courseId);
+    @Query("SELECT COUNT(c) FROM Chapter c WHERE c.course.id = :courseId")
+    long countChaptersByCourseId(@Param("courseId") String courseId);
 
-    // Đếm số Unit đã hoàn thành của user trong 1 course
-    @Query("SELECT COUNT(up) FROM UnitProgress up " +
-            "WHERE up.user = :user " +
-            "AND up.unit.chapter.course.id = :courseId " +
-            "AND up.completed = true")
-    long countCompletedUnitsByUserAndCourse(@Param("user") User user,
-                                            @Param("courseId") String courseId);
+    // Đếm số Chapter đã hoàn thành của User trong 1 Course
+    @Query("""
+        SELECT COUNT(cp) 
+        FROM ChapterProgress cp
+        WHERE cp.user = :user
+        AND cp.chapter.course.id = :courseId
+        AND cp.completed = true
+        """)
+    long countCompletedChaptersByUserAndCourse(@Param("user") User user,
+                                               @Param("courseId") String courseId);
 }

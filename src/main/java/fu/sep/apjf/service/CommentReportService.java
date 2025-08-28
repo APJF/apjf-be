@@ -44,8 +44,8 @@ public class CommentReportService {
         );
     }
 
-    public CommentReportResponseDto create(@Valid CommentReportRequestDto dto) {
-        User user = userRepo.findById(dto.userId())
+    public CommentReportResponseDto create(@Valid CommentReportRequestDto dto, Long userId) {
+        User user = userRepo.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
         Comment comment = commentRepo.findById(dto.commentId())
                 .orElseThrow(() -> new EntityNotFoundException("Comment không tồn tại"));

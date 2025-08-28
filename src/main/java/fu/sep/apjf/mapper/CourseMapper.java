@@ -2,8 +2,10 @@ package fu.sep.apjf.mapper;
 
 import fu.sep.apjf.dto.request.CourseRequestDto;
 import fu.sep.apjf.dto.request.TopicDto;
+import fu.sep.apjf.dto.response.CourseProgressResponseDto;
 import fu.sep.apjf.dto.response.CourseResponseDto;
 import fu.sep.apjf.entity.Course;
+import fu.sep.apjf.entity.CourseProgress;
 import org.mapstruct.*;
 
 import java.util.Collections;
@@ -26,9 +28,18 @@ public interface CourseMapper {
     @Mapping(target = "prerequisiteCourseId", source = "course.prerequisiteCourse.id")
     @Mapping(target = "topics", source = "course.topics", qualifiedByName = "mapTopics")
     @Mapping(target = "image", source = "presignedImageUrl")
+    @Mapping(target = "averageRating", source = "averageRating")
     @Mapping(target = "isEnrolled", source = "isEnrolled")
     @Mapping(target = "totalEnrolled", source = "totalEnrolled")
-    CourseResponseDto toDetailDtoWithPresignedUrl(Course course, Float averageRating, String presignedImageUrl, boolean isEnrolled, int totalEnrolled);
+    @Mapping(target = "courseProgress", source = "courseProgress")
+    CourseResponseDto toDetailDtoWithPresignedUrl(
+            Course course,
+            Float averageRating,
+            String presignedImageUrl,
+            boolean isEnrolled,
+            int totalEnrolled,
+            CourseProgressResponseDto courseProgress
+    );
 
     // Entity mapping (giữ lại cho create/update)
     @Mapping(target = "status", constant = "INACTIVE")

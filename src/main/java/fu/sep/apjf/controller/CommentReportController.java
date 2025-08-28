@@ -39,7 +39,7 @@ public class CommentReportController {
             @AuthenticationPrincipal User user) {
 
         log.info("User {} báo cáo bình luận {}", user.getUsername(), dto.commentId());
-        CommentReportResponseDto created = commentReportService.create(dto);
+        CommentReportResponseDto created = commentReportService.create(dto, user.getId());
         return ResponseEntity.created(URI.create("/api/comment-reports/" + created.id()))
                 .body(ApiResponseDto.ok("Gửi báo cáo thành công", created));
     }

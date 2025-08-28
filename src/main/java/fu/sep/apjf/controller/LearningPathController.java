@@ -32,7 +32,7 @@ public class LearningPathController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<LearningPathResponseDto>> getLearningPathById(
+    public ResponseEntity<ApiResponseDto<LearningPathDetailResponseDto>> getLearningPathById(
             @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponseDto.ok(
             "Chi tiết lộ trình học",

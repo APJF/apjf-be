@@ -3,6 +3,7 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.UpdateUserAuthoritiesDto;
 import fu.sep.apjf.dto.request.UpdateUserStatusDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
+import fu.sep.apjf.dto.response.DashboardManagerResponseDto;
 import fu.sep.apjf.dto.response.UserResponseDto;
 import fu.sep.apjf.dto.response.UserStatsResponseDto;
 import fu.sep.apjf.entity.Authority;
@@ -68,4 +69,10 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponseDto.ok("Thống kê người dùng", stats));
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponseDto<DashboardManagerResponseDto>> getDashboardStats() {
+        DashboardManagerResponseDto stats = adminService.getDashboardData();
+        return ResponseEntity.ok(ApiResponseDto.ok("Thống kê tổng quan dashboard", stats));
+    }
 }

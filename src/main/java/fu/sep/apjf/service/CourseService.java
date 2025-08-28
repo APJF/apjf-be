@@ -39,6 +39,8 @@ public class CourseService {
     private final ChapterMapper chapterMapper;
     private final UnitMapper unitMapper;
     private final MaterialMapper materialMapper;
+    private final CourseLearningPathRepository courseLearningPathRepository;
+    private final LearningPathService learningPathService;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
@@ -160,7 +162,8 @@ public class CourseService {
                     topicDtos,
                     avgRating,
                     false,
-                    students
+                    students,
+                    null
             );
         }).toList();
     }
@@ -170,7 +173,7 @@ public class CourseService {
     @Transactional(readOnly = true)
     public List<CourseDetailResponseDto> getAllByUser(User user) {
         // Lấy tất cả progress của user
-        List<CourseProgress> progresses = courseProgressRepository.findByUser(user);
+        List<CourseProgress> progresses = courseProgressRepository.findByUserId(user.getId());
 
         // Lấy courseId list từ progresses
         List<String> courseIds = progresses.stream()
@@ -385,6 +388,20 @@ public class CourseService {
     public CourseResponseDto findById(User user,String id) {
         Course course = courseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + id));
+        List<CourseProgress> progresses = courseProgressRepository.findByUserId(user.getId());
+
+        CourseProgress progress = progresses.stream()
+                .filter(cp -> cp.getCourse().getId().equals(course.getId()))
+                .findFirst()
+                .orElse(null);
+
+        CourseProgressResponseDto progressDto = null;
+        if (progress != null) {
+            progressDto = new CourseProgressResponseDto(
+                    progress.isCompleted(),
+                    calculateCourseProgress(user, course.getId())
+            );
+        }
 
         Float averageRating = reviewRepository.calculateAverageRatingByCourseId(id)
                 .map(this::roundToHalfStar)
@@ -406,11 +423,11 @@ public class CourseService {
         }
 
         if(courseProgressRepository.existsByUserAndCourseId(user, id)){
-            return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, true,totalStudent);
+            return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, true,totalStudent, progressDto);
         }
 
         // Sử dụng mapper với presigned URL
-        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, false,totalStudent);
+        return courseMapper.toDetailDtoWithPresignedUrl(course, averageRating, imageUrl, false,totalStudent,progressDto);
     }
 
 
@@ -512,7 +529,6 @@ public class CourseService {
         return courseMapper.toDto(savedCourse, avgRating);
     }
 
-
     public String uploadCourseImage(MultipartFile file) throws Exception {
         // Validate file type
         String contentType = file.getContentType();
@@ -541,14 +557,11 @@ public class CourseService {
     }
 
     public float calculateCourseProgress(User user, String courseId) {
-        long totalUnits = unitProgressRepository.countUnitsByCourseId(courseId);
-        if (totalUnits == 0) return 0;
+        long totalChapters = unitProgressRepository.countChaptersByCourseId(courseId);
+        if (totalChapters == 0) return 0;
 
-        long completedUnits = unitProgressRepository.countCompletedUnitsByUserAndCourse(user, courseId);
+        long completedChapters = unitProgressRepository.countCompletedChaptersByUserAndCourse(user, courseId);
 
-        return (completedUnits * 100.0f) / totalUnits;
+        return (completedChapters * 100.0f) / totalChapters;
     }
-
-
-
 }

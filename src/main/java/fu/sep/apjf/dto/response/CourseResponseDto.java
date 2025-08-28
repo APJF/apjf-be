@@ -18,6 +18,7 @@ public record CourseResponseDto(
         Set<TopicDto> topics,
         Float averageRating,
         boolean isEnrolled,
-        int totalEnrolled
+        int totalEnrolled,
+        CourseProgressResponseDto courseProgress
 ) {
 }

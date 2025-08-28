@@ -17,6 +17,8 @@ public record LearningPathDetailResponseDto(
         Long userId,
         String username,
         Instant createdAt,
-        Instant lastUpdatedAt
+        Instant lastUpdatedAt,
+        boolean isCompleted,
+        float percent
 ){
 }
