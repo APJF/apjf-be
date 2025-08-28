@@ -1,5 +1,6 @@
 package fu.sep.apjf.repository;
 
+import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Unit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +23,6 @@ public interface UnitRepository extends JpaRepository<Unit, String> {
             "AND up.completed = true")
     long countCompletedUnitsByUserAndChapter(@Param("userId") Long userId,
                                              @Param("chapterId") String chapterId);
+
+    int countByStatus(EnumClass.Status status);
 }

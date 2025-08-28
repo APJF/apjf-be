@@ -1,6 +1,7 @@
 package fu.sep.apjf.repository;
 
 import fu.sep.apjf.entity.Chapter;
+import fu.sep.apjf.entity.EnumClass;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +21,6 @@ public interface ChapterRepository extends JpaRepository<Chapter, String> {
     """)
     boolean isChapterCompleted(@Param("chapterId") String chapterId,
                                @Param("userId") Long userId);
+
+    int countByStatus(EnumClass.Status status);
 }

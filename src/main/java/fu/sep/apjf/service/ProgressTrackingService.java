@@ -70,7 +70,7 @@ public class ProgressTrackingService {
         List<Exam> examsInChapter = examRepository.findByChapterId(chapterId);
         boolean allExamsPassed = examsInChapter.stream().allMatch(exam ->
                 examResultRepository
-                        .findByUserIdAndIdExamId(userId, exam.getId())
+                        .findByUser_IdAndExam_Id(userId, exam.getId())
                         .map(result -> result.getStatus() == EnumClass.ExamStatus.PASSED)
                         .orElse(false)
         );
@@ -110,7 +110,7 @@ public class ProgressTrackingService {
         List<Exam> examsInCourse = examRepository.findByCourseId(courseId);
         boolean allExamsPassed = examsInCourse.stream().allMatch(exam ->
                 examResultRepository
-                        .findByUserIdAndIdExamId(userId, exam.getId())
+                        .findByUser_IdAndExam_Id(userId, exam.getId())
                         .map(result -> result.getStatus() == EnumClass.ExamStatus.PASSED)
                         .orElse(false)
         );

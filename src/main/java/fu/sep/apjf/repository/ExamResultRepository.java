@@ -31,6 +31,6 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
                                              @Param("examId") String examId,
                                              @Param("status") fu.sep.apjf.entity.EnumClass.ExamStatus status);
 
-    Optional<ExamResult> findByUserIdAndIdExamId(Long userId, String examId);
+    Optional<ExamResult> findByUser_IdAndExam_Id(Long userId, String examId);
 
 }

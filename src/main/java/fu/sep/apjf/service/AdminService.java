@@ -2,19 +2,27 @@ package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.UpdateUserAuthoritiesDto;
 import fu.sep.apjf.dto.request.UpdateUserStatusDto;
+import fu.sep.apjf.dto.response.CourseProgressPercentResponseDto;
+import fu.sep.apjf.dto.response.CourseTotalEnrollResponseDto;
+import fu.sep.apjf.dto.response.DashboardManagerResponseDto;
 import fu.sep.apjf.dto.response.UserResponseDto;
-import fu.sep.apjf.entity.Authority;
-import fu.sep.apjf.entity.User;
+import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.UserMapper;
-import fu.sep.apjf.repository.AuthorityRepository;
-import fu.sep.apjf.repository.UserRepository;
+import fu.sep.apjf.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -28,6 +36,12 @@ public class AdminService {
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
     private final UserMapper userMapper;
+    private final CourseRepository courseRepository;
+    private final ChapterRepository chapterRepository;
+    private final UnitRepository unitRepository;
+    private final MaterialRepository materialRepository;
+    private final ExamRepository examRepository;
+    private final CourseProgressRepository courseProgressRepository;
 
     /**
      * Lấy danh sách tất cả users (trừ admin hiện tại)
@@ -136,5 +150,77 @@ public class AdminService {
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MESSAGE + userId));
 
         return userMapper.toDto(user);
+    }
+
+    public DashboardManagerResponseDto getDashboardData() {
+        // 1. Tổng quan course, chapter, unit, material, exam
+        int totalCourse = (int) courseRepository.count();
+        int totalActiveCourse = courseRepository.countByStatus(EnumClass.Status.ACTIVE);
+        int totalInactiveCourse = courseRepository.countByStatus(EnumClass.Status.INACTIVE);
+
+        // 2. Đếm Chapter
+        int totalChapter = (int) chapterRepository.count();
+        int totalActiveChapter = chapterRepository.countByStatus(EnumClass.Status.ACTIVE);
+        int totalInactiveChapter = chapterRepository.countByStatus(EnumClass.Status.INACTIVE);
+
+        // 3. Đếm Unit
+        int totalUnit = (int) unitRepository.count();
+        int totalActiveUnit = unitRepository.countByStatus(EnumClass.Status.ACTIVE);
+        int totalInactiveUnit = unitRepository.countByStatus(EnumClass.Status.INACTIVE);
+
+        int totalMaterial = (int) materialRepository.count();
+        int totalExam = (int) examRepository.count();
+
+        // 2. Thống kê số học viên enrolled và completed theo tháng
+        List<CourseTotalEnrollResponseDto> courseMonthlyActivity = getLast6MonthsStats();
+
+        // 3. Thống kê % hoàn thành cho từng course
+        List<CourseProgressPercentResponseDto> coursesTotalCompletedPercent = buildCourseProgressPercent();
+
+        // 4. Trả về DashboardManagerResponseDto
+        return new DashboardManagerResponseDto(
+                totalCourse,
+                totalActiveCourse,
+                totalInactiveCourse,
+                totalChapter,
+                totalActiveChapter,
+                totalInactiveChapter,
+                totalUnit,
+                totalActiveUnit,
+                totalInactiveUnit,
+                totalMaterial,
+                totalExam,
+                coursesTotalCompletedPercent,
+                courseMonthlyActivity
+        );
+    }
+
+    /**
+     * Thống kê tổng số học viên đăng ký và hoàn thành khóa học theo tháng
+     */
+    public List<CourseTotalEnrollResponseDto> getLast6MonthsStats() {
+        // Lấy thời điểm bắt đầu (6 tháng gần nhất)
+        Instant startDate = YearMonth.now()
+                .minusMonths(5)
+                .atDay(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant();
+
+        // Gọi repository và map sang DTO
+        return courseProgressRepository.findLast6MonthsStats(startDate)
+                .stream()
+                .map(row -> new CourseTotalEnrollResponseDto(
+                        YearMonth.from(((Timestamp) row[0]).toLocalDateTime()),
+                        ((Number) row[1]).intValue(),
+                        ((Number) row[2]).intValue()
+                ))
+                .toList();
+    }
+
+    /**
+     * Thống kê % hoàn thành cho từng khóa học
+     */
+    private List<CourseProgressPercentResponseDto> buildCourseProgressPercent() {
+        return courseProgressRepository.getCourseProgressPercent();
     }
 }
