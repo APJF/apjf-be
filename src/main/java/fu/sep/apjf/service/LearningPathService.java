@@ -122,24 +122,22 @@ public class LearningPathService {
         learningPathRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<LearningPathDetailResponseDto> getLearningPathsByUser(Long userId) {
-        List<LearningPath> paths = learningPathRepository.findByUserId(userId);
+        List<LearningPath> paths = learningPathRepository.findByUserIdWithCourses(userId);
 
         return paths.stream().map(path -> {
-            // Lấy tất cả Course từ các CourseLearningPath
             List<Course> courses = path.getCourseLearningPaths().stream()
                     .map(CourseLearningPath::getCourse)
                     .toList();
 
-            // Tính % hoàn thành theo số lượng course đã complete
             long completedCourses = courses.stream()
                     .filter(course -> courseProgressRepository
                             .existsByCourseAndUserIdAndCompleted(course, userId, true))
                     .count();
+
             float percent = courses.isEmpty() ? 0f : (completedCourses * 100f / courses.size());
-
             EnumClass.Level targetLevel = EnumClass.Level.valueOf(path.getTargetLevel());
-
 
             return new LearningPathDetailResponseDto(
                     path.getId(),
