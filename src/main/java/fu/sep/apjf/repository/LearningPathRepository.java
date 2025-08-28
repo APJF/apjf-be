@@ -20,6 +20,15 @@ public interface LearningPathRepository extends JpaRepository<LearningPath, Long
     """)
     List<LearningPath> findByUserIdWithCourses(@Param("userId") Long userId);
 
+    @Query("""
+        SELECT lp FROM LearningPath lp
+        LEFT JOIN FETCH lp.courseLearningPaths clp
+        LEFT JOIN FETCH clp.course
+        WHERE lp.id = :id
+    """)
+    Optional<LearningPath> findByIdWithCourses(@Param("id") Long id);
+
+
 
     Optional<LearningPath> findByUserIdAndStatus(Long userId, EnumClass.PathStatus status);
 
