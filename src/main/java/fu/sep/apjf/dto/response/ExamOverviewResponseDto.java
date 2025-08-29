@@ -8,5 +8,6 @@ public record ExamOverviewResponseDto(
         String description,
         Float duration,
         int totalQuestions,
-        ExamType type // MC hoặc WRITING
+        ExamType type, // MC hoặc WRITING
+        Boolean isPassed
 ) {}

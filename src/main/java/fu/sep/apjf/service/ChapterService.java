@@ -33,8 +33,7 @@ public class ChapterService {
     private final ChapterMapper chapterMapper; // Thêm injection
     private final UnitProgressRepository unitProgressRepository;
     private final UnitRepository unitRepository;
-    private final ChapterProgressRepository chapterProgressRepository;
-    private final CourseService courseService;
+    private final ExamResultRepository examResultRepository;
 
     @Transactional(readOnly = true)
     public List<ChapterResponseDto> findAll() {
@@ -126,34 +125,48 @@ public class ChapterService {
 
         // Convert sang DTO và set isComplete
         List<UnitDetailWithExamResponseDto> unitDtos = chapter.getUnits().stream()
-                .map(unit -> new UnitDetailWithExamResponseDto(
-                        unit.getId(),
-                        unit.getTitle(),
-                        unit.getDescription(),
-                        unit.getStatus(),
-                        unit.getChapter().getId(),
-                        unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null,
-                        progressMap.getOrDefault(unit.getId(), false), // isComplete
-                        unit.getMaterials().stream()
-                                .map(m -> new MaterialResponseDto(
-                                        m.getId(),
-                                        m.getFileUrl(),
-                                        m.getType(),
-                                        m.getScript(),
-                                        m.getTranslation()
-                                ))
-                                .toList(),
-                        unit.getExams().stream()
-                                .map(exam -> new ExamOverviewResponseDto(
+                .map(unit -> {
+                    // Lấy danh sách exam DTO cho unit
+                    List<ExamOverviewResponseDto> examDtos = unit.getExams().stream()
+                            .map(exam -> {
+                                // Lấy kết quả gần nhất của user cho exam này
+                                boolean isPassed = examResultRepository
+                                        .findFirstByUserIdAndExamIdOrderBySubmittedAtDesc(user.getId(), exam.getId())
+                                        .map(r -> r.getStatus() == EnumClass.ExamStatus.PASSED)
+                                        .orElse(false);
+
+                                return new ExamOverviewResponseDto(
                                         exam.getId(),
                                         exam.getTitle(),
                                         exam.getDescription(),
                                         exam.getDuration(),
                                         exam.getQuestions() != null ? exam.getQuestions().size() : 0,
-                                        exam.getType()
-                                ))
-                                .toList()
-                ))
+                                        exam.getType(),
+                                        isPassed
+                                );
+                            })
+                            .toList();
+
+                    return new UnitDetailWithExamResponseDto(
+                            unit.getId(),
+                            unit.getTitle(),
+                            unit.getDescription(),
+                            unit.getStatus(),
+                            unit.getChapter().getId(),
+                            unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null,
+                            progressMap.getOrDefault(unit.getId(), false), // isComplete
+                            unit.getMaterials().stream()
+                                    .map(m -> new MaterialResponseDto(
+                                            m.getId(),
+                                            m.getFileUrl(),
+                                            m.getType(),
+                                            m.getScript(),
+                                            m.getTranslation()
+                                    ))
+                                    .toList(),
+                            examDtos
+                    );
+                })
                 .toList();
 
         return new ChapterDetailWithProgressResponseDto(
@@ -166,6 +179,7 @@ public class ChapterService {
                 unitDtos
         );
     }
+
 
     public ChapterResponseDto update(String currentId, @Valid ChapterRequestDto dto, Long staffId) {
         log.info("Nhân viên {} cập nhật chương học với mã: {}", staffId, currentId);

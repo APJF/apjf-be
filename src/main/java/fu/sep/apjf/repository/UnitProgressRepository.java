@@ -22,19 +22,25 @@ public interface UnitProgressRepository extends JpaRepository<UnitProgress, Long
     List<UnitProgress> findByUserAndChapter(@Param("user") User user, @Param("chapterId") String chapterId);
 
     // Đếm tổng số Unit của 1 course
-    @Query("SELECT COUNT(c) FROM Chapter c WHERE c.course.id = :courseId")
-    long countChaptersByCourseId(@Param("courseId") String courseId);
+    @Query("""
+        SELECT COUNT(c) 
+        FROM Chapter c 
+        WHERE c.course.id = :courseId
+          AND c.status = 'ACTIVE'
+    """)
+    long countActiveChaptersByCourseId(@Param("courseId") String courseId);
 
-    // Đếm số Chapter đã hoàn thành của User trong 1 Course
+    // Đếm số Chapter ACTIVE đã hoàn thành của User trong Course
     @Query("""
         SELECT COUNT(cp) 
         FROM ChapterProgress cp
         WHERE cp.user = :user
-        AND cp.chapter.course.id = :courseId
-        AND cp.completed = true
-        """)
-    long countCompletedChaptersByUserAndCourse(@Param("user") User user,
-                                               @Param("courseId") String courseId);
+          AND cp.chapter.course.id = :courseId
+          AND cp.chapter.status = 'ACTIVE'
+          AND cp.completed = true
+    """)
+    long countCompletedActiveChaptersByUserAndCourse(@Param("user") User user,
+                                                     @Param("courseId") String courseId);
 
     Optional<UnitProgress> findByUserIdAndUnitId(Long userId, String unitId);
 }
