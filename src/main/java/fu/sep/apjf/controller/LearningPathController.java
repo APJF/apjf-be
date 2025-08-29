@@ -76,7 +76,7 @@ public class LearningPathController {
     public ResponseEntity<ApiResponseDto<LearningPathDetailResponseDto>> getStudyingLearningPath(
             @AuthenticationPrincipal User user
     ) {
-        LearningPathDetailResponseDto dto = learningPathService.getStudyingLearningPath(user.getId());
+        LearningPathDetailResponseDto dto = learningPathService.getStudyingLearningPath(user);
         return ResponseEntity.ok(ApiResponseDto.ok("Learning Path đang học", dto));
     }
 

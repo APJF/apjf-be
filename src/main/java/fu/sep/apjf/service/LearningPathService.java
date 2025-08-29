@@ -53,7 +53,10 @@ public class LearningPathService {
                 .collect(Collectors.toMap(cp -> cp.getCourse().getId(), cp -> cp));
 
         // Map course -> CourseDetailResponseDto
-        List<CourseDetailResponseDto> courseDtos = courses.stream().map(course -> {
+        // Map course -> CourseDetailResponseDto
+        List<CourseDetailResponseDto> courseDtos = courseLearningPaths.stream().map(clp -> {
+            Course course = clp.getCourse();
+
             // Lấy progress tương ứng
             CourseProgress progress = progressMap.get(course.getId());
             CourseProgressResponseDto progressDto = null;
@@ -76,9 +79,11 @@ public class LearningPathService {
                     null, // prerequisiteCourseId
                     null, // topics
                     null, // averageRating
-                    progressDto
+                    progressDto,
+                    clp.getCourseOrderNumber() // thêm courseOrderNumber
             );
         }).toList();
+
 
         // Tính tổng progress cho Learning Path
         long completedCourses = courseDtos.stream()
@@ -232,32 +237,33 @@ public class LearningPathService {
     }
 
     @Transactional(readOnly = true)
-    public LearningPathDetailResponseDto getStudyingLearningPath(Long userId) {
+    public LearningPathDetailResponseDto getStudyingLearningPath(User user) {
         // Lấy learning path có status = STUDYING của user
-        LearningPath path = learningPathRepository.findByUserIdAndStatus(userId, EnumClass.PathStatus.STUDYING)
+        LearningPath path = learningPathRepository.findByUserIdAndStatus(user.getId(), EnumClass.PathStatus.STUDYING)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Learning Path đang học"));
-
+        List<CourseLearningPath> courseLearningPaths = path.getCourseLearningPaths();
         // Lấy tất cả course trong learning path
         List<Course> courses = path.getCourseLearningPaths().stream()
                 .map(CourseLearningPath::getCourse)
                 .toList();
 
         // Lấy progress của user cho các course
-        List<CourseProgress> progresses = courseProgressRepository.findByUserId(userId);
+        List<CourseProgress> progresses = courseProgressRepository.findByUserId(user.getId());
         Map<String, CourseProgress> progressMap = progresses.stream()
                 .filter(cp -> courses.stream().anyMatch(c -> c.getId().equals(cp.getCourse().getId())))
                 .collect(Collectors.toMap(cp -> cp.getCourse().getId(), cp -> cp));
 
         // Map course -> DTO
-        List<CourseDetailResponseDto> courseDtos = courses.stream().map(course -> {
+        List<CourseDetailResponseDto> courseDtos = courseLearningPaths.stream().map(clp -> {
+            Course course = clp.getCourse();
             CourseProgress progress = progressMap.get(course.getId());
             CourseProgressResponseDto progressDto = null;
             if (progress != null) {
                 progressDto = new CourseProgressResponseDto(
                         progress.isCompleted(),
-                        calculateCourseProgress(progress.getUser(), course.getId())
+                        calculateCourseProgress(user, course.getId())
                 );
             }
 
@@ -273,9 +279,11 @@ public class LearningPathService {
                     null, // prerequisiteCourseId
                     null, // topics
                     null, // averageRating
-                    progressDto
+                    progressDto,
+                    clp.getCourseOrderNumber() // <-- lấy order từ CourseLearningPath
             );
         }).toList();
+
 
         // Tính progress tổng thể của Learning Path
         long completedCourses = courseDtos.stream()
@@ -293,7 +301,7 @@ public class LearningPathService {
                 path.getFocusSkill(),
                 path.getStatus(),
                 path.getDuration(),
-                userId,
+                user.getId(),
                 path.getUser().getUsername(),
                 path.getCreatedAt(),
                 path.getLastUpdatedAt(),

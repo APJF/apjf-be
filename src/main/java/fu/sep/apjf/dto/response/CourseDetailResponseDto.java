@@ -17,6 +17,7 @@ public record CourseDetailResponseDto(
         String prerequisiteCourseId,
         Set<TopicDto> topics,
         Float averageRating,
-        CourseProgressResponseDto courseProgress
+        CourseProgressResponseDto courseProgress,
+        int courseOrderNumber
 ) {
 }
