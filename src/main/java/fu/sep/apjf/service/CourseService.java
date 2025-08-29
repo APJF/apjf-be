@@ -243,7 +243,8 @@ public class CourseService {
                     course.getPrerequisiteCourse() != null ? course.getPrerequisiteCourse().getId() : null,
                     topicDtos,
                     avgRating,
-                    progressDto
+                    progressDto,
+                    0
             );
         }).toList();
     }
