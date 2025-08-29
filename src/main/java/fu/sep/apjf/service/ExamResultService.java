@@ -147,11 +147,7 @@ public class ExamResultService {
 
     @Transactional
     public Long submitExam(Long userId, ExamResultRequestDto dto) {
-        // Lấy user
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        // Lấy Exam
+        // Lấy exam cùng questions
         Exam exam = examRepository.findByIdWithQuestions(dto.examId())
                 .orElseThrow(() -> new EntityNotFoundException(EXAM_NOT_FOUND));
 
@@ -159,21 +155,23 @@ public class ExamResultService {
             throw new UnsupportedOperationException("Only multiple choice exams are supported in this version.");
         }
 
-        // Kiểm tra xem đã có ExamResult IN_PROGRESS chưa
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Lấy ExamResult đang IN_PROGRESS nếu có, nếu không tạo mới
         ExamResult result = examResultRepository
                 .findFirstByUser_IdAndExam_IdAndStatusOrderByStartedAtDesc(userId, exam.getId(), EnumClass.ExamStatus.IN_PROGRESS)
-                .orElse(null);
+                .orElseGet(() -> {
+                    ExamResult newResult = ExamResult.builder()
+                            .exam(exam)
+                            .user(user)
+                            .startedAt(dto.startedAt())
+                            .status(EnumClass.ExamStatus.IN_PROGRESS)
+                            .build();
+                    return examResultRepository.save(newResult);
+                });
 
-        if (result == null) {
-            // Nếu chưa có, tạo mới
-            result = ExamResult.builder()
-                    .exam(exam)
-                    .user(user)
-                    .startedAt(dto.startedAt())
-                    .build();
-        }
-
-        // Map questionId -> selectedOptionId
+        // Map questionId -> selectedOptionId, giữ value đầu tiên nếu trùng
         Map<String, String> selectedMap = dto.questionResults().stream()
                 .filter(q -> q.selectedOptionId() != null)
                 .collect(Collectors.toMap(
@@ -182,6 +180,7 @@ public class ExamResultService {
                         (existing, replacement) -> existing
                 ));
 
+        // Lấy Option từ database
         List<String> selectedOptionIds = selectedMap.values().stream()
                 .filter(Objects::nonNull)
                 .distinct()
@@ -191,46 +190,56 @@ public class ExamResultService {
                 .stream()
                 .collect(Collectors.toMap(Option::getId, o -> o));
 
-        // Tạo chi tiết ExamResult
-        List<ExamResultDetail> details = new ArrayList<>();
-        int totalQuestions = 0;
-        int correctAnswers = 0;
+        // Lấy tất cả ExamResultDetail hiện có
+        List<ExamResultDetail> existingDetails = examResultDetailRepository.findByExamResultId(result.getId());
 
         for (Question question : exam.getQuestions()) {
-            ExamResultDetail detail = new ExamResultDetail();
-            detail.setExamResult(result);
-            detail.setQuestion(question);
-
-            totalQuestions++;
-
             String selectedOptionId = selectedMap.get(question.getId());
             Option selectedOption = selectedOptionId != null ? optionMap.get(selectedOptionId) : null;
-            detail.setSelectedOption(selectedOption);
-
             boolean isCorrect = selectedOption != null && Boolean.TRUE.equals(selectedOption.getIsCorrect());
-            detail.setIsCorrect(isCorrect);
-            if (isCorrect) correctAnswers++;
 
-            details.add(detail);
+            // Tìm detail hiện có cho question
+            ExamResultDetail detail = existingDetails.stream()
+                    .filter(d -> d.getQuestion().getId().equals(question.getId()))
+                    .findFirst()
+                    .orElseGet(() -> {
+                        ExamResultDetail newDetail = new ExamResultDetail();
+                        newDetail.setExamResult(result);
+                        newDetail.setQuestion(question);
+                        existingDetails.add(newDetail);
+                        return newDetail;
+                    });
+
+            detail.setSelectedOption(selectedOption);
+            detail.setIsCorrect(isCorrect);
         }
 
-        // Tính điểm và set status
+        // Tính score
+        int totalQuestions = existingDetails.size();
+        int correctAnswers = (int) existingDetails.stream().filter(ExamResultDetail::getIsCorrect).count();
         float score = totalQuestions > 0 ? ((float) correctAnswers / totalQuestions) * 100 : 0.0f;
+
         result.setScore(score);
-        result.setStatus(score >= 60.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
         result.setSubmittedAt(dto.submittedAt());
+        result.setStatus(score >= 60 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
 
-        // Lưu ExamResult trước
-        ExamResult savedResult = examResultRepository.save(result);
+        // Lưu detail và result
+        examResultDetailRepository.saveAll(existingDetails);
+        examResultRepository.save(result);
 
-        // Gán lại ExamResult đã persist cho các detail
-        details.forEach(detail -> detail.setExamResult(savedResult));
+        // Nếu pass, update progress
+        if (result.getStatus() == EnumClass.ExamStatus.PASSED) {
+            switch (exam.getExamScopeType()) {
+                case UNIT -> progressTrackingService.markUnitPassed(exam.getUnit().getId(), userId);
+                case CHAPTER -> progressTrackingService.markChapterComplete(exam.getChapter().getId(), userId);
+                case COURSE -> progressTrackingService.markCourseComplete(exam.getCourse().getId(), userId);
+                default -> throw new UnsupportedOperationException("Unsupported exam scope type.");
+            }
+        }
 
-        // Lưu tất cả ExamResultDetail
-        examResultDetailRepository.saveAll(details);
-
-        return savedResult.getId();
+        return result.getId();
     }
+
 
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {
