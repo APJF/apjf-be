@@ -231,6 +231,78 @@ public class LearningPathService {
         learningPathRepository.save(path);
     }
 
+    @Transactional(readOnly = true)
+    public LearningPathDetailResponseDto getStudyingLearningPath(Long userId) {
+        // Lấy learning path có status = STUDYING của user
+        LearningPath path = learningPathRepository.findByUserIdAndStatus(userId, EnumClass.PathStatus.STUDYING)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Learning Path đang học"));
+
+        // Lấy tất cả course trong learning path
+        List<Course> courses = path.getCourseLearningPaths().stream()
+                .map(CourseLearningPath::getCourse)
+                .toList();
+
+        // Lấy progress của user cho các course
+        List<CourseProgress> progresses = courseProgressRepository.findByUserId(userId);
+        Map<String, CourseProgress> progressMap = progresses.stream()
+                .filter(cp -> courses.stream().anyMatch(c -> c.getId().equals(cp.getCourse().getId())))
+                .collect(Collectors.toMap(cp -> cp.getCourse().getId(), cp -> cp));
+
+        // Map course -> DTO
+        List<CourseDetailResponseDto> courseDtos = courses.stream().map(course -> {
+            CourseProgress progress = progressMap.get(course.getId());
+            CourseProgressResponseDto progressDto = null;
+            if (progress != null) {
+                progressDto = new CourseProgressResponseDto(
+                        progress.isCompleted(),
+                        calculateCourseProgress(progress.getUser(), course.getId())
+                );
+            }
+
+            return new CourseDetailResponseDto(
+                    course.getId(),
+                    course.getTitle(),
+                    course.getDescription(),
+                    course.getDuration(),
+                    course.getLevel(),
+                    null, // image
+                    null, // requirement
+                    null, // status
+                    null, // prerequisiteCourseId
+                    null, // topics
+                    null, // averageRating
+                    progressDto
+            );
+        }).toList();
+
+        // Tính progress tổng thể của Learning Path
+        long completedCourses = courseDtos.stream()
+                .filter(c -> c.courseProgress() != null && c.courseProgress().completed())
+                .count();
+        float percent = courses.isEmpty() ? 0f : (completedCourses * 100f / courses.size());
+        EnumClass.Level targetLevel = EnumClass.Level.valueOf(path.getTargetLevel());
+
+        return new LearningPathDetailResponseDto(
+                path.getId(),
+                path.getTitle(),
+                path.getDescription(),
+                targetLevel,
+                path.getPrimaryGoal(),
+                path.getFocusSkill(),
+                path.getStatus(),
+                path.getDuration(),
+                userId,
+                path.getUser().getUsername(),
+                path.getCreatedAt(),
+                path.getLastUpdatedAt(),
+                completedCourses == courses.size() && !courses.isEmpty(),
+                percent,
+                courseDtos
+        );
+    }
+
 
     @Transactional
     public void reorderCoursesInPath(Long pathId, List<String> courseIds) {

@@ -72,6 +72,14 @@ public class LearningPathController {
         return ResponseEntity.ok(ApiResponseDto.ok("Đặt lộ trình học hoạt động thành công"));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponseDto<LearningPathDetailResponseDto>> getStudyingLearningPath(
+            @AuthenticationPrincipal User user
+    ) {
+        LearningPathDetailResponseDto dto = learningPathService.getStudyingLearningPath(user.getId());
+        return ResponseEntity.ok(ApiResponseDto.ok("Learning Path đang học", dto));
+    }
+
     @PutMapping("/{id}/reorder")
     public ResponseEntity<ApiResponseDto<String>> reorderCourses(
             @PathVariable Long id,
