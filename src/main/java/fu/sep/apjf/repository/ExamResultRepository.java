@@ -1,5 +1,6 @@
 package fu.sep.apjf.repository;
 
+import fu.sep.apjf.entity.EnumClass;
 import fu.sep.apjf.entity.Exam;
 import fu.sep.apjf.entity.ExamResult;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +32,7 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
                                              @Param("examId") String examId,
                                              @Param("status") fu.sep.apjf.entity.EnumClass.ExamStatus status);
 
-    Optional<ExamResult> findByUser_IdAndExam_Id(Long userId, String examId);
+    Optional<ExamResult> findFirstByUser_IdAndExam_IdAndStatusOrderByStartedAtDesc(Long userId, String examId, EnumClass.ExamStatus status);
 
+    Optional<ExamResult> findFirstByUserIdAndExamIdOrderBySubmittedAtDesc(Long userId, String examId);
 }

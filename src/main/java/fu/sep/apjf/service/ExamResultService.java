@@ -37,29 +37,28 @@ public class ExamResultService {
 
     @Transactional
     public ExamDetailResponseDto startExam(Long userId, String examId) {
-        // Kiểm tra xem user đã bắt đầu exam này chưa (idempotent check)
+        // Kiểm tra user đã có IN_PROGRESS chưa
         ExamResult existingResult = examResultRepository
-                .findByUserIdAndExamIdAndStatus(userId, examId, EnumClass.ExamStatus.IN_PROGRESS);
+                .findFirstByUser_IdAndExam_IdAndStatusOrderByStartedAtDesc(userId, examId, EnumClass.ExamStatus.IN_PROGRESS)
+                .orElse(null);
 
         if (existingResult != null) {
-            // Nếu đã có exam đang IN_PROGRESS, trả về thông tin exam đó
             return buildExamDetailResponseFromExistingResult(existingResult.getExam().getId());
         }
 
-        // Giải pháp 2-query để tránh MultipleBagFetchException:
-        // Query 1: Lấy Exam cơ bản
+        // Lấy Exam cơ bản
         Exam exam = examRepository.findByIdOnly(examId)
                 .orElseThrow(() -> new ResourceNotFoundException(EXAM_NOT_FOUND));
 
-        // Query 2: Lấy Questions với Options riêng biệt
+        // Lấy Questions + Options
         List<Question> questionsWithOptions = examRepository.findQuestionsByExamIdWithOptions(examId);
         exam.setQuestions(questionsWithOptions);
 
-        // User lookup đơn giản
+        // User
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Tạo ExamResult
+        // Tạo ExamResult IN_PROGRESS
         ExamResult result = ExamResult.builder()
                 .exam(exam)
                 .user(user)
@@ -67,7 +66,7 @@ public class ExamResultService {
                 .status(EnumClass.ExamStatus.IN_PROGRESS)
                 .build();
 
-        // Batch create details
+        // Tạo ExamResultDetail
         List<ExamResultDetail> details = questionsWithOptions.stream()
                 .map(question -> {
                     ExamResultDetail detail = new ExamResultDetail();
@@ -77,9 +76,10 @@ public class ExamResultService {
                 })
                 .toList();
 
+        // Gán detail vào result
         result.setDetails(details);
 
-        // Single transaction với batch operations
+        // Lưu result và detail
         examResultRepository.save(result);
         if (!details.isEmpty()) {
             examResultDetailRepository.saveAll(details);
@@ -87,6 +87,7 @@ public class ExamResultService {
 
         return buildExamDetailResponseOptimized(exam, questionsWithOptions);
     }
+
 
     private ExamDetailResponseDto buildExamDetailResponseFromExistingResult(String examId) {
         // Cho trường hợp idempotent, fetch data với 2-query approach
@@ -146,7 +147,11 @@ public class ExamResultService {
 
     @Transactional
     public Long submitExam(Long userId, ExamResultRequestDto dto) {
-        // Lấy exam cùng questions
+        // Lấy user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Lấy Exam
         Exam exam = examRepository.findByIdWithQuestions(dto.examId())
                 .orElseThrow(() -> new EntityNotFoundException(EXAM_NOT_FOUND));
 
@@ -154,30 +159,39 @@ public class ExamResultService {
             throw new UnsupportedOperationException("Only multiple choice exams are supported in this version.");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        // Kiểm tra xem đã có ExamResult IN_PROGRESS chưa
+        ExamResult result = examResultRepository
+                .findFirstByUser_IdAndExam_IdAndStatusOrderByStartedAtDesc(userId, exam.getId(), EnumClass.ExamStatus.IN_PROGRESS)
+                .orElse(null);
 
-        ExamResult result = ExamResult.builder()
-                .startedAt(dto.startedAt())
-                .submittedAt(dto.submittedAt())
-                .exam(exam)
-                .user(user)
-                .status(EnumClass.ExamStatus.SUBMITTED) // tạm thời
-                .build();
+        if (result == null) {
+            // Nếu chưa có, tạo mới
+            result = ExamResult.builder()
+                    .exam(exam)
+                    .user(user)
+                    .startedAt(dto.startedAt())
+                    .build();
+        }
 
-        // Map questionId -> selectedOptionId từ DTO
+        // Map questionId -> selectedOptionId
         Map<String, String> selectedMap = dto.questionResults().stream()
-                .collect(Collectors.toMap(QuestionResultRequestDto::questionId, QuestionResultRequestDto::selectedOptionId));
+                .filter(q -> q.selectedOptionId() != null)
+                .collect(Collectors.toMap(
+                        QuestionResultRequestDto::questionId,
+                        QuestionResultRequestDto::selectedOptionId,
+                        (existing, replacement) -> existing
+                ));
 
-        // Lấy tất cả option cần dùng trong 1 query
         List<String> selectedOptionIds = selectedMap.values().stream()
                 .filter(Objects::nonNull)
+                .distinct()
                 .toList();
 
         Map<String, Option> optionMap = optionRepository.findAllById(selectedOptionIds)
                 .stream()
                 .collect(Collectors.toMap(Option::getId, o -> o));
 
+        // Tạo chi tiết ExamResult
         List<ExamResultDetail> details = new ArrayList<>();
         int totalQuestions = 0;
         int correctAnswers = 0;
@@ -200,34 +214,24 @@ public class ExamResultService {
             details.add(detail);
         }
 
-        // Tính điểm
+        // Tính điểm và set status
         float score = totalQuestions > 0 ? ((float) correctAnswers / totalQuestions) * 100 : 0.0f;
         result.setScore(score);
         result.setStatus(score >= 60.0 ? EnumClass.ExamStatus.PASSED : EnumClass.ExamStatus.FAILED);
+        result.setSubmittedAt(dto.submittedAt());
 
-        // Lưu ExamResult
-        ExamResult examResult = examResultRepository.save(result);
+        // Lưu ExamResult trước
+        ExamResult savedResult = examResultRepository.save(result);
 
-        // Batch insert tất cả ExamResultDetail
+        // Gán lại ExamResult đã persist cho các detail
+        details.forEach(detail -> detail.setExamResult(savedResult));
+
+        // Lưu tất cả ExamResultDetail
         examResultDetailRepository.saveAll(details);
 
-        if (result.getStatus() == EnumClass.ExamStatus.PASSED) {
-            switch (exam.getExamScopeType()) {
-                case UNIT -> {
-                    progressTrackingService.markUnitPassed(exam.getUnit().getId(), userId);
-                }
-                case CHAPTER -> {
-                    progressTrackingService.markChapterComplete( exam.getChapter().getId(),userId);
-                }
-                case COURSE -> {
-                    progressTrackingService.markCourseComplete(exam.getCourse().getId(),userId);
-                }
-                default -> throw new UnsupportedOperationException("Unsupported exam scope type.");
-            }
-        }
-
-        return examResult.getId();
+        return savedResult.getId();
     }
+
 
     public List<ExamHistoryResponseDto> getHistoryByUserId(Long userId) {
         return examResultRepository.findByUserIdWithExam(userId)

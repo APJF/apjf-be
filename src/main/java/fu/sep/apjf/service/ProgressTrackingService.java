@@ -54,8 +54,6 @@ public class ProgressTrackingService {
         Chapter chapter = chapterRepository.findById(chapterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Chapter"));
 
-        User user = userRepository.findById(userId).orElseThrow();
-
         // Lấy tất cả Units trong Chapter
         List<Unit> units = unitRepository.findByChapterId(chapterId);
 
@@ -67,24 +65,17 @@ public class ProgressTrackingService {
                         .orElse(false)
         );
 
-        List<Exam> examsInChapter = examRepository.findByChapterId(chapterId);
-        boolean allExamsPassed = examsInChapter.stream().allMatch(exam ->
-                examResultRepository
-                        .findByUser_IdAndExam_Id(userId, exam.getId())
-                        .map(result -> result.getStatus() == EnumClass.ExamStatus.PASSED)
-                        .orElse(false)
-        );
-
-        if (allUnitsCompleted && allExamsPassed) {
+        if (allUnitsCompleted) {
+            // Đánh dấu Chapter completed
             ChapterProgress progress = ChapterProgress.builder()
                     .id(new ChapterProgressKey(chapterId, userId))
                     .chapter(chapter)
-                    .user(user)
+                    .user(userRepository.findById(userId).orElseThrow())
                     .completed(true)
                     .build();
             chapterProgressRepository.save(progress);
 
-            // Kiểm tra Course sau khi Chapter hoàn thành
+            // Kiểm tra Course
             markCourseComplete(chapter.getCourse().getId(), userId);
         }
     }
@@ -94,12 +85,10 @@ public class ProgressTrackingService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Course"));
 
-        User user = userRepository.findById(userId).orElseThrow();
-
         // Lấy tất cả Chapters trong Course
         List<Chapter> chapters = chapterRepository.findByCourseId(courseId);
 
-        // Kiểm tra xem tất cả Chapters đã hoàn thành chưa
+        // Kiểm tra xem tất cả Chapters đã completed chưa
         boolean allChaptersCompleted = chapters.stream().allMatch(chapter ->
                 chapterProgressRepository
                         .findById(new ChapterProgressKey(chapter.getId(), userId))
@@ -107,26 +96,17 @@ public class ProgressTrackingService {
                         .orElse(false)
         );
 
-        List<Exam> examsInCourse = examRepository.findByCourseId(courseId);
-        boolean allExamsPassed = examsInCourse.stream().allMatch(exam ->
-                examResultRepository
-                        .findByUser_IdAndExam_Id(userId, exam.getId())
-                        .map(result -> result.getStatus() == EnumClass.ExamStatus.PASSED)
-                        .orElse(false)
-        );
-
-        if (allChaptersCompleted && allExamsPassed) {
-            // Đánh dấu Course là completed
+        if (allChaptersCompleted) {
+            // Đánh dấu Course completed
             CourseProgress progress = CourseProgress.builder()
                     .id(new CourseProgressKey(courseId, userId))
                     .course(course)
-                    .user(user)
+                    .user(userRepository.findById(userId).orElseThrow())
                     .completed(true)
                     .build();
             courseProgressRepository.save(progress);
 
-            // === Xử lý Learning Path ===
-            // Lấy tất cả các learning path chứa course này
+            // Kiểm tra Learning Path
             List<CourseLearningPath> mappings = courseLearningPathRepository.findByCourseId(courseId);
             for (CourseLearningPath mapping : mappings) {
                 markLearningPathComplete(mapping.getLearningPath().getId(), userId);
@@ -139,16 +119,11 @@ public class ProgressTrackingService {
         LearningPath lp = learningPathRepository.findById(learningPathId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Learning Path"));
 
-        User user = userRepository.findById(userId).orElseThrow();
-
-        // Lấy tất cả Course thuộc Learning Path qua bảng trung gian
+        // Lấy tất cả Course trong Learning Path
         List<CourseLearningPath> mappings = courseLearningPathRepository.findByLearningPathId(learningPathId);
+        List<Course> courses = mappings.stream().map(CourseLearningPath::getCourse).toList();
 
-        List<Course> courses = mappings.stream()
-                .map(CourseLearningPath::getCourse)
-                .toList();
-
-        // Kiểm tra tất cả course đã xong chưa
+        // Kiểm tra tất cả Course đã completed chưa
         boolean allCoursesCompleted = courses.stream().allMatch(course ->
                 courseProgressRepository
                         .findById(new CourseProgressKey(course.getId(), userId))
@@ -160,11 +135,10 @@ public class ProgressTrackingService {
             LearningPathProgress progress = LearningPathProgress.builder()
                     .id(new LearningPathProgressKey(learningPathId, userId))
                     .learningPath(lp)
-                    .user(user)
+                    .user(userRepository.findById(userId).orElseThrow())
                     .completed(true)
                     .build();
             learningPathProgressRepository.save(progress);
         }
     }
-
 }
