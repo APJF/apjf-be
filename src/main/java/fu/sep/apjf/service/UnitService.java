@@ -1,13 +1,12 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.UnitRequestDto;
+import fu.sep.apjf.dto.response.UnitDetailProgressDto;
 import fu.sep.apjf.dto.response.UnitResponseDto;
-import fu.sep.apjf.entity.ApprovalRequest;
-import fu.sep.apjf.entity.Chapter;
-import fu.sep.apjf.entity.EnumClass;
-import fu.sep.apjf.entity.Unit;
+import fu.sep.apjf.entity.*;
 import fu.sep.apjf.mapper.UnitMapper;
 import fu.sep.apjf.repository.ChapterRepository;
+import fu.sep.apjf.repository.UnitProgressRepository;
 import fu.sep.apjf.repository.UnitRepository;
 import fu.sep.apjf.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -30,6 +29,7 @@ public class UnitService {
     private final ApprovalRequestService approvalRequestService;
     private final UnitMapper unitMapper;
     private final UserRepository userRepository;
+    private final UnitProgressRepository unitProgressRepository;
 
     @Transactional(readOnly = true)
     public List<UnitResponseDto> list() {
@@ -58,6 +58,31 @@ public class UnitService {
         return unitMapper.toDto(unitRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Unit not found with ID: " + id)));
     }
+
+    @Transactional(readOnly = true)
+    public UnitDetailProgressDto getUnitDetailById(String unitId, Long userId) {
+        // Lấy unit
+        Unit unit = unitRepo.findById(unitId)
+                .orElseThrow(() -> new EntityNotFoundException("Unit not found with ID: " + unitId));
+
+        // Lấy progress của user cho unit này
+        UnitProgress progress = unitProgressRepository.findByUserIdAndUnitId(userId, unitId)
+                .orElse(null);
+
+        boolean isCompleted = progress != null && progress.isCompleted();
+
+        // Map sang DTO
+        return new UnitDetailProgressDto(
+                unit.getId(),
+                unit.getTitle(),
+                unit.getDescription(),
+                unit.getStatus(),
+                unit.getChapter() != null ? unit.getChapter().getId() : null,
+                unit.getPrerequisiteUnit() != null ? unit.getPrerequisiteUnit().getId() : null,
+                isCompleted
+        );
+    }
+
 
     /* ---------- CREATE ---------- */
     public UnitResponseDto create(@Valid UnitRequestDto dto, Long staffId) {

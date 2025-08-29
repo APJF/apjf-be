@@ -1,9 +1,7 @@
 package fu.sep.apjf.service;
 
 import fu.sep.apjf.dto.request.LearningPathRequestDto;
-import fu.sep.apjf.dto.response.CourseOrderDto;
-import fu.sep.apjf.dto.response.LearningPathDetailResponseDto;
-import fu.sep.apjf.dto.response.LearningPathResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.*;
 import fu.sep.apjf.exception.ResourceNotFoundException;
 import fu.sep.apjf.mapper.CourseLearningPathMapper;
@@ -32,23 +30,60 @@ public class LearningPathService {
     private final LearningPathMapper learningPathMapper;
     private final CourseLearningPathMapper courseLearningPathMapper;
     private final CourseProgressRepository courseProgressRepository;
-    private final LearningPathProgressRepository learningPathProgressRepository;
+    private final UnitProgressRepository unitProgressRepository;
 
     @Transactional(readOnly = true)
-    public LearningPathDetailResponseDto getLearningPathById(Long id) {
+    public LearningPathDetailResponseDto getLearningPathById(Long id, User user) {
         LearningPath path = learningPathRepository.findByIdWithCourses(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy Learning Path với ID: " + id));
 
-        List<Course> courses = path.getCourseLearningPaths().stream()
+        // Lấy tất cả CourseLearningPath
+        List<CourseLearningPath> courseLearningPaths = path.getCourseLearningPaths();
+
+        // Lấy danh sách course
+        List<Course> courses = courseLearningPaths.stream()
                 .map(CourseLearningPath::getCourse)
                 .toList();
 
-        long completedCourses = courses.stream()
-                .filter(course -> courseProgressRepository
-                        .existsByCourseAndUserIdAndCompleted(course, path.getUser().getId(), true))
-                .count();
+        // Lấy tất cả progress của user liên quan đến các course này
+        List<CourseProgress> progresses = courseProgressRepository.findByUserId(user.getId());
+        Map<String, CourseProgress> progressMap = progresses.stream()
+                .filter(cp -> courses.stream().anyMatch(c -> c.getId().equals(cp.getCourse().getId())))
+                .collect(Collectors.toMap(cp -> cp.getCourse().getId(), cp -> cp));
 
+        // Map course -> CourseDetailResponseDto
+        List<CourseDetailResponseDto> courseDtos = courses.stream().map(course -> {
+            // Lấy progress tương ứng
+            CourseProgress progress = progressMap.get(course.getId());
+            CourseProgressResponseDto progressDto = null;
+            if (progress != null) {
+                progressDto = new CourseProgressResponseDto(
+                        progress.isCompleted(),
+                        calculateCourseProgress(user, course.getId())
+                );
+            }
+
+            return new CourseDetailResponseDto(
+                    course.getId(),
+                    course.getTitle(),
+                    course.getDescription(),
+                    course.getDuration(),
+                    course.getLevel(),
+                    null, // image
+                    null, // requirement
+                    null, // status
+                    null, // prerequisiteCourseId
+                    null, // topics
+                    null, // averageRating
+                    progressDto
+            );
+        }).toList();
+
+        // Tính tổng progress cho Learning Path
+        long completedCourses = courseDtos.stream()
+                .filter(c -> c.courseProgress() != null && c.courseProgress().completed())
+                .count();
         float percent = courses.isEmpty() ? 0f : (completedCourses * 100f / courses.size());
         EnumClass.Level targetLevel = EnumClass.Level.valueOf(path.getTargetLevel());
 
@@ -61,14 +96,16 @@ public class LearningPathService {
                 path.getFocusSkill(),
                 path.getStatus(),
                 path.getDuration(),
-                path.getUser().getId(),
-                path.getUser().getUsername(),
+                user.getId(),
+                user.getUsername(),
                 path.getCreatedAt(),
                 path.getLastUpdatedAt(),
                 completedCourses == courses.size() && !courses.isEmpty(),
-                percent
+                percent,
+                courseDtos
         );
     }
+
 
     @Transactional
     public LearningPathResponseDto createLearningPath(LearningPathRequestDto dto, Long userId) {
@@ -151,7 +188,8 @@ public class LearningPathService {
                     path.getCreatedAt(),
                     path.getLastUpdatedAt(),
                     completedCourses == courses.size() && !courses.isEmpty(),
-                    percent
+                    percent,
+                    null
             );
         }).toList();
     }
@@ -223,5 +261,14 @@ public class LearningPathService {
                 })
                 .toList();
         courseLearningPathRepository.saveAll(courseLinks);
+    }
+
+    public float calculateCourseProgress(User user, String courseId) {
+        long totalChapters = unitProgressRepository.countChaptersByCourseId(courseId);
+        if (totalChapters == 0) return 0;
+
+        long completedChapters = unitProgressRepository.countCompletedChaptersByUserAndCourse(user, courseId);
+
+        return (completedChapters * 100.0f) / totalChapters;
     }
 }
