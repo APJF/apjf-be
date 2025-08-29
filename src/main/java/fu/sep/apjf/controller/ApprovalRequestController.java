@@ -3,14 +3,17 @@ package fu.sep.apjf.controller;
 import fu.sep.apjf.dto.request.ApprovalDecisionDto;
 import fu.sep.apjf.dto.response.ApiResponseDto;
 import fu.sep.apjf.dto.response.ApprovalRequestDto;
+import fu.sep.apjf.dto.response.DashboardManagerResponseDto;
 import fu.sep.apjf.entity.ApprovalRequest;
 import fu.sep.apjf.entity.ApprovalRequest.TargetType;
 import fu.sep.apjf.entity.User;
+import fu.sep.apjf.service.AdminService;
 import fu.sep.apjf.service.ApprovalRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +26,7 @@ import java.util.List;
 public class ApprovalRequestController {
 
     private final ApprovalRequestService approvalRequestService;
+    private final AdminService adminService;
 
     @GetMapping
     public ResponseEntity<ApiResponseDto<List<ApprovalRequestDto>>> getAll(
@@ -86,5 +90,11 @@ public class ApprovalRequestController {
                 : "Từ chối thành công";
 
         return ResponseEntity.ok(ApiResponseDto.ok(message, result));
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponseDto<DashboardManagerResponseDto>> getDashboardStats() {
+        DashboardManagerResponseDto stats = adminService.getDashboardData();
+        return ResponseEntity.ok(ApiResponseDto.ok("Thống kê tổng quan dashboard", stats));
     }
 }

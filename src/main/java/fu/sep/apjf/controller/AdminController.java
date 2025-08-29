@@ -68,10 +68,4 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponseDto.ok("Thống kê người dùng", stats));
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/dashboard")
-    public ResponseEntity<ApiResponseDto<DashboardManagerResponseDto>> getDashboardStats() {
-        DashboardManagerResponseDto stats = adminService.getDashboardData();
-        return ResponseEntity.ok(ApiResponseDto.ok("Thống kê tổng quan dashboard", stats));
-    }
 }
