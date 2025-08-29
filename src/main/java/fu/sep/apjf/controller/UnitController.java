@@ -1,10 +1,7 @@
 package fu.sep.apjf.controller;
 
 import fu.sep.apjf.dto.request.UnitRequestDto;
-import fu.sep.apjf.dto.response.ApiResponseDto;
-import fu.sep.apjf.dto.response.ExamListResponseDto;
-import fu.sep.apjf.dto.response.MaterialResponseDto;
-import fu.sep.apjf.dto.response.UnitResponseDto;
+import fu.sep.apjf.dto.response.*;
 import fu.sep.apjf.entity.User;
 import fu.sep.apjf.service.ExamService;
 import fu.sep.apjf.service.MaterialService;
@@ -53,6 +50,14 @@ public class UnitController {
     public ResponseEntity<ApiResponseDto<UnitResponseDto>> getById(@PathVariable String id) {
         return ResponseEntity.ok(
                 ApiResponseDto.ok("Chi tiết bài học", unitService.findById(id)));
+    }
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<ApiResponseDto<UnitDetailProgressDto>> getUnitDetail(
+            @PathVariable String id,
+            @AuthenticationPrincipal User user // lấy user hiện tại từ security context
+    ) {
+        UnitDetailProgressDto dto = unitService.getUnitDetailById(id, user.getId());
+        return ResponseEntity.ok(ApiResponseDto.ok("Chi tiết bài học", dto));
     }
 
     @PostMapping("/{unitId}/pass")

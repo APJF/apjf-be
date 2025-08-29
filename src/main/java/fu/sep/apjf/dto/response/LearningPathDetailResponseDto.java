@@ -19,6 +19,7 @@ public record LearningPathDetailResponseDto(
         Instant createdAt,
         Instant lastUpdatedAt,
         boolean isCompleted,
-        float percent
+        float percent,
+        List<CourseDetailResponseDto> courses
 ){
 }

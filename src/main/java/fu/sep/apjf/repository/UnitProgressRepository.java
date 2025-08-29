@@ -35,4 +35,6 @@ public interface UnitProgressRepository extends JpaRepository<UnitProgress, Long
         """)
     long countCompletedChaptersByUserAndCourse(@Param("user") User user,
                                                @Param("courseId") String courseId);
+
+    Optional<UnitProgress> findByUserIdAndUnitId(Long userId, String unitId);
 }
