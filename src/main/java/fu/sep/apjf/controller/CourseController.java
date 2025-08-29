@@ -115,8 +115,9 @@ public class CourseController {
 
     @GetMapping("/{id}/exams")
     public ResponseEntity<ApiResponseDto<List<ExamOverviewResponseDto>>> getExamsByCourseId(
-            @PathVariable String id) {
-        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài kiểm tra của khóa học", courseService.getExamsByCourseId(id)));
+            @PathVariable String id,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(ApiResponseDto.ok("Danh sách bài kiểm tra của khóa học", courseService.getExamsByCourseId(user,id)));
     }
 
 }

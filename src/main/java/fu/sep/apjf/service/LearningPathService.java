@@ -44,6 +44,7 @@ public class LearningPathService {
         // Lấy danh sách course
         List<Course> courses = courseLearningPaths.stream()
                 .map(CourseLearningPath::getCourse)
+                .filter(course -> course.getStatus() == EnumClass.Status.ACTIVE)
                 .toList();
 
         // Lấy tất cả progress của user liên quan đến các course này
@@ -87,7 +88,7 @@ public class LearningPathService {
 
         // Tính tổng progress cho Learning Path
         long completedCourses = courseDtos.stream()
-                .filter(c -> c.courseProgress() != null && c.courseProgress().completed())
+                .filter(c -> c.courseProgress() != null && c.courseProgress().completed() && c.status() == EnumClass.Status.ACTIVE)
                 .count();
         float percent = courses.isEmpty() ? 0f : (completedCourses * 100f / courses.size());
         EnumClass.Level targetLevel = EnumClass.Level.valueOf(path.getTargetLevel());
@@ -344,10 +345,10 @@ public class LearningPathService {
     }
 
     public float calculateCourseProgress(User user, String courseId) {
-        long totalChapters = unitProgressRepository.countChaptersByCourseId(courseId);
+        long totalChapters = unitProgressRepository.countActiveChaptersByCourseId(courseId);
         if (totalChapters == 0) return 0;
 
-        long completedChapters = unitProgressRepository.countCompletedChaptersByUserAndCourse(user, courseId);
+        long completedChapters = unitProgressRepository.countCompletedActiveChaptersByUserAndCourse(user, courseId);
 
         return (completedChapters * 100.0f) / totalChapters;
     }

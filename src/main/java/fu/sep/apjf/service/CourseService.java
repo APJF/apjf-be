@@ -39,8 +39,7 @@ public class CourseService {
     private final ChapterMapper chapterMapper;
     private final UnitMapper unitMapper;
     private final MaterialMapper materialMapper;
-    private final CourseLearningPathRepository courseLearningPathRepository;
-    private final LearningPathService learningPathService;
+    private final ExamResultRepository examResultRepository;
 
     @Transactional(readOnly = true)
     public List<CourseResponseDto> findAll() {
@@ -433,14 +432,33 @@ public class CourseService {
 
 
     @Transactional(readOnly = true)
-    public List<ExamOverviewResponseDto> getExamsByCourseId(String courseId) {
+    public List<ExamOverviewResponseDto> getExamsByCourseId(User user, String courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy khóa học với ID: " + courseId));
 
         return course.getExams().stream()
-                .map(examMapper::toDto)
+                .map(exam -> {
+                    // Lấy kết quả gần nhất của user cho exam này
+                    boolean isPassed = examResultRepository
+                            .findFirstByUserIdAndExamIdOrderBySubmittedAtDesc(user.getId(), exam.getId())
+                            .map(r -> r.getStatus() == EnumClass.ExamStatus.PASSED)
+                            .orElse(false);
+
+                    // Chuyển sang DTO và thêm isPassed
+                    ExamOverviewResponseDto dto = examMapper.toDto(exam);
+                    return new ExamOverviewResponseDto(
+                            dto.examId(),
+                            dto.title(),
+                            dto.description(),
+                            dto.duration(),
+                            dto.totalQuestions(),
+                            dto.type(),
+                            isPassed
+                    );
+                })
                 .toList();
     }
+
 
     public CourseResponseDto create(CourseRequestDto dto, Long staffId) {
         if (courseRepository.existsById(dto.id())) {
@@ -558,11 +576,12 @@ public class CourseService {
     }
 
     public float calculateCourseProgress(User user, String courseId) {
-        long totalChapters = unitProgressRepository.countChaptersByCourseId(courseId);
+        long totalChapters = unitProgressRepository.countActiveChaptersByCourseId(courseId);
         if (totalChapters == 0) return 0;
 
-        long completedChapters = unitProgressRepository.countCompletedChaptersByUserAndCourse(user, courseId);
+        long completedChapters = unitProgressRepository.countCompletedActiveChaptersByUserAndCourse(user, courseId);
 
         return (completedChapters * 100.0f) / totalChapters;
     }
+
 }
